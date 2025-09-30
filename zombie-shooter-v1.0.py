@@ -974,7 +974,7 @@ class Game:
                 self.screen.blit(health_text, (10, 40))
                 
                 # Draw instructions
-                instruction_text = pygame.font.Font(None, 24).render("WASD to move, aim with mouse, P to pause, Hold 1+T for cheat", True, WHITE)
+                instruction_text = pygame.font.Font(None, 24).render("WASD or Arrow keys to move, aim with mouse, P to pause", True, WHITE)
                 self.screen.blit(instruction_text, (10, SCREEN_HEIGHT - 30))
                 
             elif not game_over and self.paused:
