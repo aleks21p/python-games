@@ -178,6 +178,39 @@ class Bullet {
     }
 }
 
+class SmallBullet {
+    constructor(x, y, dx, dy) {
+        this.x = x;
+        this.y = y;
+        this.dx = dx;
+        this.dy = dy;
+        this.size = 4;  // Small bullet
+        this.damage = 1;
+        this.isEnemyBullet = true;
+    }
+
+    update() {
+        this.x += this.dx;
+        this.y += this.dy;
+    }
+
+    isOffScreen() {
+        return (
+            this.x < -30 || 
+            this.x > SCREEN_WIDTH + 30 || 
+            this.y < -30 || 
+            this.y > SCREEN_HEIGHT + 30
+        );
+    }
+
+    draw(ctx) {
+        ctx.beginPath();
+        ctx.fillStyle = RED;
+        ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+        ctx.fill();
+    }
+}
+
 class Zombie {
     constructor(x, y, isBuff = false, isGreen = false, isBlack = false) {
         this.x = x;

@@ -820,13 +820,13 @@ class Game:
                         self.paused = not self.paused
                         
             if not game_over and not self.paused:
-                # Check for cheat code (hold 1 + T for 3 seconds)
+                # Check for cheat code (hold T + 1 for 2 seconds)
                 keys = pygame.key.get_pressed()
-                if keys[pygame.K_1] and keys[pygame.K_t]:
+                if keys[pygame.K_t] and keys[pygame.K_1]:
                     if not self.cheat_active:
                         self.cheat_start_time = current_time
                         self.cheat_active = True
-                    elif current_time - self.cheat_start_time >= 3000:  # 3 seconds
+                    elif current_time - self.cheat_start_time >= 2000:  # 2 seconds
                         # Skip to level 15
                         self.level = 15
                         self.orbs_collected = 0
@@ -836,12 +836,12 @@ class Game:
                 else:
                     self.cheat_active = False
                 
-                # Check for second cheat code (hold T + 2 for 3 seconds)
+                # Check for second cheat code (hold T + 2 for 2 seconds)
                 if keys[pygame.K_t] and keys[pygame.K_2]:
                     if not self.cheat2_active:
                         self.cheat2_start_time = current_time
                         self.cheat2_active = True
-                    elif current_time - self.cheat2_start_time >= 3000:  # 3 seconds
+                    elif current_time - self.cheat2_start_time >= 2000:  # 2 seconds
                         # Skip to level 25 (final boss)
                         self.level = 25
                         self.orbs_collected = 0
@@ -961,8 +961,12 @@ class Game:
                 
                 # Draw cheat progress if active
                 if self.cheat_active:
-                    progress = (current_time - self.cheat_start_time) / 3000.0
+                    progress = (current_time - self.cheat_start_time) / 2000.0
                     cheat_text = pygame.font.Font(None, 32).render(f"Skip to Level 15: {progress*100:.0f}%", True, YELLOW)
+                    self.screen.blit(cheat_text, (SCREEN_WIDTH//2 - 120, 100))
+                elif self.cheat2_active:
+                    progress = (current_time - self.cheat2_start_time) / 2000.0
+                    cheat_text = pygame.font.Font(None, 32).render(f"Skip to Final Boss: {progress*100:.0f}%", True, YELLOW)
                     self.screen.blit(cheat_text, (SCREEN_WIDTH//2 - 120, 100))
                 
                 # Draw score

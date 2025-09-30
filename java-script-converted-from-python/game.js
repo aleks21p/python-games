@@ -30,6 +30,13 @@ class Game {
         this.gameOver = false;
         this.paused = false;
 
+        // Cheat code system
+        this.cheatActive = false;
+        this.cheatStartTime = 0;
+        this.cheat2Active = false;
+        this.cheat2StartTime = 0;
+        this.tKeyPressed = false;
+
         // Input handling
         this.keys = {};
         this.mousePos = { x: 0, y: 0 };
@@ -43,6 +50,12 @@ class Game {
         // Keyboard events
         document.addEventListener('keydown', (e) => {
             this.keys[e.key] = true;
+            
+            // Track T key separately for cheat codes
+            if (e.key === 't' || e.key === 'T') {
+                this.tKeyPressed = true;
+            }
+
             if (e.key === 'p' || e.key === 'P') {
                 this.paused = !this.paused;
             }
@@ -55,6 +68,21 @@ class Game {
 
         document.addEventListener('keyup', (e) => {
             this.keys[e.key] = false;
+
+            // Reset T key tracking when released
+            if (e.key === 't' || e.key === 'T') {
+                this.tKeyPressed = false;
+                this.cheatActive = false;
+                this.cheat2Active = false;
+            }
+
+            // Reset cheat states when 1 or 2 are released
+            if (e.key === '1') {
+                this.cheatActive = false;
+            }
+            if (e.key === '2') {
+                this.cheat2Active = false;
+            }
         });
 
         // Mouse events
@@ -82,6 +110,9 @@ class Game {
         this.zombiesSpawned = 0;
         this.greenSpawnCount = 0;
         this.orangeSpawnCount = 0;
+        this.cheatActive = false;
+        this.cheat2Active = false;
+        this.tKeyPressed = false;
     }
 
     spawnOrbs(x, y, count) {
@@ -189,10 +220,49 @@ class Game {
         }
     }
 
+    updateCheatCodes() {
+        const currentTime = Date.now();
+
+        // T + 1 cheat code (skip to level 15)
+        if (this.tKeyPressed && this.keys['1']) {
+            if (!this.cheatActive) {
+                this.cheatStartTime = currentTime;
+                this.cheatActive = true;
+            } else if (currentTime - this.cheatStartTime >= 2000) { // 2 seconds
+                // Skip to level 15
+                this.level = 15;
+                this.orbsCollected = 0;
+                this.orbsNeeded = 150;
+                this.player.updateShootSpeed(this.level);
+                this.cheatActive = false;
+            }
+        }
+
+        // T + 2 cheat code (skip to level 25/final boss)
+        if (this.tKeyPressed && this.keys['2']) {
+            if (!this.cheat2Active) {
+                this.cheat2StartTime = currentTime;
+                this.cheat2Active = true;
+            } else if (currentTime - this.cheat2StartTime >= 2000) { // 2 seconds
+                // Skip to level 25
+                this.level = 25;
+                this.orbsCollected = 0;
+                this.orbsNeeded = 250;
+                this.player.updateShootSpeed(this.level);
+                // Clear all enemies
+                this.zombies = [];
+                this.cheat2Active = false;
+            }
+        }
+    }
+
     update() {
         if (this.gameOver || this.paused) return;
 
         const currentTime = Date.now();
+
+        // Update cheat codes
+        this.updateCheatCodes();
 
         // Update player
         this.player.update(this.keys);
@@ -241,7 +311,7 @@ class Game {
     drawOrbBar() {
         const barWidth = 300;
         const barHeight = 15;
-        const barX = 200;
+        const barX = 350;  // Moved right to avoid overlap with score
         const barY = 10;
 
         ctx.fillStyle = GRAY;
@@ -261,6 +331,23 @@ class Game {
         ctx.fillText(`${this.orbsCollected}/${this.orbsNeeded}`, barX + barWidth + 10, barY + 13);
     }
 
+    drawCheatProgress() {
+        if (this.cheatActive || this.cheat2Active) {
+            const currentTime = Date.now();
+            const progress = this.cheatActive ? 
+                (currentTime - this.cheatStartTime) / 2000 :
+                (currentTime - this.cheat2StartTime) / 2000;
+            
+            const text = this.cheatActive ? 
+                `Skip to Level 15: ${Math.min(100, progress * 100).toFixed(0)}%` :
+                `Skip to Final Boss: ${Math.min(100, progress * 100).toFixed(0)}%`;
+
+            ctx.font = '32px Arial';
+            ctx.fillStyle = YELLOW;
+            ctx.fillText(text, SCREEN_WIDTH/2 - 120, 100);
+        }
+    }
+
     draw() {
         // Clear canvas
         ctx.fillStyle = BLACK;
@@ -274,11 +361,17 @@ class Game {
 
         // Draw UI
         this.drawOrbBar();
+        this.drawCheatProgress();
 
         // Draw score
         ctx.fillStyle = WHITE;
         ctx.font = '36px Arial';
         ctx.fillText(`Score: ${this.score}`, 10, 40);
+
+        // Draw instructions
+        ctx.font = '20px Arial';
+        ctx.fillStyle = WHITE;
+        ctx.fillText('WASD to move, Mouse to shoot, P to pause', 10, SCREEN_HEIGHT - 20);
 
         // Draw game state messages
         if (this.gameOver) {
