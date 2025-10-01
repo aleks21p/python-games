@@ -491,7 +491,7 @@ class Game {
         const barWidth = 300;
         const barHeight = 15;
         const barX = 350;  // Moved right to avoid overlap with score
-        const barY = 10;
+        const barY = 40;   // Lowered to align with score and coins
 
         ctx.fillStyle = GRAY;
         ctx.fillRect(barX, barY, barWidth, barHeight);
