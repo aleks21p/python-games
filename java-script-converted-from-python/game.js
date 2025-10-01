@@ -49,35 +49,35 @@ class Game {
                 sponsors: 'Sponsors: Shaun'
             },
             french: {
-                start: 'Démarrer',
+                start: 'Demarrer',
                 options: 'Options',
-                controls: 'Contrôles',
+                controls: 'Controles',
                 cheats: 'Astuces',
-                difficulty: 'Difficulté',
-                credits: 'Crédits',
+                difficulty: 'Difficulte',
+                credits: 'Credits',
                 languages: 'Langues',
-                special: 'Spécial',
+                special: 'Special',
                 score: 'Score',
-                coins: 'Pièces',
+                coins: 'Pieces',
                 level: 'Nv.',
-                gameOver: 'PARTIE TERMINÉE',
+                gameOver: 'PARTIE TERMINEE',
                 finalScore: 'Score Final',
                 pressToRestart: 'Appuyez sur R pour recommencer',
                 paused: 'PAUSE',
                 pressToResume: 'Appuyez sur P pour continuer',
                 pressForMenu: 'ESC pour le Menu',
-                getReady: 'Préparez-vous!',
-                move: 'ZQSD ou Flèches - Déplacer',
+                getReady: 'Preparez-vous!',
+                move: 'ZQSD ou Fleches - Deplacer',
                 aim: 'Souris - Viser et Tirer',
                 pauseGame: 'P - Mettre en Pause',
                 returnToMenu: 'ESC - Retour au Menu',
                 closeOptions: 'Appuyez sur ESC pour fermer les options',
-                selectOption: 'Sélectionnez une option ci-dessus',
+                selectOption: 'Selectionnez une option ci-dessus',
                 easy: 'Facile',
                 normal: 'Normal',
                 hard: 'Difficile',
-                difficultyNote: '(Sélection de difficulté bientôt disponible)',
-                developer: 'Développeur: Aleks P',
+                difficultyNote: '(Selection de difficulte bientot disponible)',
+                developer: 'Developpeur: Aleks P',
                 soundDesign: 'Design Sonore: Claude Sonnet',
                 art: 'Art & Textures: Aleks P',
                 sponsors: 'Sponsors: Shaun'
@@ -88,31 +88,31 @@ class Game {
                 controls: 'Controles',
                 cheats: 'Trucos',
                 difficulty: 'Dificultad',
-                credits: 'Créditos',
+                credits: 'Creditos',
                 languages: 'Idiomas',
                 special: 'Especial',
                 score: 'Puntos',
                 coins: 'Monedas',
                 level: 'Nv.',
                 gameOver: 'JUEGO TERMINADO',
-                finalScore: 'Puntuación Final',
+                finalScore: 'Puntuacion Final',
                 pressToRestart: 'Presiona R para reiniciar',
                 paused: 'PAUSADO',
                 pressToResume: 'Presiona P para continuar',
-                pressForMenu: 'ESC para el Menú',
-                getReady: '¡Prepárate!',
+                pressForMenu: 'ESC para el Menu',
+                getReady: 'Preparate!',
                 move: 'WASD o Flechas - Mover',
-                aim: 'Ratón - Apuntar y Disparar',
+                aim: 'Raton - Apuntar y Disparar',
                 pauseGame: 'P - Pausar Juego',
-                returnToMenu: 'ESC - Volver al Menú',
+                returnToMenu: 'ESC - Volver al Menu',
                 closeOptions: 'Presiona ESC para cerrar opciones',
-                selectOption: 'Selecciona una opción arriba',
-                easy: 'Fácil',
+                selectOption: 'Selecciona una opcion arriba',
+                easy: 'Facil',
                 normal: 'Normal',
-                hard: 'Difícil',
-                difficultyNote: '(Selección de dificultad próximamente)',
+                hard: 'Dificil',
+                difficultyNote: '(Seleccion de dificultad proximamente)',
                 developer: 'Desarrollador: Aleks P',
-                soundDesign: 'Diseño de Sonido: Claude Sonnet',
+                soundDesign: 'Diseno de Sonido: Claude Sonnet',
                 art: 'Arte & Texturas: Aleks P',
                 sponsors: 'Patrocinadores: Shaun'
             }
@@ -1011,8 +1011,8 @@ class Game {
                         // Create language option buttons
                         const languageButtons = {
                             english: { y: contentY, color: '#4CAF50', text: 'English' },
-                            french: { y: contentY + 60, color: '#808080', text: 'Français' },
-                            spanish: { y: contentY + 120, color: '#FF0000', text: 'Español' }
+                            french: { y: contentY + 60, color: '#808080', text: 'French' },
+                            spanish: { y: contentY + 120, color: '#FF0000', text: 'Spanish' }
                         };
 
                         // Draw each language button
@@ -1069,7 +1069,7 @@ class Game {
                         ctx.fillStyle = WHITE;
                         ctx.font = 'bold 24px Arial';
                         ctx.textAlign = 'center';
-                        ctx.fillText('Upside Down Mode', contentX, specialBtn.y + 30);
+                        ctx.fillText('Broken Mode', contentX, specialBtn.y + 30);
                         ctx.textAlign = 'left';
 
                         // Add click handler for special button
