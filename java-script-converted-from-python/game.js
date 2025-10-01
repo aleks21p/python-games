@@ -8,6 +8,15 @@ canvas.height = SCREEN_HEIGHT;
 
 class Game {
     constructor() {
+        // Menu state
+        this.inMenu = true;
+        this.inOptions = false;
+        const buttonWidth = 300;  // Increased from 200 to 300 (1.5x)
+        this.menuButtons = {
+            start: { x: SCREEN_WIDTH/2 - buttonWidth/2, y: SCREEN_HEIGHT/2 - 50, width: buttonWidth, height: 60 },
+            options: { x: SCREEN_WIDTH/2 - buttonWidth/2, y: SCREEN_HEIGHT/2 + 50, width: buttonWidth, height: 60 }
+        };
+
         this.player = new Player(SCREEN_WIDTH / 2, SCREEN_HEIGHT / 2);
         this.bullets = [];
         this.zombies = [];
@@ -72,12 +81,18 @@ class Game {
                 this.tKeyPressed = true;
             }
 
-            if (e.key === 'p' || e.key === 'P') {
+            if (!this.inMenu && e.key === 'p' || e.key === 'P') {
                 this.paused = !this.paused;
             }
             if (e.key === 'r' || e.key === 'R') {
                 if (this.gameOver) {
                     this.reset();
+                }
+            }
+            if (e.key === 'Escape') {
+                if (!this.inMenu) {
+                    this.inMenu = true;
+                    this.paused = true;
                 }
             }
         });
@@ -114,6 +129,33 @@ class Game {
                 x: e.clientX - rect.left,
                 y: e.clientY - rect.top
             };
+        });
+
+        // Mouse click for menu buttons
+        canvas.addEventListener('click', (e) => {
+            if (this.inMenu) {
+                const rect = canvas.getBoundingClientRect();
+                const clickX = e.clientX - rect.left;
+                const clickY = e.clientY - rect.top;
+
+                // Check start button
+                const startBtn = this.menuButtons.start;
+                if (clickX >= startBtn.x && clickX <= startBtn.x + startBtn.width &&
+                    clickY >= startBtn.y && clickY <= startBtn.y + startBtn.height) {
+                    this.inMenu = false;
+                    this.paused = false;
+                    if (this.gameOver) {
+                        this.reset();
+                    }
+                }
+
+                // Check options button
+                const optionsBtn = this.menuButtons.options;
+                if (clickX >= optionsBtn.x && clickX <= optionsBtn.x + optionsBtn.width &&
+                    clickY >= optionsBtn.y && clickY <= optionsBtn.y + optionsBtn.height) {
+                    this.inOptions = !this.inOptions;
+                }
+            }
         });
     }
 
@@ -152,6 +194,8 @@ class Game {
         this.zombiesSpawned = 0;
         this.greenSpawnCount = 0;
         this.orangeSpawnCount = 0;
+        this.inMenu = true;  // Return to menu on reset
+        this.inOptions = false;
         
         // Reset boss states
         this.boss = null;
@@ -402,6 +446,9 @@ class Game {
                             if (zombie.isBuff) {
                                 this.spawnOrbs(zombie.x, zombie.y, 7);
                                 this.score += 80;
+                            } else if (zombie.isGreen) {
+                                this.spawnOrbs(zombie.x, zombie.y, 4);  // Double orbs for green enemies
+                                this.score += 10;
                             } else {
                                 this.spawnOrbs(zombie.x, zombie.y, 2);
                                 this.score += 10;
@@ -515,7 +562,7 @@ class Game {
     }
 
     update() {
-        if (this.gameOver || this.paused) return;
+        if (this.inMenu || this.gameOver || this.paused) return;
 
         const currentTime = Date.now();
 
@@ -640,7 +687,70 @@ class Game {
         }
     }
 
+    drawMenu() {
+        // Clear canvas with gray background
+        ctx.fillStyle = '#808080';  // Gray background
+        ctx.fillRect(0, 0, SCREEN_WIDTH, SCREEN_HEIGHT);
+
+        // Draw title
+        ctx.fillStyle = WHITE;
+        ctx.font = '64px Arial';
+        const title = 'Zombie Shooter';
+        const titleWidth = ctx.measureText(title).width;
+        ctx.fillText(title, (SCREEN_WIDTH - titleWidth) / 2, SCREEN_HEIGHT / 4);
+
+        // Draw Start button (green)
+        const startBtn = this.menuButtons.start;
+        ctx.fillStyle = '#00AA00';  // Green
+        ctx.fillRect(startBtn.x, startBtn.y, startBtn.width, startBtn.height);
+        ctx.strokeStyle = WHITE;
+        ctx.lineWidth = 2;
+        ctx.strokeRect(startBtn.x, startBtn.y, startBtn.width, startBtn.height);
+        
+        // Start text
+        ctx.fillStyle = WHITE;
+        ctx.font = '32px Arial';
+        const startText = 'Start';
+        const startTextWidth = ctx.measureText(startText).width;
+        ctx.fillText(startText, startBtn.x + (startBtn.width - startTextWidth) / 2, startBtn.y + 40);
+
+        // Draw Options button (red)
+        const optionsBtn = this.menuButtons.options;
+        ctx.fillStyle = '#AA0000';  // Red
+        ctx.fillRect(optionsBtn.x, optionsBtn.y, optionsBtn.width, optionsBtn.height);
+        ctx.strokeStyle = WHITE;
+        ctx.strokeRect(optionsBtn.x, optionsBtn.y, optionsBtn.width, optionsBtn.height);
+        
+        // Options text
+        ctx.fillStyle = WHITE;
+        const optionsText = 'Options';
+        const optionsTextWidth = ctx.measureText(optionsText).width;
+        ctx.fillText(optionsText, optionsBtn.x + (optionsBtn.width - optionsTextWidth) / 2, optionsBtn.y + 40);
+
+        // Draw Options menu if active
+        if (this.inOptions) {
+            ctx.fillStyle = 'rgba(0, 0, 0, 0.8)';
+            ctx.fillRect(SCREEN_WIDTH/4, SCREEN_HEIGHT/4, SCREEN_WIDTH/2, SCREEN_HEIGHT/2);
+            ctx.strokeStyle = WHITE;
+            ctx.strokeRect(SCREEN_WIDTH/4, SCREEN_HEIGHT/4, SCREEN_WIDTH/2, SCREEN_HEIGHT/2);
+            
+            ctx.fillStyle = WHITE;
+            ctx.font = '24px Arial';
+            ctx.fillText('Controls:', SCREEN_WIDTH/4 + 20, SCREEN_HEIGHT/4 + 40);
+            ctx.fillText('WASD or Arrow Keys - Move', SCREEN_WIDTH/4 + 20, SCREEN_HEIGHT/4 + 80);
+            ctx.fillText('Mouse - Aim and Shoot', SCREEN_WIDTH/4 + 20, SCREEN_HEIGHT/4 + 120);
+            ctx.fillText('P - Pause Game', SCREEN_WIDTH/4 + 20, SCREEN_HEIGHT/4 + 160);
+            ctx.fillText('ESC - Return to Menu', SCREEN_WIDTH/4 + 20, SCREEN_HEIGHT/4 + 200);
+            ctx.fillText('Click anywhere to close', SCREEN_WIDTH/4 + 20, SCREEN_HEIGHT/4 + 240);
+        }
+    }
+
     draw() {
+        if (this.inMenu) {
+            this.drawMenu();
+            return;
+        }
+
         // Clear canvas
         ctx.fillStyle = BLACK;
         ctx.fillRect(0, 0, SCREEN_WIDTH, SCREEN_HEIGHT);
