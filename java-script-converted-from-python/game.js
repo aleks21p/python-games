@@ -796,6 +796,14 @@ class Game {
                 // Clear all progress
                 this.coins = 0;
                 this.saveCoins();
+                
+                // Clear all purchased skins
+                for (const itemId in this.shopItems) {
+                    this.shopItems[itemId].owned = false;
+                }
+                this.activePlayerSkin = 'default';
+                this.saveSkins();
+                
                 this.reset();
                 this.cheat4Active = false;
             }
