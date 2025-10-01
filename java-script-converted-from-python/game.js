@@ -13,6 +13,8 @@ class Game {
         this.zombies = [];
         this.orbs = [];
         this.score = 0;
+        this.coins = this.loadCoins(); // Load saved coins
+        this.lastCoinScore = 0; // Track when to award next coin
         this.zombieSpawnTimer = 0;
         this.zombieSpawnDelay = 2000;
         this.zombiesSpawned = 0;
@@ -100,12 +102,32 @@ class Game {
         });
     }
 
+    loadCoins() {
+        const savedCoins = localStorage.getItem('zombieShooterCoins');
+        return savedCoins ? parseInt(savedCoins) : 0;
+    }
+
+    saveCoins() {
+        localStorage.setItem('zombieShooterCoins', this.coins.toString());
+    }
+
+    updateCoins() {
+        // Award 1 coin for every 1000 score points
+        const newCoins = Math.floor(this.score / 1000);
+        if (newCoins > Math.floor(this.lastCoinScore / 1000)) {
+            this.coins += newCoins - Math.floor(this.lastCoinScore / 1000);
+            this.saveCoins();
+        }
+        this.lastCoinScore = this.score;
+    }
+
     reset() {
         this.player = new Player(SCREEN_WIDTH / 2, SCREEN_HEIGHT / 2);
         this.bullets = [];
         this.zombies = [];
         this.orbs = [];
         this.score = 0;
+        this.lastCoinScore = 0;
         this.level = 1;
         this.orbsCollected = 0;
         this.orbsNeeded = 10;
@@ -115,6 +137,13 @@ class Game {
         this.zombiesSpawned = 0;
         this.greenSpawnCount = 0;
         this.orangeSpawnCount = 0;
+        
+        // Reset boss state
+        this.boss = null;
+        this.bossSpawned = false;
+        this.bossDefeated = false;
+        
+        // Reset cheat state
         this.cheatActive = false;
         this.cheat2Active = false;
         this.tKeyPressed = false;
@@ -396,6 +425,9 @@ class Game {
 
         const currentTime = Date.now();
 
+        // Update coins
+        this.updateCoins();
+
         // Update cheat codes
         this.updateCheatCodes();
 
@@ -511,10 +543,13 @@ class Game {
         this.drawCheatProgress();
         this.drawBossBar();
 
-        // Draw score
+        // Draw score and coins
         ctx.fillStyle = WHITE;
         ctx.font = '36px Arial';
         ctx.fillText(`Score: ${this.score}`, 10, 40);
+        ctx.font = '28px Arial';
+        ctx.fillStyle = GOLD;
+        ctx.fillText(`Coins: ${this.coins}`, 10, 80);
 
         // Draw instructions
         ctx.font = '20px Arial';
