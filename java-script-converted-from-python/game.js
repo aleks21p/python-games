@@ -11,10 +11,23 @@ class Game {
         // Menu state
         this.inMenu = true;
         this.inOptions = false;
+        this.activeOptionTab = '';  // Can be: 'controls', 'cheats', 'difficulty', 'credits'
         const buttonWidth = 300;  // Increased from 200 to 300 (1.5x)
         this.menuButtons = {
             start: { x: SCREEN_WIDTH/2 - buttonWidth/2, y: SCREEN_HEIGHT/2 - 50, width: buttonWidth, height: 60 },
             options: { x: SCREEN_WIDTH/2 - buttonWidth/2, y: SCREEN_HEIGHT/2 + 50, width: buttonWidth, height: 60 }
+        };
+        
+        // Options menu buttons
+        const optionButtonWidth = 200;
+        const optionButtonHeight = 50;
+        const optionButtonSpacing = 30;
+        const startY = SCREEN_HEIGHT/2 - 100;
+        this.optionButtons = {
+            controls: { x: SCREEN_WIDTH/2 - optionButtonWidth - 20, y: startY, width: optionButtonWidth, height: optionButtonHeight },
+            cheats: { x: SCREEN_WIDTH/2 + 20, y: startY, width: optionButtonWidth, height: optionButtonHeight },
+            difficulty: { x: SCREEN_WIDTH/2 - optionButtonWidth - 20, y: startY + optionButtonHeight + optionButtonSpacing, width: optionButtonWidth, height: optionButtonHeight },
+            credits: { x: SCREEN_WIDTH/2 + 20, y: startY + optionButtonHeight + optionButtonSpacing, width: optionButtonWidth, height: optionButtonHeight }
         };
 
         this.player = new Player(SCREEN_WIDTH / 2, SCREEN_HEIGHT / 2);
@@ -154,6 +167,18 @@ class Game {
                 if (clickX >= optionsBtn.x && clickX <= optionsBtn.x + optionsBtn.width &&
                     clickY >= optionsBtn.y && clickY <= optionsBtn.y + optionsBtn.height) {
                     this.inOptions = !this.inOptions;
+                    this.activeOptionTab = '';  // Reset active tab when opening/closing options
+                }
+
+                // Check option tab buttons when in options menu
+                if (this.inOptions) {
+                    for (const [tabName, btn] of Object.entries(this.optionButtons)) {
+                        if (clickX >= btn.x && clickX <= btn.x + btn.width &&
+                            clickY >= btn.y && clickY <= btn.y + btn.height) {
+                            this.activeOptionTab = this.activeOptionTab === tabName ? '' : tabName;
+                            break;
+                        }
+                    }
                 }
             }
         });
@@ -736,58 +761,77 @@ class Game {
 
         // Draw Options menu if active
         if (this.inOptions) {
-            // Semi-transparent black background covering most of the screen
+            // Semi-transparent black background
             ctx.fillStyle = 'rgba(0, 0, 0, 0.9)';
             ctx.fillRect(100, 50, SCREEN_WIDTH - 200, SCREEN_HEIGHT - 100);
             ctx.strokeStyle = WHITE;
             ctx.strokeRect(100, 50, SCREEN_WIDTH - 200, SCREEN_HEIGHT - 100);
 
+            // Title
             ctx.fillStyle = WHITE;
             ctx.font = '32px Arial';
-            
-            // Title
             ctx.fillText('Options', SCREEN_WIDTH/2 - 50, 90);
-            
-            // Controls Section
-            ctx.font = '24px Arial';
-            ctx.fillStyle = '#FFA500';  // Orange header
-            ctx.fillText('Controls:', 150, 140);
-            ctx.fillStyle = WHITE;
-            ctx.fillText('WASD or Arrow Keys - Move', 150, 170);
-            ctx.fillText('Mouse - Aim and Shoot', 150, 200);
-            ctx.fillText('P - Pause Game', 150, 230);
-            ctx.fillText('ESC - Return to Menu', 150, 260);
 
-            // Cheat Codes Section
-            ctx.fillStyle = '#FFA500';
-            ctx.fillText('Cheat Codes:', 150, 320);
-            ctx.fillStyle = WHITE;
-            ctx.fillText('T + 1 - Skip to Level 15', 150, 350);
-            ctx.fillText('T + 2 - Skip to Final Boss', 150, 380);
-            ctx.fillText('T + 3 - Get 10000 Coins', 150, 410);
-            ctx.fillText('T + 4 - Reset All Progress', 150, 440);
+            // Draw option buttons
+            for (const [tabName, btn] of Object.entries(this.optionButtons)) {
+                ctx.fillStyle = this.activeOptionTab === tabName ? '#AA0000' : '#666666';
+                ctx.fillRect(btn.x, btn.y, btn.width, btn.height);
+                ctx.strokeStyle = WHITE;
+                ctx.strokeRect(btn.x, btn.y, btn.width, btn.height);
+                
+                ctx.fillStyle = WHITE;
+                ctx.font = '24px Arial';
+                const text = tabName.charAt(0).toUpperCase() + tabName.slice(1);
+                const textWidth = ctx.measureText(text).width;
+                ctx.fillText(text, btn.x + (btn.width - textWidth)/2, btn.y + 35);
+            }
 
-            // Difficulty Section (Decorative)
-            ctx.fillStyle = '#FFA500';
-            ctx.fillText('Difficulty:', SCREEN_WIDTH/2 + 100, 140);
-            ctx.fillStyle = '#808080';  // Gray for non-functional options
-            ctx.fillText('Easy', SCREEN_WIDTH/2 + 100, 170);
-            ctx.fillText('Normal', SCREEN_WIDTH/2 + 100, 200);
-            ctx.fillText('Hard', SCREEN_WIDTH/2 + 100, 230);
-            ctx.fillText('(Coming Soon)', SCREEN_WIDTH/2 + 100, 260);
+            // Draw content based on active tab
+            if (this.activeOptionTab) {
+                const contentX = SCREEN_WIDTH/2 - 300;
+                const contentY = SCREEN_HEIGHT/2 + 50;
+                ctx.font = '24px Arial';
+                ctx.fillStyle = WHITE;
 
-            // Credits Section
-            ctx.fillStyle = '#FFA500';
-            ctx.fillText('Credits:', SCREEN_WIDTH/2 + 100, 320);
-            ctx.fillStyle = WHITE;
-            ctx.fillText('Game Developer: Aleks P', SCREEN_WIDTH/2 + 100, 350);
-            ctx.fillText('Sound Design: Claude Sonnet', SCREEN_WIDTH/2 + 100, 380);
-            ctx.fillText('Art & Textures: Aleks P', SCREEN_WIDTH/2 + 100, 410);
-            ctx.fillText('Sponsors: Shaun', SCREEN_WIDTH/2 + 100, 440);
+                switch(this.activeOptionTab) {
+                    case 'controls':
+                        ctx.fillText('WASD or Arrow Keys - Move', contentX, contentY);
+                        ctx.fillText('Mouse - Aim and Shoot', contentX, contentY + 40);
+                        ctx.fillText('P - Pause Game', contentX, contentY + 80);
+                        ctx.fillText('ESC - Return to Menu', contentX, contentY + 120);
+                        break;
+
+                    case 'cheats':
+                        ctx.fillText('T + 1 - Skip to Level 15', contentX, contentY);
+                        ctx.fillText('T + 2 - Skip to Final Boss', contentX, contentY + 40);
+                        ctx.fillText('T + 3 - Get 10000 Coins', contentX, contentY + 80);
+                        ctx.fillText('T + 4 - Reset All Progress', contentX, contentY + 120);
+                        break;
+
+                    case 'difficulty':
+                        ctx.fillStyle = '#808080';
+                        ctx.fillText('Easy (Coming Soon)', contentX, contentY);
+                        ctx.fillText('Normal (Coming Soon)', contentX, contentY + 40);
+                        ctx.fillText('Hard (Coming Soon)', contentX, contentY + 80);
+                        break;
+
+                    case 'credits':
+                        ctx.fillText('Game Developer: Aleks P', contentX, contentY);
+                        ctx.fillText('Sound Design: Claude Sonnet', contentX, contentY + 40);
+                        ctx.fillText('Art & Textures: Aleks P', contentX, contentY + 80);
+                        ctx.fillText('Sponsors: Shaun', contentX, contentY + 120);
+                        break;
+                }
+            } else {
+                ctx.fillStyle = '#808080';
+                ctx.font = '24px Arial';
+                ctx.fillText('Select an option above to view details', SCREEN_WIDTH/2 - 180, SCREEN_HEIGHT/2 + 50);
+            }
 
             // Close instruction at bottom
             ctx.fillStyle = '#808080';
-            ctx.fillText('Click anywhere or press ESC to close', SCREEN_WIDTH/2 - 150, SCREEN_HEIGHT - 80);
+            ctx.font = '20px Arial';
+            ctx.fillText('Press ESC to close options menu', SCREEN_WIDTH/2 - 120, SCREEN_HEIGHT - 80);
         }
     }
 
