@@ -160,9 +160,9 @@ class Game {
                 const clickX = e.clientX - rect.left;
                 const clickY = e.clientY - rect.top;
 
-                // Check start button
+                // Check start button (only if options menu is not open)
                 const startBtn = this.menuButtons.start;
-                if (clickX >= startBtn.x && clickX <= startBtn.x + startBtn.width &&
+                if (!this.inOptions && clickX >= startBtn.x && clickX <= startBtn.x + startBtn.width &&
                     clickY >= startBtn.y && clickY <= startBtn.y + startBtn.height) {
                     if (this.gameOver) {
                         this.reset();
@@ -865,7 +865,7 @@ class Game {
                             // Button background
                             const btnWidth = 200;
                             const btnHeight = 40;
-                            const btnX = contentX + contentBox.width/2 - btnWidth/2;
+                            const btnX = contentX - btnWidth/2;  // Center horizontally relative to contentX
                             
                             ctx.fillStyle = button.color;
                             ctx.fillRect(btnX, button.y - 30, btnWidth, btnHeight);
@@ -878,8 +878,9 @@ class Game {
                             // Button text
                             ctx.fillStyle = WHITE;
                             ctx.font = 'bold 24px Arial';
-                            const textWidth = ctx.measureText(button.text).width;
-                            ctx.fillText(button.text, btnX + (btnWidth - textWidth)/2, button.y);
+                            ctx.textAlign = 'center';  // Center text
+                            ctx.fillText(button.text, contentX, button.y);
+                            ctx.textAlign = 'left';  // Reset text alignment
                         }
 
                         // Add note at bottom
