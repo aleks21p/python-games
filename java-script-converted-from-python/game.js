@@ -165,9 +165,12 @@ class Game {
                     if (this.gameOver) {
                         this.reset();
                     }
+                    // Initialize countdown and game state
                     this.countdownActive = true;
-                    this.countdownTime = 3;
                     this.countdownStart = Date.now();
+                    this.paused = true;  // Keep paused during countdown
+                    this.inOptions = false;  // Close options if open
+                    this.activeOptionTab = '';  // Reset active tab
                 }
 
                 // Check options button
@@ -595,9 +598,21 @@ class Game {
     }
 
     update() {
-        if (this.inMenu || this.gameOver || (this.paused && !this.countdownActive)) return;
-
         const currentTime = Date.now();
+
+        // Update countdown if active
+        if (this.countdownActive) {
+            const elapsed = currentTime - this.countdownStart;
+            if (elapsed >= 3000) {  // 3 seconds
+                this.countdownActive = false;
+                this.inMenu = false;
+                this.paused = false;
+            }
+            return;
+        }
+
+        // Don't update game state if paused or in menu
+        if (this.inMenu || this.gameOver || this.paused) return;
 
         // Update coins
         this.updateCoins();
@@ -888,16 +903,35 @@ class Game {
     }
 
     draw() {
+        // Clear canvas
+        ctx.fillStyle = BLACK;
+        ctx.fillRect(0, 0, SCREEN_WIDTH, SCREEN_HEIGHT);
+
         if (this.inMenu) {
             this.drawMenu();
             return;
         }
 
-        // Clear canvas
-        ctx.fillStyle = BLACK;
-        ctx.fillRect(0, 0, SCREEN_WIDTH, SCREEN_HEIGHT);
+        // Draw game objects
+        this.orbs.forEach(orb => orb.draw(ctx));
+        this.zombies.forEach(zombie => zombie.draw(ctx));
+        this.bullets.forEach(bullet => bullet.draw(ctx));
+        this.player.draw(ctx);
 
-        // Handle countdown
+        // Draw UI elements
+        this.drawOrbBar();
+        this.drawCheatProgress();
+        this.drawBossBar();
+
+        // Draw score and coins
+        ctx.fillStyle = WHITE;
+        ctx.font = '36px Arial';
+        ctx.fillText(`Score: ${this.score}`, 10, 40);
+        ctx.font = '28px Arial';
+        ctx.fillStyle = GOLD;
+        ctx.fillText(`Coins: ${this.coins}`, 10, 80);
+
+        // Handle countdown overlay
         if (this.countdownActive) {
             const elapsed = Date.now() - this.countdownStart;
             const remainingTime = Math.ceil(3 - elapsed/1000);
@@ -911,14 +945,36 @@ class Game {
                 ctx.fillStyle = 'rgba(0, 0, 0, 0.7)';
                 ctx.fillRect(0, 0, SCREEN_WIDTH, SCREEN_HEIGHT);
                 
-                // Draw countdown number
+                // Draw countdown number with animation
                 ctx.fillStyle = WHITE;
-                ctx.font = '128px Arial';
+                ctx.font = 'bold 128px Arial';
+
+                // Scale animation
+                const animProgress = (elapsed % 1000) / 1000;  // 0 to 1 each second
+                const scale = 1 + Math.sin(animProgress * Math.PI) * 0.2;  // Scale between 1 and 1.2
+                
+                ctx.save();
+                ctx.translate(SCREEN_WIDTH/2, SCREEN_HEIGHT/2);
+                ctx.scale(scale, scale);
+                
                 const text = remainingTime.toString();
                 const textWidth = ctx.measureText(text).width;
-                ctx.fillText(text, (SCREEN_WIDTH - textWidth)/2, SCREEN_HEIGHT/2);
-                return;
+                ctx.fillText(text, -textWidth/2, 50);  // Centered text
+
+                // Draw "Get Ready!" text
+                ctx.font = 'bold 48px Arial';
+                const readyText = "Get Ready!";
+                const readyWidth = ctx.measureText(readyText).width;
+                ctx.fillText(readyText, -readyWidth/2, -100);
+
+                ctx.restore();
             }
+            return;
+        }
+
+        // Draw pause menu if game is paused
+        if (this.paused && !this.countdownActive) {
+            this.drawPauseMenu();
         }
 
         // Draw game objects
