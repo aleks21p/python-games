@@ -11,7 +11,115 @@ class Game {
         // Menu state
         this.inMenu = true;
         this.inOptions = false;
-        this.activeOptionTab = '';  // Can be: 'controls', 'cheats', 'difficulty', 'credits'
+        
+        // Language translations
+        this.translations = {
+            english: {
+                start: 'Start',
+                options: 'Options',
+                controls: 'Controls',
+                cheats: 'Cheats',
+                difficulty: 'Difficulty',
+                credits: 'Credits',
+                languages: 'Languages',
+                special: 'Special',
+                score: 'Score',
+                coins: 'Coins',
+                level: 'Lv.',
+                gameOver: 'GAME OVER',
+                finalScore: 'Final Score',
+                pressToRestart: 'Press R to restart',
+                paused: 'PAUSED',
+                pressToResume: 'Press P to Resume',
+                pressForMenu: 'Press ESC for Menu',
+                getReady: 'Get Ready!',
+                move: 'WASD or Arrow Keys - Move',
+                aim: 'Mouse - Aim and Shoot',
+                pauseGame: 'P - Pause Game',
+                returnToMenu: 'ESC - Return to Menu',
+                closeOptions: 'Press ESC to close options menu',
+                selectOption: 'Select an option above to view details',
+                easy: 'Easy',
+                normal: 'Normal',
+                hard: 'Hard',
+                difficultyNote: '(Difficulty selection coming soon)',
+                developer: 'Game Developer: Aleks P',
+                soundDesign: 'Sound Design: Claude Sonnet',
+                art: 'Art & Textures: Aleks P',
+                sponsors: 'Sponsors: Shaun'
+            },
+            french: {
+                start: 'Démarrer',
+                options: 'Options',
+                controls: 'Contrôles',
+                cheats: 'Astuces',
+                difficulty: 'Difficulté',
+                credits: 'Crédits',
+                languages: 'Langues',
+                special: 'Spécial',
+                score: 'Score',
+                coins: 'Pièces',
+                level: 'Nv.',
+                gameOver: 'PARTIE TERMINÉE',
+                finalScore: 'Score Final',
+                pressToRestart: 'Appuyez sur R pour recommencer',
+                paused: 'PAUSE',
+                pressToResume: 'Appuyez sur P pour continuer',
+                pressForMenu: 'ESC pour le Menu',
+                getReady: 'Préparez-vous!',
+                move: 'ZQSD ou Flèches - Déplacer',
+                aim: 'Souris - Viser et Tirer',
+                pauseGame: 'P - Mettre en Pause',
+                returnToMenu: 'ESC - Retour au Menu',
+                closeOptions: 'Appuyez sur ESC pour fermer les options',
+                selectOption: 'Sélectionnez une option ci-dessus',
+                easy: 'Facile',
+                normal: 'Normal',
+                hard: 'Difficile',
+                difficultyNote: '(Sélection de difficulté bientôt disponible)',
+                developer: 'Développeur: Aleks P',
+                soundDesign: 'Design Sonore: Claude Sonnet',
+                art: 'Art & Textures: Aleks P',
+                sponsors: 'Sponsors: Shaun'
+            },
+            spanish: {
+                start: 'Iniciar',
+                options: 'Opciones',
+                controls: 'Controles',
+                cheats: 'Trucos',
+                difficulty: 'Dificultad',
+                credits: 'Créditos',
+                languages: 'Idiomas',
+                special: 'Especial',
+                score: 'Puntos',
+                coins: 'Monedas',
+                level: 'Nv.',
+                gameOver: 'JUEGO TERMINADO',
+                finalScore: 'Puntuación Final',
+                pressToRestart: 'Presiona R para reiniciar',
+                paused: 'PAUSADO',
+                pressToResume: 'Presiona P para continuar',
+                pressForMenu: 'ESC para el Menú',
+                getReady: '¡Prepárate!',
+                move: 'WASD o Flechas - Mover',
+                aim: 'Ratón - Apuntar y Disparar',
+                pauseGame: 'P - Pausar Juego',
+                returnToMenu: 'ESC - Volver al Menú',
+                closeOptions: 'Presiona ESC para cerrar opciones',
+                selectOption: 'Selecciona una opción arriba',
+                easy: 'Fácil',
+                normal: 'Normal',
+                hard: 'Difícil',
+                difficultyNote: '(Selección de dificultad próximamente)',
+                developer: 'Desarrollador: Aleks P',
+                soundDesign: 'Diseño de Sonido: Claude Sonnet',
+                art: 'Arte & Texturas: Aleks P',
+                sponsors: 'Patrocinadores: Shaun'
+            }
+        };
+        this.activeOptionTab = '';  // Can be: 'controls', 'cheats', 'difficulty', 'credits', 'languages', 'special'
+        this.selectedLanguage = 'english';  // Default language
+        this.isUpsideDown = false;  // Special effect toggle
         this.countdownActive = false;
         this.countdownTime = 0;
         this.countdownStart = 0;
@@ -27,12 +135,14 @@ class Game {
         const optionButtonWidth = 200;
         const optionButtonHeight = 50;
         const optionButtonSpacing = 30;
-        const startY = SCREEN_HEIGHT/2 - 100;
+        const startY = SCREEN_HEIGHT/2 - 150; // Moved up to accommodate new buttons
         this.optionButtons = {
             controls: { x: SCREEN_WIDTH/2 - optionButtonWidth - 20, y: startY, width: optionButtonWidth, height: optionButtonHeight },
             cheats: { x: SCREEN_WIDTH/2 + 20, y: startY, width: optionButtonWidth, height: optionButtonHeight },
             difficulty: { x: SCREEN_WIDTH/2 - optionButtonWidth - 20, y: startY + optionButtonHeight + optionButtonSpacing, width: optionButtonWidth, height: optionButtonHeight },
-            credits: { x: SCREEN_WIDTH/2 + 20, y: startY + optionButtonHeight + optionButtonSpacing, width: optionButtonWidth, height: optionButtonHeight }
+            credits: { x: SCREEN_WIDTH/2 + 20, y: startY + optionButtonHeight + optionButtonSpacing, width: optionButtonWidth, height: optionButtonHeight },
+            languages: { x: SCREEN_WIDTH/2 - optionButtonWidth - 20, y: startY + (optionButtonHeight + optionButtonSpacing) * 2, width: optionButtonWidth, height: optionButtonHeight },
+            special: { x: SCREEN_WIDTH/2 + 20, y: startY + (optionButtonHeight + optionButtonSpacing) * 2, width: optionButtonWidth, height: optionButtonHeight }
         };
 
         this.player = new Player(SCREEN_WIDTH / 2, SCREEN_HEIGHT / 2);
@@ -748,7 +858,7 @@ class Game {
         // Draw coins in top-right corner
         ctx.font = '28px Arial';
         ctx.fillStyle = GOLD;
-        const coinText = `Coins: ${this.coins}`;
+        const coinText = `${this.translations[this.selectedLanguage].coins}: ${this.coins}`;
         const coinTextWidth = ctx.measureText(coinText).width;
         ctx.fillText(coinText, SCREEN_WIDTH - coinTextWidth - 20, 40);
 
@@ -896,12 +1006,100 @@ class Game {
                         ctx.fillText('Art & Textures: Aleks P', contentX, contentY + 80);
                         ctx.fillText('Sponsors: Shaun', contentX, contentY + 120);
                         break;
+
+                    case 'languages':
+                        // Create language option buttons
+                        const languageButtons = {
+                            english: { y: contentY, color: '#4CAF50', text: 'English' },
+                            french: { y: contentY + 60, color: '#808080', text: 'Français' },
+                            spanish: { y: contentY + 120, color: '#FF0000', text: 'Español' }
+                        };
+
+                        // Draw each language button
+                        for (const [lang, button] of Object.entries(languageButtons)) {
+                            const btnWidth = 200;
+                            const btnHeight = 40;
+                            const btnX = contentX - btnWidth/2;
+                            
+                            // Highlight selected language
+                            ctx.fillStyle = this.selectedLanguage === lang ? '#FFFF00' : button.color;
+                            ctx.fillRect(btnX, button.y - 30, btnWidth, btnHeight);
+                            
+                            ctx.strokeStyle = WHITE;
+                            ctx.lineWidth = 2;
+                            ctx.strokeRect(btnX, button.y - 30, btnWidth, btnHeight);
+
+                            ctx.fillStyle = WHITE;
+                            ctx.font = 'bold 24px Arial';
+                            ctx.textAlign = 'center';
+                            ctx.fillText(button.text, contentX, button.y);
+                            ctx.textAlign = 'left';
+
+                            // Add click handler for language buttons
+                            canvas.addEventListener('click', (e) => {
+                                const rect = canvas.getBoundingClientRect();
+                                const clickX = e.clientX - rect.left;
+                                const clickY = e.clientY - rect.top;
+                                
+                                if (this.activeOptionTab === 'languages' &&
+                                    clickX >= btnX && clickX <= btnX + btnWidth &&
+                                    clickY >= button.y - 30 && clickY <= button.y + 10) {
+                                    this.selectedLanguage = lang;
+                                }
+                            });
+                        }
+                        break;
+
+                    case 'special':
+                        // Special effects button
+                        const specialBtn = {
+                            x: contentX - 100,
+                            y: contentY + 50,
+                            width: 200,
+                            height: 40
+                        };
+
+                        // Draw special button
+                        ctx.fillStyle = this.isUpsideDown ? '#FFFF00' : '#808080';
+                        ctx.fillRect(specialBtn.x, specialBtn.y, specialBtn.width, specialBtn.height);
+                        ctx.strokeStyle = WHITE;
+                        ctx.strokeRect(specialBtn.x, specialBtn.y, specialBtn.width, specialBtn.height);
+
+                        // Button text
+                        ctx.fillStyle = WHITE;
+                        ctx.font = 'bold 24px Arial';
+                        ctx.textAlign = 'center';
+                        ctx.fillText('Upside Down Mode', contentX, specialBtn.y + 30);
+                        ctx.textAlign = 'left';
+
+                        // Add click handler for special button
+                        canvas.addEventListener('click', (e) => {
+                            const rect = canvas.getBoundingClientRect();
+                            const clickX = e.clientX - rect.left;
+                            const clickY = e.clientY - rect.top;
+                            
+                            if (this.activeOptionTab === 'special' &&
+                                clickX >= specialBtn.x && clickX <= specialBtn.x + specialBtn.width &&
+                                clickY >= specialBtn.y && clickY <= specialBtn.y + specialBtn.height) {
+                                this.isUpsideDown = !this.isUpsideDown;
+                                
+                                // Apply or remove the upside-down effect
+                                if (this.isUpsideDown) {
+                                    ctx.translate(SCREEN_WIDTH, SCREEN_HEIGHT);
+                                    ctx.rotate(Math.PI);
+                                } else {
+                                    ctx.setTransform(1, 0, 0, 1, 0, 0);
+                                }
+                            }
+                        });
+                        break;
                 }
                 ctx.textAlign = 'left';  // Reset text alignment
             } else {
                 ctx.fillStyle = '#808080';
                 ctx.font = '24px Arial';
-                ctx.fillText('Select an option above to view details', SCREEN_WIDTH/2 - 180, SCREEN_HEIGHT/2 + 50);
+                const text = this.translations[this.selectedLanguage].selectOption;
+                ctx.fillText(text, SCREEN_WIDTH/2 - 180, SCREEN_HEIGHT/2 + 50);
             }
 
             // Close instruction at bottom
@@ -954,6 +1152,15 @@ class Game {
     }
 
     draw() {
+        // Save the current transform
+        ctx.save();
+        
+        // Apply upside-down effect if enabled
+        if (this.isUpsideDown) {
+            ctx.translate(SCREEN_WIDTH, SCREEN_HEIGHT);
+            ctx.rotate(Math.PI);
+        }
+        
         // Clear canvas
         ctx.fillStyle = BLACK;
         ctx.fillRect(0, 0, SCREEN_WIDTH, SCREEN_HEIGHT);
@@ -1088,17 +1295,20 @@ class Game {
         if (this.gameOver) {
             ctx.fillStyle = WHITE;
             ctx.font = '48px Arial';
-            ctx.fillText('GAME OVER', SCREEN_WIDTH/2 - 120, SCREEN_HEIGHT/2);
+            ctx.fillText(this.translations[this.selectedLanguage].gameOver, SCREEN_WIDTH/2 - 120, SCREEN_HEIGHT/2);
             ctx.font = '24px Arial';
-            ctx.fillText(`Final Score: ${this.score}`, SCREEN_WIDTH/2 - 70, SCREEN_HEIGHT/2 + 40);
-            ctx.fillText('Press R to restart', SCREEN_WIDTH/2 - 80, SCREEN_HEIGHT/2 + 80);
+            ctx.fillText(`${this.translations[this.selectedLanguage].finalScore}: ${this.score}`, SCREEN_WIDTH/2 - 70, SCREEN_HEIGHT/2 + 40);
+            ctx.fillText(this.translations[this.selectedLanguage].pressToRestart, SCREEN_WIDTH/2 - 80, SCREEN_HEIGHT/2 + 80);
         } else if (this.paused) {
             ctx.fillStyle = WHITE;
             ctx.font = '48px Arial';
-            ctx.fillText('PAUSED', SCREEN_WIDTH/2 - 80, SCREEN_HEIGHT/2);
+            ctx.fillText(this.translations[this.selectedLanguage].paused, SCREEN_WIDTH/2 - 80, SCREEN_HEIGHT/2);
             ctx.font = '24px Arial';
-            ctx.fillText('Press P to resume', SCREEN_WIDTH/2 - 80, SCREEN_HEIGHT/2 + 40);
+            ctx.fillText(this.translations[this.selectedLanguage].pressToResume, SCREEN_WIDTH/2 - 80, SCREEN_HEIGHT/2 + 40);
         }
+        
+        // Restore the original transform
+        ctx.restore();
     }
 
     gameLoop() {
