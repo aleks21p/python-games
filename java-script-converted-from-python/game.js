@@ -170,13 +170,13 @@ class Game {
             special: { x: SCREEN_WIDTH/2 + 20, y: startY + (optionButtonHeight + optionButtonSpacing) * 2, width: optionButtonWidth, height: optionButtonHeight }
         };
 
+        this.loadSkins(); // Load saved skins first
         this.player = new Player(SCREEN_WIDTH / 2, SCREEN_HEIGHT / 2);
         this.bullets = [];
         this.zombies = [];
         this.orbs = [];
         this.score = 0;
         this.coins = this.loadCoins(); // Load saved coins
-        this.loadSkins(); // Load saved skins
         this.lastCoinScore = 0; // Track when to award next coin
         this.zombieSpawnTimer = 0;
         this.zombieSpawnDelay = 2000;
@@ -445,7 +445,18 @@ class Game {
     }
 
     reset() {
+        // Keep the current skin settings
+        const currentSkin = this.activePlayerSkin;
+        
         this.player = new Player(SCREEN_WIDTH / 2, SCREEN_HEIGHT / 2);
+        // Immediately apply the current skin
+        if (currentSkin !== 'default' && this.shopItems[currentSkin]) {
+            const skin = this.shopItems[currentSkin];
+            this.player.color = skin.color;
+            this.player.scale = skin.scale || 1;
+            this.player.speedBoost = skin.speedBoost || 1;
+        }
+        
         this.bullets = [];
         this.zombies = [];
         this.orbs = [];
@@ -829,6 +840,18 @@ class Game {
 
     update() {
         const currentTime = Date.now();
+
+        // Always update player skin first
+        if (this.activePlayerSkin !== 'default' && this.shopItems[this.activePlayerSkin]) {
+            const skin = this.shopItems[this.activePlayerSkin];
+            this.player.color = skin.color;
+            this.player.scale = skin.scale || 1;
+            this.player.speedBoost = skin.speedBoost || 1;
+        } else {
+            this.player.color = 'white';
+            this.player.scale = 1;
+            this.player.speedBoost = 1;
+        }
 
         // Update countdown if active
         if (this.countdownActive) {
@@ -1288,6 +1311,7 @@ class Game {
                 // Draw item name
                 ctx.fillStyle = WHITE;
                 ctx.font = '20px Arial';
+                ctx.textAlign = 'center';  // Center align the text
                 ctx.fillText(item.name, itemX + itemWidth/2, startY + 60);
 
                 // Draw price or status
@@ -1295,10 +1319,10 @@ class Game {
                 if (item.owned) {
                     ctx.fillStyle = '#00FF00';
                     ctx.fillText(this.activePlayerSkin === itemId ? 'Equipped' : 'Click to Equip', 
-                               itemX + itemWidth/2, startY + 60);
+                               itemX + itemWidth/2, startY + 85);  // Moved down
                 } else {
                     ctx.fillStyle = this.coins >= item.cost ? '#FFFF00' : '#FF0000';
-                    ctx.fillText(`${item.cost} Coins`, itemX + itemWidth/2, startY + 60);
+                    ctx.fillText(`${item.cost} Coins`, itemX + itemWidth/2, startY + 85);  // Moved down
                 }
 
                 index++;
