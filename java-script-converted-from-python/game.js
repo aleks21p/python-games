@@ -692,6 +692,13 @@ class Game {
         ctx.fillStyle = '#808080';  // Gray background
         ctx.fillRect(0, 0, SCREEN_WIDTH, SCREEN_HEIGHT);
 
+        // Draw coins in top-right corner
+        ctx.font = '28px Arial';
+        ctx.fillStyle = GOLD;
+        const coinText = `Coins: ${this.coins}`;
+        const coinTextWidth = ctx.measureText(coinText).width;
+        ctx.fillText(coinText, SCREEN_WIDTH - coinTextWidth - 20, 40);
+
         // Draw title
         ctx.fillStyle = WHITE;
         ctx.font = '64px Arial';
@@ -729,19 +736,58 @@ class Game {
 
         // Draw Options menu if active
         if (this.inOptions) {
-            ctx.fillStyle = 'rgba(0, 0, 0, 0.8)';
-            ctx.fillRect(SCREEN_WIDTH/4, SCREEN_HEIGHT/4, SCREEN_WIDTH/2, SCREEN_HEIGHT/2);
+            // Semi-transparent black background covering most of the screen
+            ctx.fillStyle = 'rgba(0, 0, 0, 0.9)';
+            ctx.fillRect(100, 50, SCREEN_WIDTH - 200, SCREEN_HEIGHT - 100);
             ctx.strokeStyle = WHITE;
-            ctx.strokeRect(SCREEN_WIDTH/4, SCREEN_HEIGHT/4, SCREEN_WIDTH/2, SCREEN_HEIGHT/2);
-            
+            ctx.strokeRect(100, 50, SCREEN_WIDTH - 200, SCREEN_HEIGHT - 100);
+
             ctx.fillStyle = WHITE;
+            ctx.font = '32px Arial';
+            
+            // Title
+            ctx.fillText('Options', SCREEN_WIDTH/2 - 50, 90);
+            
+            // Controls Section
             ctx.font = '24px Arial';
-            ctx.fillText('Controls:', SCREEN_WIDTH/4 + 20, SCREEN_HEIGHT/4 + 40);
-            ctx.fillText('WASD or Arrow Keys - Move', SCREEN_WIDTH/4 + 20, SCREEN_HEIGHT/4 + 80);
-            ctx.fillText('Mouse - Aim and Shoot', SCREEN_WIDTH/4 + 20, SCREEN_HEIGHT/4 + 120);
-            ctx.fillText('P - Pause Game', SCREEN_WIDTH/4 + 20, SCREEN_HEIGHT/4 + 160);
-            ctx.fillText('ESC - Return to Menu', SCREEN_WIDTH/4 + 20, SCREEN_HEIGHT/4 + 200);
-            ctx.fillText('Click anywhere to close', SCREEN_WIDTH/4 + 20, SCREEN_HEIGHT/4 + 240);
+            ctx.fillStyle = '#FFA500';  // Orange header
+            ctx.fillText('Controls:', 150, 140);
+            ctx.fillStyle = WHITE;
+            ctx.fillText('WASD or Arrow Keys - Move', 150, 170);
+            ctx.fillText('Mouse - Aim and Shoot', 150, 200);
+            ctx.fillText('P - Pause Game', 150, 230);
+            ctx.fillText('ESC - Return to Menu', 150, 260);
+
+            // Cheat Codes Section
+            ctx.fillStyle = '#FFA500';
+            ctx.fillText('Cheat Codes:', 150, 320);
+            ctx.fillStyle = WHITE;
+            ctx.fillText('T + 1 - Skip to Level 15', 150, 350);
+            ctx.fillText('T + 2 - Skip to Final Boss', 150, 380);
+            ctx.fillText('T + 3 - Get 10000 Coins', 150, 410);
+            ctx.fillText('T + 4 - Reset All Progress', 150, 440);
+
+            // Difficulty Section (Decorative)
+            ctx.fillStyle = '#FFA500';
+            ctx.fillText('Difficulty:', SCREEN_WIDTH/2 + 100, 140);
+            ctx.fillStyle = '#808080';  // Gray for non-functional options
+            ctx.fillText('Easy', SCREEN_WIDTH/2 + 100, 170);
+            ctx.fillText('Normal', SCREEN_WIDTH/2 + 100, 200);
+            ctx.fillText('Hard', SCREEN_WIDTH/2 + 100, 230);
+            ctx.fillText('(Coming Soon)', SCREEN_WIDTH/2 + 100, 260);
+
+            // Credits Section
+            ctx.fillStyle = '#FFA500';
+            ctx.fillText('Credits:', SCREEN_WIDTH/2 + 100, 320);
+            ctx.fillStyle = WHITE;
+            ctx.fillText('Game Developer: Aleks P', SCREEN_WIDTH/2 + 100, 350);
+            ctx.fillText('Sound Design: Claude Sonnet', SCREEN_WIDTH/2 + 100, 380);
+            ctx.fillText('Art & Textures: Aleks P', SCREEN_WIDTH/2 + 100, 410);
+            ctx.fillText('Sponsors: Shaun', SCREEN_WIDTH/2 + 100, 440);
+
+            // Close instruction at bottom
+            ctx.fillStyle = '#808080';
+            ctx.fillText('Click anywhere or press ESC to close', SCREEN_WIDTH/2 - 150, SCREEN_HEIGHT - 80);
         }
     }
 
