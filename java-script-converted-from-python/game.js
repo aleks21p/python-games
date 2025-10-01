@@ -853,10 +853,39 @@ class Game {
                         break;
 
                     case 'difficulty':
+                        // Create difficulty option buttons
+                        const difficultyButtons = {
+                            easy: { y: contentY, color: '#00AA00', text: 'Easy' },
+                            normal: { y: contentY + 60, color: '#808080', text: 'Normal' },
+                            hard: { y: contentY + 120, color: '#AA0000', text: 'Hard' }
+                        };
+
+                        // Draw each difficulty button
+                        for (const [difficulty, button] of Object.entries(difficultyButtons)) {
+                            // Button background
+                            const btnWidth = 200;
+                            const btnHeight = 40;
+                            const btnX = contentX + contentBox.width/2 - btnWidth/2;
+                            
+                            ctx.fillStyle = button.color;
+                            ctx.fillRect(btnX, button.y - 30, btnWidth, btnHeight);
+                            
+                            // Button border
+                            ctx.strokeStyle = WHITE;
+                            ctx.lineWidth = 2;
+                            ctx.strokeRect(btnX, button.y - 30, btnWidth, btnHeight);
+
+                            // Button text
+                            ctx.fillStyle = WHITE;
+                            ctx.font = 'bold 24px Arial';
+                            const textWidth = ctx.measureText(button.text).width;
+                            ctx.fillText(button.text, btnX + (btnWidth - textWidth)/2, button.y);
+                        }
+
+                        // Add note at bottom
                         ctx.fillStyle = '#808080';
-                        ctx.fillText('Easy (Coming Soon)', contentX, contentY);
-                        ctx.fillText('Normal (Coming Soon)', contentX, contentY + 40);
-                        ctx.fillText('Hard (Coming Soon)', contentX, contentY + 80);
+                        ctx.font = '20px Arial';
+                        ctx.fillText('(Difficulty selection coming soon)', contentX + contentBox.width/2 - 120, contentY + 180);
                         break;
 
                     case 'credits':
@@ -886,26 +915,41 @@ class Game {
         ctx.fillStyle = 'rgba(0, 0, 0, 0.7)';
         ctx.fillRect(0, 0, SCREEN_WIDTH, SCREEN_HEIGHT);
 
-        // Pause menu box
-        const boxWidth = 300;
-        const boxHeight = 200;
+        // Pause menu box (2x bigger)
+        const boxWidth = 600;  // Doubled from 300
+        const boxHeight = 400; // Doubled from 200
         const boxX = SCREEN_WIDTH/2 - boxWidth/2;
         const boxY = SCREEN_HEIGHT/2 - boxHeight/2;
 
-        ctx.fillStyle = '#333333';
+        // Draw box with gradient for better appearance
+        const gradient = ctx.createLinearGradient(boxX, boxY, boxX, boxY + boxHeight);
+        gradient.addColorStop(0, '#444444');
+        gradient.addColorStop(1, '#222222');
+        ctx.fillStyle = gradient;
         ctx.fillRect(boxX, boxY, boxWidth, boxHeight);
+        
+        // Box border
         ctx.strokeStyle = WHITE;
+        ctx.lineWidth = 2;
         ctx.strokeRect(boxX, boxY, boxWidth, boxHeight);
 
         // Menu title
         ctx.fillStyle = WHITE;
-        ctx.font = '32px Arial';
-        ctx.fillText('PAUSED', boxX + boxWidth/2 - 50, boxY + 50);
+        ctx.font = 'bold 48px Arial';  // Larger font
+        const pausedText = 'PAUSED';
+        const pausedWidth = ctx.measureText(pausedText).width;
+        ctx.fillText(pausedText, boxX + (boxWidth - pausedWidth)/2, boxY + 100);
 
         // Instructions
-        ctx.font = '24px Arial';
-        ctx.fillText('Press P to Resume', boxX + boxWidth/2 - 80, boxY + 100);
-        ctx.fillText('Press ESC for Menu', boxX + boxWidth/2 - 80, boxY + 140);
+        ctx.font = '32px Arial';  // Larger font
+        const resumeText = 'Press P to Resume';
+        const menuText = 'Press ESC for Menu';
+        const resumeWidth = ctx.measureText(resumeText).width;
+        const menuWidth = ctx.measureText(menuText).width;
+
+        // Center align text
+        ctx.fillText(resumeText, boxX + (boxWidth - resumeWidth)/2, boxY + 200);
+        ctx.fillText(menuText, boxX + (boxWidth - menuWidth)/2, boxY + 280);
     }
 
     draw() {
