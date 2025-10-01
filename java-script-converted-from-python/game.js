@@ -15,12 +15,17 @@ class Game {
         // Language translations
         this.translations = {
             english: {
+                gameTitle: 'Zombie Shooter',
                 start: 'Start',
                 options: 'Options',
                 controls: 'Controls',
                 cheats: 'Cheats',
                 difficulty: 'Difficulty',
                 credits: 'Credits',
+                cheatLv15: 'Skip to Level 15',
+                cheatBoss: 'Skip to Final Boss',
+                cheatCoins: 'Get 10000 Coins',
+                cheatReset: 'Reset All Progress',
                 languages: 'Languages',
                 special: 'Special',
                 score: 'Score',
@@ -49,10 +54,15 @@ class Game {
                 sponsors: 'Sponsors: Shaun'
             },
             french: {
+                gameTitle: 'Tueur de Zombies',
                 start: 'Demarrer',
                 options: 'Options',
                 controls: 'Controles',
                 cheats: 'Astuces',
+                cheatLv15: 'Passer au Niveau 15',
+                cheatBoss: 'Passer au Boss Final',
+                cheatCoins: 'Obtenir 10000 Pieces',
+                cheatReset: 'Reinitialiser Tout',
                 difficulty: 'Difficulte',
                 credits: 'Credits',
                 languages: 'Langues',
@@ -83,10 +93,15 @@ class Game {
                 sponsors: 'Sponsors: Shaun'
             },
             spanish: {
+                gameTitle: 'Cazador de Zombis',
                 start: 'Iniciar',
                 options: 'Opciones',
                 controls: 'Controles',
                 cheats: 'Trucos',
+                cheatLv15: 'Saltar al Nivel 15',
+                cheatBoss: 'Saltar al Jefe Final',
+                cheatCoins: 'Obtener 10000 Monedas',
+                cheatReset: 'Reiniciar Todo',
                 difficulty: 'Dificultad',
                 credits: 'Creditos',
                 languages: 'Idiomas',
@@ -865,7 +880,7 @@ class Game {
         // Draw title
         ctx.fillStyle = WHITE;
         ctx.font = '64px Arial';
-        const title = 'Zombie Shooter';
+        const title = this.translations[this.selectedLanguage].gameTitle;
         const titleWidth = ctx.measureText(title).width;
         ctx.fillText(title, (SCREEN_WIDTH - titleWidth) / 2, SCREEN_HEIGHT / 4);
 
@@ -880,7 +895,7 @@ class Game {
         // Start text
         ctx.fillStyle = WHITE;
         ctx.font = '32px Arial';  // Back to original size
-        const startText = 'Start';
+        const startText = this.translations[this.selectedLanguage].start;
         const startTextWidth = ctx.measureText(startText).width;
         ctx.fillText(startText, startBtn.x + (startBtn.width - startTextWidth) / 2, startBtn.y + 40);  // Back to original position
 
@@ -894,7 +909,7 @@ class Game {
         // Options text
         ctx.fillStyle = WHITE;
         ctx.font = '32px Arial';  // Back to original size
-        const optionsText = 'Options';
+        const optionsText = this.translations[this.selectedLanguage].options;
         const optionsTextWidth = ctx.measureText(optionsText).width;
         ctx.fillText(optionsText, optionsBtn.x + (optionsBtn.width - optionsTextWidth) / 2, optionsBtn.y + 40);  // Back to original position
 
@@ -920,7 +935,7 @@ class Game {
                 
                 ctx.fillStyle = WHITE;
                 ctx.font = '24px Arial';
-                const text = tabName.charAt(0).toUpperCase() + tabName.slice(1);
+                const text = this.translations[this.selectedLanguage][tabName];
                 const textWidth = ctx.measureText(text).width;
                 ctx.fillText(text, btn.x + (btn.width - textWidth)/2, btn.y + 35);
             }
@@ -948,26 +963,26 @@ class Game {
                 switch(this.activeOptionTab) {
                     case 'controls':
                         ctx.fillStyle = WHITE;
-                        ctx.fillText('WASD or Arrow Keys - Move', contentX, contentY);
-                        ctx.fillText('Mouse - Aim and Shoot', contentX, contentY + 40);
-                        ctx.fillText('P - Pause Game', contentX, contentY + 80);
-                        ctx.fillText('ESC - Return to Menu', contentX, contentY + 120);
+                        ctx.fillText(this.translations[this.selectedLanguage].move, contentX, contentY);
+                        ctx.fillText(this.translations[this.selectedLanguage].aim, contentX, contentY + 40);
+                        ctx.fillText(this.translations[this.selectedLanguage].pauseGame, contentX, contentY + 80);
+                        ctx.fillText(this.translations[this.selectedLanguage].returnToMenu, contentX, contentY + 120);
                         break;
 
                     case 'cheats':
                         ctx.fillStyle = WHITE;
-                        ctx.fillText('T + 1 - Skip to Level 15', contentX, contentY);
-                        ctx.fillText('T + 2 - Skip to Final Boss', contentX, contentY + 40);
-                        ctx.fillText('T + 3 - Get 10000 Coins', contentX, contentY + 80);
-                        ctx.fillText('T + 4 - Reset All Progress', contentX, contentY + 120);
+                        ctx.fillText('T + 1 - ' + this.translations[this.selectedLanguage].cheatLv15, contentX, contentY);
+                        ctx.fillText('T + 2 - ' + this.translations[this.selectedLanguage].cheatBoss, contentX, contentY + 40);
+                        ctx.fillText('T + 3 - ' + this.translations[this.selectedLanguage].cheatCoins, contentX, contentY + 80);
+                        ctx.fillText('T + 4 - ' + this.translations[this.selectedLanguage].cheatReset, contentX, contentY + 120);
                         break;
 
                     case 'difficulty':
                         // Create difficulty option buttons
                         const difficultyButtons = {
-                            easy: { y: contentY, color: '#00AA00', text: 'Easy' },
-                            normal: { y: contentY + 60, color: '#808080', text: 'Normal' },
-                            hard: { y: contentY + 120, color: '#AA0000', text: 'Hard' }
+                            easy: { y: contentY, color: '#00AA00', text: this.translations[this.selectedLanguage].easy },
+                            normal: { y: contentY + 60, color: '#808080', text: this.translations[this.selectedLanguage].normal },
+                            hard: { y: contentY + 120, color: '#AA0000', text: this.translations[this.selectedLanguage].hard }
                         };
 
                         // Draw each difficulty button
@@ -996,15 +1011,15 @@ class Game {
                         // Add note at bottom
                         ctx.fillStyle = '#808080';
                         ctx.font = '20px Arial';
-                        ctx.fillText('(Difficulty selection coming soon)', contentX + contentBox.width/2 - 120, contentY + 180);
+                        ctx.fillText(this.translations[this.selectedLanguage].difficultyNote, contentX + contentBox.width/2 - 120, contentY + 180);
                         break;
 
                     case 'credits':
                         ctx.fillStyle = WHITE;
-                        ctx.fillText('Game Developer: Aleks P', contentX, contentY);
-                        ctx.fillText('Sound Design: Claude Sonnet', contentX, contentY + 40);
-                        ctx.fillText('Art & Textures: Aleks P', contentX, contentY + 80);
-                        ctx.fillText('Sponsors: Shaun', contentX, contentY + 120);
+                        ctx.fillText(this.translations[this.selectedLanguage].developer, contentX, contentY);
+                        ctx.fillText(this.translations[this.selectedLanguage].soundDesign, contentX, contentY + 40);
+                        ctx.fillText(this.translations[this.selectedLanguage].art, contentX, contentY + 80);
+                        ctx.fillText(this.translations[this.selectedLanguage].sponsors, contentX, contentY + 120);
                         break;
 
                     case 'languages':
@@ -1105,7 +1120,9 @@ class Game {
             // Close instruction at bottom
             ctx.fillStyle = '#808080';
             ctx.font = '20px Arial';
-            ctx.fillText('Press ESC to close options menu', SCREEN_WIDTH/2 - 120, SCREEN_HEIGHT - 80);
+            const closeText = this.translations[this.selectedLanguage].closeOptions;
+            const closeTextWidth = ctx.measureText(closeText).width;
+            ctx.fillText(closeText, SCREEN_WIDTH/2 - closeTextWidth/2, SCREEN_HEIGHT - 80);
         }
     }
 
@@ -1184,10 +1201,10 @@ class Game {
         // Draw score and coins
         ctx.fillStyle = WHITE;
         ctx.font = '36px Arial';
-        ctx.fillText(`Score: ${this.score}`, 10, 40);
+        ctx.fillText(`${this.translations[this.selectedLanguage].score}: ${this.score}`, 10, 40);
         ctx.font = '28px Arial';
         ctx.fillStyle = GOLD;
-        ctx.fillText(`Coins: ${this.coins}`, 10, 80);
+        ctx.fillText(`${this.translations[this.selectedLanguage].coins}: ${this.coins}`, 10, 80);
 
         // Draw countdown if active
         if (this.countdownActive) {
@@ -1218,7 +1235,7 @@ class Game {
 
                 // Draw "Get Ready!" text
                 ctx.font = 'bold 48px Arial';
-                const readyText = "Get Ready!";
+                const readyText = this.translations[this.selectedLanguage].getReady;
                 const readyWidth = ctx.measureText(readyText).width;
                 ctx.fillText(readyText, SCREEN_WIDTH/2 - readyWidth/2, centerY - 100);
             } else {
