@@ -143,8 +143,18 @@ class Game {
         const buttonSpacing = 50;  // Back to original spacing
         this.menuButtons = {
             start: { x: SCREEN_WIDTH/2 - buttonWidth/2, y: SCREEN_HEIGHT/2 - 50, width: buttonWidth, height: buttonHeight },
-            options: { x: SCREEN_WIDTH/2 - buttonWidth/2, y: SCREEN_HEIGHT/2 + 50, width: buttonWidth, height: buttonHeight }
+            options: { x: SCREEN_WIDTH/2 - buttonWidth/2, y: SCREEN_HEIGHT/2 + 50, width: buttonWidth, height: buttonHeight },
+            shop: { x: SCREEN_WIDTH/2 - buttonWidth/2, y: SCREEN_HEIGHT/2 + 150, width: buttonWidth, height: buttonHeight }
         };
+        
+        // Shop state
+        this.inShop = false;
+        this.shopItems = {
+            purple: { name: 'Purple Skin', cost: 5, owned: false, color: '#800080' },
+            small: { name: 'Small & Green', cost: 10, owned: false, color: '#00FF00', scale: 0.5 },
+            bigge: { name: 'Bigge', cost: 30, owned: false, color: '#FFA500', scale: 1.2, speedBoost: 2 }
+        };
+        this.activePlayerSkin = 'default';
         
         // Options menu buttons
         const optionButtonWidth = 200;
@@ -306,7 +316,46 @@ class Game {
                 if (clickX >= optionsBtn.x && clickX <= optionsBtn.x + optionsBtn.width &&
                     clickY >= optionsBtn.y && clickY <= optionsBtn.y + optionsBtn.height) {
                     this.inOptions = !this.inOptions;
+                    this.inShop = false;  // Close shop when opening options
                     this.activeOptionTab = '';  // Reset active tab when opening/closing options
+                }
+
+                // Check shop button
+                const shopBtn = this.menuButtons.shop;
+                if (clickX >= shopBtn.x && clickX <= shopBtn.x + shopBtn.width &&
+                    clickY >= shopBtn.y && clickY <= shopBtn.y + shopBtn.height) {
+                    this.inShop = !this.inShop;
+                    this.inOptions = false;  // Close options when opening shop
+                    this.activeOptionTab = '';
+                }
+
+                // Check shop item clicks
+                if (this.inShop) {
+                    const itemHeight = 100;
+                    const itemWidth = 150;
+                    const itemSpacing = 20;
+                    const startX = SCREEN_WIDTH/2 - ((itemWidth * 3 + itemSpacing * 2) / 2);
+                    const startY = SCREEN_HEIGHT/2 - 50;
+
+                    let index = 0;
+                    for (const [itemId, item] of Object.entries(this.shopItems)) {
+                        const itemX = startX + (itemWidth + itemSpacing) * index;
+                        if (clickX >= itemX && clickX <= itemX + itemWidth &&
+                            clickY >= startY && clickY <= startY + itemHeight) {
+                            // Try to buy/equip the item
+                            if (!item.owned) {
+                                if (this.coins >= item.cost) {
+                                    this.coins -= item.cost;
+                                    item.owned = true;
+                                    this.saveCoins();
+                                    this.activePlayerSkin = itemId;
+                                }
+                            } else {
+                                this.activePlayerSkin = this.activePlayerSkin === itemId ? 'default' : itemId;
+                            }
+                        }
+                        index++;
+                    }
                 }
 
                 // Check option tab buttons when in options menu
@@ -785,7 +834,18 @@ class Game {
             this.spawnBoss();
         }
 
-        // Update player
+        // Update player and apply skin effects
+        if (this.activePlayerSkin !== 'default') {
+            const skin = this.shopItems[this.activePlayerSkin];
+            this.player.color = skin.color;
+            this.player.scale = skin.scale || 1;
+            this.player.speedBoost = skin.speedBoost || 1;
+        } else {
+            this.player.color = 'white';  // Default color
+            this.player.scale = 1;
+            this.player.speedBoost = 1;
+        }
+
         this.player.update(this.keys);
 
         // Shooting
@@ -938,6 +998,20 @@ class Game {
         const optionsText = this.translations[this.selectedLanguage].options;
         const optionsTextWidth = ctx.measureText(optionsText).width;
         ctx.fillText(optionsText, optionsBtn.x + (optionsBtn.width - optionsTextWidth) / 2, optionsBtn.y + 40);  // Back to original position
+
+        // Draw Shop button (gold)
+        const shopBtn = this.menuButtons.shop;
+        ctx.fillStyle = GOLD;
+        ctx.fillRect(shopBtn.x, shopBtn.y, shopBtn.width, shopBtn.height);
+        ctx.strokeStyle = WHITE;
+        ctx.strokeRect(shopBtn.x, shopBtn.y, shopBtn.width, shopBtn.height);
+        
+        // Shop text
+        ctx.fillStyle = WHITE;
+        ctx.font = '32px Arial';
+        const shopText = 'Shop';
+        const shopTextWidth = ctx.measureText(shopText).width;
+        ctx.fillText(shopText, shopBtn.x + (shopBtn.width - shopTextWidth) / 2, shopBtn.y + 40);
 
         // Draw Options menu if active
         if (this.inOptions) {
@@ -1132,6 +1206,63 @@ class Game {
             const closeText = this.translations[this.selectedLanguage].closeOptions;
             const closeTextWidth = ctx.measureText(closeText).width;
             ctx.fillText(closeText, SCREEN_WIDTH/2 - closeTextWidth/2, SCREEN_HEIGHT - 80);
+        }
+
+        // Draw Shop menu if active
+        if (this.inShop) {
+            // Semi-transparent black background
+            ctx.fillStyle = 'rgba(0, 0, 0, 0.9)';
+            ctx.fillRect(100, 50, SCREEN_WIDTH - 200, SCREEN_HEIGHT - 100);
+            ctx.strokeStyle = WHITE;
+            ctx.strokeRect(100, 50, SCREEN_WIDTH - 200, SCREEN_HEIGHT - 100);
+
+            // Title
+            ctx.fillStyle = GOLD;
+            ctx.font = '32px Arial';
+            ctx.textAlign = 'center';
+            ctx.fillText('Shop', SCREEN_WIDTH/2, 90);
+
+            // Draw shop items
+            const itemHeight = 100;
+            const itemWidth = 150;
+            const itemSpacing = 20;
+            const startX = SCREEN_WIDTH/2 - ((itemWidth * 3 + itemSpacing * 2) / 2);
+            const startY = SCREEN_HEIGHT/2 - 50;
+
+            let index = 0;
+            for (const [itemId, item] of Object.entries(this.shopItems)) {
+                const itemX = startX + (itemWidth + itemSpacing) * index;
+                
+                // Draw item box
+                ctx.fillStyle = item.color;
+                ctx.fillRect(itemX, startY, itemWidth, itemHeight);
+                ctx.strokeStyle = WHITE;
+                ctx.strokeRect(itemX, startY, itemWidth, itemHeight);
+
+                // Draw item name
+                ctx.fillStyle = WHITE;
+                ctx.font = '20px Arial';
+                ctx.fillText(item.name, itemX + itemWidth/2, startY + 30);
+
+                // Draw price or status
+                ctx.font = '16px Arial';
+                if (item.owned) {
+                    ctx.fillStyle = '#00FF00';
+                    ctx.fillText(this.activePlayerSkin === itemId ? 'Equipped' : 'Click to Equip', 
+                               itemX + itemWidth/2, startY + 60);
+                } else {
+                    ctx.fillStyle = this.coins >= item.cost ? '#FFFF00' : '#FF0000';
+                    ctx.fillText(`${item.cost} Coins`, itemX + itemWidth/2, startY + 60);
+                }
+
+                index++;
+            }
+
+            // Close instruction
+            ctx.fillStyle = '#808080';
+            ctx.font = '20px Arial';
+            ctx.fillText('Click Shop again to close', SCREEN_WIDTH/2, SCREEN_HEIGHT - 80);
+            ctx.textAlign = 'left';
         }
     }
 
