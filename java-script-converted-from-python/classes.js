@@ -4,8 +4,8 @@ class Orb {
         this.y = y;
         this.size = 5;
         this.collected = false;
-        this.collectionRange = 20;
-        this.magnetRange = 80;
+        this.collectionRange = 40;  // Doubled from 20
+        this.magnetRange = 160;     // Doubled from 80
         this.magnetSpeed = 6;
     }
 

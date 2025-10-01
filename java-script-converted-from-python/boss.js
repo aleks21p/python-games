@@ -148,14 +148,26 @@ class FinalBoss {
     draw(ctx) {
         // Draw boss body (golden with red aura)
         ctx.beginPath();
-        ctx.fillStyle = GOLD;
+        ctx.fillStyle = '#FFD700';  // Bright gold color
+        ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Add metallic effect
+        const gradient = ctx.createRadialGradient(
+            this.x - this.size/3, this.y - this.size/3, 10,
+            this.x, this.y, this.size
+        );
+        gradient.addColorStop(0, '#FFF7CC');  // Lighter gold
+        gradient.addColorStop(1, '#FFD700');  // Regular gold
+        ctx.beginPath();
+        ctx.fillStyle = gradient;
         ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
         ctx.fill();
 
         // Red aura effect
         for (let i = 0; i < 4; i++) {
             const auraSize = this.size + (i * 10);
-            const auraAlpha = (80 - (i * 20)) / 255;
+            const auraAlpha = (100 - (i * 20)) / 255;
             ctx.beginPath();
             ctx.strokeStyle = `rgba(255, 0, 0, ${auraAlpha})`;
             ctx.lineWidth = 4;
@@ -225,18 +237,34 @@ class Boss {
     }
 
     draw(ctx) {
-        // Draw boss body (gray with red aura)
+        // Draw boss body (metallic gray with red aura)
+        // Base metallic effect
+        const gradient = ctx.createRadialGradient(
+            this.x - this.size/3, this.y - this.size/3, 10,
+            this.x, this.y, this.size
+        );
+        gradient.addColorStop(0, '#E0E0E0');  // Light silver
+        gradient.addColorStop(0.5, '#A9A9A9');  // Mid gray
+        gradient.addColorStop(1, '#808080');  // Dark gray
+        
         ctx.beginPath();
-        ctx.fillStyle = '#A9A9A9'; // Using a lighter gray (DarkGray)
+        ctx.fillStyle = gradient;
         ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
         ctx.fill();
 
-        // Red radiating aura effect
-        for (let i = 0; i < 3; i++) {
+        // Bright outline for definition
+        ctx.beginPath();
+        ctx.strokeStyle = '#FFFFFF';
+        ctx.lineWidth = 2;
+        ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+        ctx.stroke();
+
+        // Red radiating aura effect with increased intensity
+        for (let i = 0; i < 4; i++) {
             const glowSize = this.size + (i * 8);
-            const glowAlpha = (100 - (i * 30)) / 255;
+            const glowAlpha = (120 - (i * 25)) / 255;  // Increased brightness
             ctx.beginPath();
-            ctx.strokeStyle = `rgba(139, 0, 0, ${glowAlpha})`;
+            ctx.strokeStyle = `rgba(220, 0, 0, ${glowAlpha})`; // Brighter red
             ctx.lineWidth = 3;
             ctx.arc(this.x, this.y, glowSize, 0, Math.PI * 2);
             ctx.stroke();
