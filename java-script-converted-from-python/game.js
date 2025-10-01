@@ -1120,19 +1120,59 @@ class Game {
 
                 switch(this.activeOptionTab) {
                     case 'controls':
-                        ctx.fillStyle = WHITE;
-                        ctx.fillText(this.translations[this.selectedLanguage].move, contentX, contentY);
-                        ctx.fillText(this.translations[this.selectedLanguage].aim, contentX, contentY + 40);
-                        ctx.fillText(this.translations[this.selectedLanguage].pauseGame, contentX, contentY + 80);
-                        ctx.fillText(this.translations[this.selectedLanguage].returnToMenu, contentX, contentY + 120);
+                        const controlOptions = [
+                            this.translations[this.selectedLanguage].move,
+                            this.translations[this.selectedLanguage].aim,
+                            this.translations[this.selectedLanguage].pauseGame,
+                            this.translations[this.selectedLanguage].returnToMenu
+                        ];
+                        
+                        // Draw each control option as a button
+                        controlOptions.forEach((option, index) => {
+                            const btnY = contentY + (index * 50);
+                            const btnWidth = 400;
+                            const btnHeight = 40;
+                            const btnX = contentX - btnWidth/2;
+                            
+                            // Button background
+                            ctx.fillStyle = '#333333';
+                            ctx.fillRect(btnX, btnY, btnWidth, btnHeight);
+                            ctx.strokeStyle = WHITE;
+                            ctx.strokeRect(btnX, btnY, btnWidth, btnHeight);
+                            
+                            // Button text
+                            ctx.fillStyle = WHITE;
+                            ctx.fillText(option, contentX, btnY + 28);
+                        });
                         break;
 
                     case 'cheats':
-                        ctx.fillStyle = WHITE;
-                        ctx.fillText('T + 1 - ' + this.translations[this.selectedLanguage].cheatLv15, contentX, contentY);
-                        ctx.fillText('T + 2 - ' + this.translations[this.selectedLanguage].cheatBoss, contentX, contentY + 40);
-                        ctx.fillText('T + 3 - ' + this.translations[this.selectedLanguage].cheatCoins, contentX, contentY + 80);
-                        ctx.fillText('T + 4 - ' + this.translations[this.selectedLanguage].cheatReset, contentX, contentY + 120);
+                        const cheatOptions = [
+                            { key: 'T + 1', desc: this.translations[this.selectedLanguage].cheatLv15 },
+                            { key: 'T + 2', desc: this.translations[this.selectedLanguage].cheatBoss },
+                            { key: 'T + 3', desc: this.translations[this.selectedLanguage].cheatCoins },
+                            { key: 'T + 4', desc: this.translations[this.selectedLanguage].cheatReset }
+                        ];
+                        
+                        // Draw each cheat option as a button
+                        cheatOptions.forEach((option, index) => {
+                            const btnY = contentY + (index * 50);
+                            const btnWidth = 400;
+                            const btnHeight = 40;
+                            const btnX = contentX - btnWidth/2;
+                            
+                            // Button background
+                            ctx.fillStyle = '#333333';
+                            ctx.fillRect(btnX, btnY, btnWidth, btnHeight);
+                            ctx.strokeStyle = WHITE;
+                            ctx.strokeRect(btnX, btnY, btnWidth, btnHeight);
+                            
+                            // Button text - split into key and description
+                            ctx.fillStyle = '#FFD700';  // Gold color for key
+                            ctx.fillText(option.key, btnX + 20, btnY + 28);
+                            ctx.fillStyle = WHITE;
+                            ctx.fillText('- ' + option.desc, btnX + 80, btnY + 28);
+                        });
                         break;
 
                     case 'difficulty':
