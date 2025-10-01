@@ -311,10 +311,36 @@ class Game {
 
                 // Check option tab buttons when in options menu
                 if (this.inOptions) {
+                    // Check language buttons if in language tab
+                    if (this.activeOptionTab === 'languages' && this.languageButtons) {
+                        for (const [lang, btn] of Object.entries(this.languageButtons)) {
+                            if (clickX >= btn.x && clickX <= btn.x + btn.width &&
+                                clickY >= btn.y && clickY <= btn.y + btn.height) {
+                                this.selectedLanguage = lang;
+                                break;
+                            }
+                        }
+                    }
+
+                    // Check special button if in special tab
+                    if (this.activeOptionTab === 'special' && this.specialButton) {
+                        const btn = this.specialButton;
+                        if (clickX >= btn.x && clickX <= btn.x + btn.width &&
+                            clickY >= btn.y && clickY <= btn.y + btn.height) {
+                            this.isUpsideDown = !this.isUpsideDown;
+                            // The actual rotation is handled in the draw method
+                        }
+                    }
+
+                    // Check option tab buttons
                     for (const [tabName, btn] of Object.entries(this.optionButtons)) {
                         if (clickX >= btn.x && clickX <= btn.x + btn.width &&
                             clickY >= btn.y && clickY <= btn.y + btn.height) {
                             this.activeOptionTab = this.activeOptionTab === tabName ? '' : tabName;
+                            // Reset language buttons when changing tabs
+                            if (this.activeOptionTab !== 'languages') {
+                                this.languageButtons = {};
+                            }
                             break;
                         }
                     }
@@ -1050,18 +1076,14 @@ class Game {
                             ctx.fillText(button.text, contentX, button.y);
                             ctx.textAlign = 'left';
 
-                            // Add click handler for language buttons
-                            canvas.addEventListener('click', (e) => {
-                                const rect = canvas.getBoundingClientRect();
-                                const clickX = e.clientX - rect.left;
-                                const clickY = e.clientY - rect.top;
-                                
-                                if (this.activeOptionTab === 'languages' &&
-                                    clickX >= btnX && clickX <= btnX + btnWidth &&
-                                    clickY >= button.y - 30 && clickY <= button.y + 10) {
-                                    this.selectedLanguage = lang;
-                                }
-                            });
+                            // Store button position and dimensions for click handling
+                            this.languageButtons = this.languageButtons || {};
+                            this.languageButtons[lang] = {
+                                x: btnX,
+                                y: button.y - 30,
+                                width: btnWidth,
+                                height: btnHeight
+                            };
                         }
                         break;
 
@@ -1087,26 +1109,13 @@ class Game {
                         ctx.fillText('Broken Mode', contentX, specialBtn.y + 30);
                         ctx.textAlign = 'left';
 
-                        // Add click handler for special button
-                        canvas.addEventListener('click', (e) => {
-                            const rect = canvas.getBoundingClientRect();
-                            const clickX = e.clientX - rect.left;
-                            const clickY = e.clientY - rect.top;
-                            
-                            if (this.activeOptionTab === 'special' &&
-                                clickX >= specialBtn.x && clickX <= specialBtn.x + specialBtn.width &&
-                                clickY >= specialBtn.y && clickY <= specialBtn.y + specialBtn.height) {
-                                this.isUpsideDown = !this.isUpsideDown;
-                                
-                                // Apply or remove the upside-down effect
-                                if (this.isUpsideDown) {
-                                    ctx.translate(SCREEN_WIDTH, SCREEN_HEIGHT);
-                                    ctx.rotate(Math.PI);
-                                } else {
-                                    ctx.setTransform(1, 0, 0, 1, 0, 0);
-                                }
-                            }
-                        });
+                        // Store special button position for click handling
+                        this.specialButton = {
+                            x: specialBtn.x,
+                            y: specialBtn.y,
+                            width: specialBtn.width,
+                            height: specialBtn.height
+                        };
                         break;
                 }
                 ctx.textAlign = 'left';  // Reset text alignment
