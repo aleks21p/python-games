@@ -50,7 +50,7 @@ class FinalBossBullet {
         this.dy = dy;
         this.size = 8;  // Medium-sized bullets
         this.damage = 0.5;  // 0.5 damage per bullet
-        this.isFinalBossBullet = true;
+        this.isBossBullet = true;  // Changed to match the collision check
     }
 
     update() {
