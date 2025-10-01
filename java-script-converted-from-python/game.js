@@ -12,6 +12,9 @@ class Game {
         this.inMenu = true;
         this.inOptions = false;
         this.activeOptionTab = '';  // Can be: 'controls', 'cheats', 'difficulty', 'credits'
+        this.countdownActive = false;
+        this.countdownTime = 0;
+        this.countdownStart = 0;
         const buttonWidth = 300;  // Increased from 200 to 300 (1.5x)
         this.menuButtons = {
             start: { x: SCREEN_WIDTH/2 - buttonWidth/2, y: SCREEN_HEIGHT/2 - 50, width: buttonWidth, height: 60 },
@@ -103,9 +106,13 @@ class Game {
                 }
             }
             if (e.key === 'Escape') {
-                if (!this.inMenu) {
+                if (this.inOptions) {
+                    this.inOptions = false;
+                    this.activeOptionTab = '';
+                } else if (!this.inMenu && !this.countdownActive) {
                     this.inMenu = true;
                     this.paused = true;
+                    this.reset();  // Reset game when returning to menu
                 }
             }
         });
@@ -155,11 +162,12 @@ class Game {
                 const startBtn = this.menuButtons.start;
                 if (clickX >= startBtn.x && clickX <= startBtn.x + startBtn.width &&
                     clickY >= startBtn.y && clickY <= startBtn.y + startBtn.height) {
-                    this.inMenu = false;
-                    this.paused = false;
                     if (this.gameOver) {
                         this.reset();
                     }
+                    this.countdownActive = true;
+                    this.countdownTime = 3;
+                    this.countdownStart = Date.now();
                 }
 
                 // Check options button
@@ -587,7 +595,7 @@ class Game {
     }
 
     update() {
-        if (this.inMenu || this.gameOver || this.paused) return;
+        if (this.inMenu || this.gameOver || (this.paused && !this.countdownActive)) return;
 
         const currentTime = Date.now();
 
@@ -786,15 +794,29 @@ class Game {
                 ctx.fillText(text, btn.x + (btn.width - textWidth)/2, btn.y + 35);
             }
 
-            // Draw content based on active tab
+            // Draw content box for active tab
             if (this.activeOptionTab) {
-                const contentX = SCREEN_WIDTH/2 - 300;
-                const contentY = SCREEN_HEIGHT/2 + 50;
+                const contentBox = {
+                    width: 500,
+                    height: 250,
+                    x: SCREEN_WIDTH/2 - 250,
+                    y: SCREEN_HEIGHT/2 + 20
+                };
+
+                // Draw content box
+                ctx.fillStyle = '#222222';
+                ctx.fillRect(contentBox.x, contentBox.y, contentBox.width, contentBox.height);
+                ctx.strokeStyle = '#444444';
+                ctx.strokeRect(contentBox.x, contentBox.y, contentBox.width, contentBox.height);
+
+                const contentX = contentBox.x + contentBox.width/2;
+                const contentY = contentBox.y + 40;
                 ctx.font = '24px Arial';
-                ctx.fillStyle = WHITE;
+                ctx.textAlign = 'center';  // Center align text
 
                 switch(this.activeOptionTab) {
                     case 'controls':
+                        ctx.fillStyle = WHITE;
                         ctx.fillText('WASD or Arrow Keys - Move', contentX, contentY);
                         ctx.fillText('Mouse - Aim and Shoot', contentX, contentY + 40);
                         ctx.fillText('P - Pause Game', contentX, contentY + 80);
@@ -802,6 +824,7 @@ class Game {
                         break;
 
                     case 'cheats':
+                        ctx.fillStyle = WHITE;
                         ctx.fillText('T + 1 - Skip to Level 15', contentX, contentY);
                         ctx.fillText('T + 2 - Skip to Final Boss', contentX, contentY + 40);
                         ctx.fillText('T + 3 - Get 10000 Coins', contentX, contentY + 80);
@@ -816,12 +839,14 @@ class Game {
                         break;
 
                     case 'credits':
+                        ctx.fillStyle = WHITE;
                         ctx.fillText('Game Developer: Aleks P', contentX, contentY);
                         ctx.fillText('Sound Design: Claude Sonnet', contentX, contentY + 40);
                         ctx.fillText('Art & Textures: Aleks P', contentX, contentY + 80);
                         ctx.fillText('Sponsors: Shaun', contentX, contentY + 120);
                         break;
                 }
+                ctx.textAlign = 'left';  // Reset text alignment
             } else {
                 ctx.fillStyle = '#808080';
                 ctx.font = '24px Arial';
@@ -835,6 +860,33 @@ class Game {
         }
     }
 
+    drawPauseMenu() {
+        // Semi-transparent background
+        ctx.fillStyle = 'rgba(0, 0, 0, 0.7)';
+        ctx.fillRect(0, 0, SCREEN_WIDTH, SCREEN_HEIGHT);
+
+        // Pause menu box
+        const boxWidth = 300;
+        const boxHeight = 200;
+        const boxX = SCREEN_WIDTH/2 - boxWidth/2;
+        const boxY = SCREEN_HEIGHT/2 - boxHeight/2;
+
+        ctx.fillStyle = '#333333';
+        ctx.fillRect(boxX, boxY, boxWidth, boxHeight);
+        ctx.strokeStyle = WHITE;
+        ctx.strokeRect(boxX, boxY, boxWidth, boxHeight);
+
+        // Menu title
+        ctx.fillStyle = WHITE;
+        ctx.font = '32px Arial';
+        ctx.fillText('PAUSED', boxX + boxWidth/2 - 50, boxY + 50);
+
+        // Instructions
+        ctx.font = '24px Arial';
+        ctx.fillText('Press P to Resume', boxX + boxWidth/2 - 80, boxY + 100);
+        ctx.fillText('Press ESC for Menu', boxX + boxWidth/2 - 80, boxY + 140);
+    }
+
     draw() {
         if (this.inMenu) {
             this.drawMenu();
@@ -844,6 +896,30 @@ class Game {
         // Clear canvas
         ctx.fillStyle = BLACK;
         ctx.fillRect(0, 0, SCREEN_WIDTH, SCREEN_HEIGHT);
+
+        // Handle countdown
+        if (this.countdownActive) {
+            const elapsed = Date.now() - this.countdownStart;
+            const remainingTime = Math.ceil(3 - elapsed/1000);
+            
+            if (remainingTime <= 0) {
+                this.countdownActive = false;
+                this.inMenu = false;
+                this.paused = false;
+            } else {
+                // Draw semi-transparent background
+                ctx.fillStyle = 'rgba(0, 0, 0, 0.7)';
+                ctx.fillRect(0, 0, SCREEN_WIDTH, SCREEN_HEIGHT);
+                
+                // Draw countdown number
+                ctx.fillStyle = WHITE;
+                ctx.font = '128px Arial';
+                const text = remainingTime.toString();
+                const textWidth = ctx.measureText(text).width;
+                ctx.fillText(text, (SCREEN_WIDTH - textWidth)/2, SCREEN_HEIGHT/2);
+                return;
+            }
+        }
 
         // Draw game objects
         this.orbs.forEach(orb => orb.draw(ctx));
