@@ -176,6 +176,7 @@ class Game {
         this.orbs = [];
         this.score = 0;
         this.coins = this.loadCoins(); // Load saved coins
+        this.loadSkins(); // Load saved skins
         this.lastCoinScore = 0; // Track when to award next coin
         this.zombieSpawnTimer = 0;
         this.zombieSpawnDelay = 2000;
@@ -349,9 +350,11 @@ class Game {
                                     item.owned = true;
                                     this.saveCoins();
                                     this.activePlayerSkin = itemId;
+                                    this.saveSkins();
                                 }
                             } else {
                                 this.activePlayerSkin = this.activePlayerSkin === itemId ? 'default' : itemId;
+                                this.saveSkins();
                             }
                         }
                         index++;
@@ -405,6 +408,30 @@ class Game {
 
     saveCoins() {
         localStorage.setItem('zombieShooterCoins', this.coins.toString());
+    }
+
+    loadSkins() {
+        const savedSkins = localStorage.getItem('zombieShooterSkins');
+        if (savedSkins) {
+            const skinData = JSON.parse(savedSkins);
+            for (const [itemId, status] of Object.entries(skinData.owned)) {
+                if (this.shopItems[itemId]) {
+                    this.shopItems[itemId].owned = status;
+                }
+            }
+            this.activePlayerSkin = skinData.active || 'default';
+        }
+    }
+
+    saveSkins() {
+        const skinData = {
+            owned: {},
+            active: this.activePlayerSkin
+        };
+        for (const [itemId, item] of Object.entries(this.shopItems)) {
+            skinData.owned[itemId] = item.owned;
+        }
+        localStorage.setItem('zombieShooterSkins', JSON.stringify(skinData));
     }
 
     updateCoins() {
@@ -1239,10 +1266,29 @@ class Game {
                 ctx.strokeStyle = WHITE;
                 ctx.strokeRect(itemX, startY, itemWidth, itemHeight);
 
+                // Draw preview circle (player appearance)
+                const previewSize = 20;
+                const scale = item.scale || 1;
+                ctx.fillStyle = item.color;
+                ctx.beginPath();
+                ctx.arc(itemX + itemWidth/2, startY + 25, previewSize * scale, 0, Math.PI * 2);
+                ctx.fill();
+                if (item.speedBoost) {
+                    // Draw speed indicator arrows
+                    ctx.strokeStyle = WHITE;
+                    ctx.beginPath();
+                    ctx.moveTo(itemX + itemWidth/2 + 25, startY + 25);
+                    ctx.lineTo(itemX + itemWidth/2 + 35, startY + 25);
+                    ctx.lineTo(itemX + itemWidth/2 + 30, startY + 20);
+                    ctx.moveTo(itemX + itemWidth/2 + 35, startY + 25);
+                    ctx.lineTo(itemX + itemWidth/2 + 30, startY + 30);
+                    ctx.stroke();
+                }
+
                 // Draw item name
                 ctx.fillStyle = WHITE;
                 ctx.font = '20px Arial';
-                ctx.fillText(item.name, itemX + itemWidth/2, startY + 30);
+                ctx.fillText(item.name, itemX + itemWidth/2, startY + 60);
 
                 // Draw price or status
                 ctx.font = '16px Arial';
