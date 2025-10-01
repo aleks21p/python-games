@@ -15,10 +15,12 @@ class Game {
         this.countdownActive = false;
         this.countdownTime = 0;
         this.countdownStart = 0;
-        const buttonWidth = 300;  // Increased from 200 to 300 (1.5x)
+        const buttonWidth = 450;   // 300 * 1.5 = 450
+        const buttonHeight = 60;   // Back to original height
+        const buttonSpacing = 50;  // Back to original spacing
         this.menuButtons = {
-            start: { x: SCREEN_WIDTH/2 - buttonWidth/2, y: SCREEN_HEIGHT/2 - 50, width: buttonWidth, height: 60 },
-            options: { x: SCREEN_WIDTH/2 - buttonWidth/2, y: SCREEN_HEIGHT/2 + 50, width: buttonWidth, height: 60 }
+            start: { x: SCREEN_WIDTH/2 - buttonWidth/2, y: SCREEN_HEIGHT/2 - 50, width: buttonWidth, height: buttonHeight },
+            options: { x: SCREEN_WIDTH/2 - buttonWidth/2, y: SCREEN_HEIGHT/2 + 50, width: buttonWidth, height: buttonHeight }
         };
         
         // Options menu buttons
@@ -168,9 +170,10 @@ class Game {
                     // Initialize countdown and game state
                     this.countdownActive = true;
                     this.countdownStart = Date.now();
-                    this.paused = true;  // Keep paused during countdown
+                    this.inMenu = false;  // Exit menu to show game background
                     this.inOptions = false;  // Close options if open
                     this.activeOptionTab = '';  // Reset active tab
+                    this.paused = false;  // Unpause to allow background updates
                 }
 
                 // Check options button
@@ -602,13 +605,15 @@ class Game {
 
         // Update countdown if active
         if (this.countdownActive) {
-            const elapsed = currentTime - this.countdownStart;
-            if (elapsed >= 3000) {  // 3 seconds
-                this.countdownActive = false;
-                this.inMenu = false;
-                this.paused = false;
-            }
-            return;
+            // Continue updating game objects during countdown
+            // but don't let the player move or shoot
+            this.orbs.forEach(orb => orb.update(this.player));
+            this.bullets.forEach(bullet => bullet.update());
+            this.zombies.forEach(zombie => zombie.update(this.player));
+            if (this.boss) this.boss.update(this.player);
+            if (this.finalBoss) this.finalBoss.update(this.player);
+            
+            return;  // Skip other updates during countdown
         }
 
         // Don't update game state if paused or in menu
@@ -764,10 +769,10 @@ class Game {
         
         // Start text
         ctx.fillStyle = WHITE;
-        ctx.font = '32px Arial';
+        ctx.font = '32px Arial';  // Back to original size
         const startText = 'Start';
         const startTextWidth = ctx.measureText(startText).width;
-        ctx.fillText(startText, startBtn.x + (startBtn.width - startTextWidth) / 2, startBtn.y + 40);
+        ctx.fillText(startText, startBtn.x + (startBtn.width - startTextWidth) / 2, startBtn.y + 40);  // Back to original position
 
         // Draw Options button (red)
         const optionsBtn = this.menuButtons.options;
@@ -778,9 +783,10 @@ class Game {
         
         // Options text
         ctx.fillStyle = WHITE;
+        ctx.font = '32px Arial';  // Back to original size
         const optionsText = 'Options';
         const optionsTextWidth = ctx.measureText(optionsText).width;
-        ctx.fillText(optionsText, optionsBtn.x + (optionsBtn.width - optionsTextWidth) / 2, optionsBtn.y + 40);
+        ctx.fillText(optionsText, optionsBtn.x + (optionsBtn.width - optionsTextWidth) / 2, optionsBtn.y + 40);  // Back to original position
 
         // Draw Options menu if active
         if (this.inOptions) {
@@ -931,6 +937,43 @@ class Game {
         ctx.fillStyle = GOLD;
         ctx.fillText(`Coins: ${this.coins}`, 10, 80);
 
+        // Draw countdown if active
+        if (this.countdownActive) {
+            const elapsed = Date.now() - this.countdownStart;
+            const remainingTime = 3 - Math.floor(elapsed/1000);
+            
+            if (remainingTime > 0) {
+                // Dark overlay
+                ctx.fillStyle = 'rgba(0, 0, 0, 0.7)';
+                ctx.fillRect(0, 0, SCREEN_WIDTH, SCREEN_HEIGHT);
+
+                // Draw countdown number
+                ctx.fillStyle = WHITE;
+                ctx.font = 'bold 128px Arial';
+                const text = remainingTime.toString();
+                const textWidth = ctx.measureText(text).width;
+                const textHeight = 128; // Approximate height of the font
+
+                // Position text in center
+                const centerX = SCREEN_WIDTH/2 - textWidth/2;
+                const centerY = SCREEN_HEIGHT/2 + textHeight/3;
+                
+                // Draw with shadow for better visibility
+                ctx.shadowColor = 'rgba(0, 0, 0, 0.5)';
+                ctx.shadowBlur = 10;
+                ctx.fillText(text, centerX, centerY);
+                ctx.shadowBlur = 0;
+
+                // Draw "Get Ready!" text
+                ctx.font = 'bold 48px Arial';
+                const readyText = "Get Ready!";
+                const readyWidth = ctx.measureText(readyText).width;
+                ctx.fillText(readyText, SCREEN_WIDTH/2 - readyWidth/2, centerY - 100);
+            } else {
+                this.countdownActive = false;
+            }
+        }
+
         // Handle countdown overlay
         if (this.countdownActive) {
             const elapsed = Date.now() - this.countdownStart;
@@ -995,11 +1038,6 @@ class Game {
         ctx.font = '28px Arial';
         ctx.fillStyle = GOLD;
         ctx.fillText(`Coins: ${this.coins}`, 10, 80);
-
-        // Draw instructions
-        ctx.font = '20px Arial';
-        ctx.fillStyle = WHITE;
-        ctx.fillText('WASD to move, Mouse to shoot, P to pause', 10, SCREEN_HEIGHT - 20);
 
         // Draw game state messages
         if (this.gameOver) {

@@ -183,8 +183,8 @@ class Boss {
         this.y = y;
         this.size = 60;
         this.speed = 0.8;
-        this.health = 25000; // Reduced boss health (2x less)
-        this.maxHealth = 25000;
+        this.health = 8333; // Reduced boss health (3x less from 25000)
+        this.maxHealth = 8333;
         this.damage = 5;
         this.lastShot = 0;
         this.shootDelay = 1000; // Shoots every second
