@@ -32,6 +32,11 @@ class Game {
         this.boss = null;
         this.bossSpawned = false;
         this.bossDefeated = false;
+        
+        // Final boss system
+        this.finalBoss = null;
+        this.finalBossSpawned = false;
+        this.finalBossDefeated = false;
 
         // Game state
         this.gameOver = false;
@@ -42,6 +47,10 @@ class Game {
         this.cheatStartTime = 0;
         this.cheat2Active = false;
         this.cheat2StartTime = 0;
+        this.cheat3Active = false;
+        this.cheat3StartTime = 0;
+        this.cheat4Active = false;
+        this.cheat4StartTime = 0;
         this.tKeyPressed = false;
 
         // Input handling
@@ -83,12 +92,18 @@ class Game {
                 this.cheat2Active = false;
             }
 
-            // Reset cheat states when 1 or 2 are released
+            // Reset cheat states when keys are released
             if (e.key === '1') {
                 this.cheatActive = false;
             }
             if (e.key === '2') {
                 this.cheat2Active = false;
+            }
+            if (e.key === '3') {
+                this.cheat3Active = false;
+            }
+            if (e.key === '4') {
+                this.cheat4Active = false;
             }
         });
 
@@ -138,10 +153,13 @@ class Game {
         this.greenSpawnCount = 0;
         this.orangeSpawnCount = 0;
         
-        // Reset boss state
+        // Reset boss states
         this.boss = null;
         this.bossSpawned = false;
         this.bossDefeated = false;
+        this.finalBoss = null;
+        this.finalBossSpawned = false;
+        this.finalBossDefeated = false;
         
         // Reset cheat state
         this.cheatActive = false;
@@ -194,6 +212,17 @@ class Game {
 
         this.boss = new Boss(x, y);
         this.bossSpawned = true;
+    }
+
+    spawnFinalBoss() {
+        // Spawn the final boss at the center of the screen
+        // Clear all enemies
+        this.zombies = [];
+        this.boss = null;
+
+        // Spawn final boss at center
+        this.finalBoss = new FinalBoss(SCREEN_WIDTH / 2, SCREEN_HEIGHT / 2);
+        this.finalBossSpawned = true;
     }
 
     spawnZombie() {
@@ -280,6 +309,24 @@ class Game {
             }
         }
 
+        // Player-final boss collision
+        if (this.finalBoss) {
+            const dx = this.player.x - this.finalBoss.x;
+            const dy = this.player.y - this.finalBoss.y;
+            const distance = Math.sqrt(dx * dx + dy * dy);
+
+            if (distance < this.player.size + this.finalBoss.size) {
+                if (this.finalBoss.canDamagePlayer(currentTime)) {
+                    this.player.health -= this.finalBoss.damage;
+                    this.finalBoss.damagePlayer(currentTime);
+                    if (this.player.health <= 0) {
+                        this.gameOver = true;
+                        return;
+                    }
+                }
+            }
+        }
+
         // Bullet collisions
         for (let i = this.bullets.length - 1; i >= 0; i--) {
             const bullet = this.bullets[i];
@@ -303,7 +350,7 @@ class Game {
             }
 
             // Check boss collision (only for player bullets)
-            if (this.boss && !bullet.isBossBullet) {
+            if (this.boss && !bullet.isBossBullet && !bullet.isFinalBossBullet) {
                 const dx = bullet.x - this.boss.x;
                 const dy = bullet.y - this.boss.y;
                 const distance = Math.sqrt(dx * dx + dy * dy);
@@ -317,6 +364,26 @@ class Game {
                         this.boss = null;
                         this.bossDefeated = true;
                         this.score += 1000; // Huge score bonus
+                    }
+                    continue;
+                }
+            }
+
+            // Check final boss collision (only for player bullets)
+            if (this.finalBoss && !bullet.isBossBullet && !bullet.isFinalBossBullet) {
+                const dx = bullet.x - this.finalBoss.x;
+                const dy = bullet.y - this.finalBoss.y;
+                const distance = Math.sqrt(dx * dx + dy * dy);
+
+                if (distance < bullet.size + this.finalBoss.size) {
+                    // Hit final boss!
+                    this.bullets.splice(i, 1);
+                    if (this.finalBoss.takeDamage(bullet.damage)) {
+                        // Final boss defeated!
+                        this.spawnOrbs(this.finalBoss.x, this.finalBoss.y, 500); // 500 orbs
+                        this.finalBoss = null;
+                        this.finalBossDefeated = true;
+                        this.score += 5000; // Massive score bonus
                     }
                     continue;
                 }
@@ -383,10 +450,37 @@ class Game {
                 this.cheat2Active = false;
             }
         }
+
+        // T + 3 cheat code (set coins to 10000)
+        if (this.tKeyPressed && this.keys['3']) {
+            if (!this.cheat3Active) {
+                this.cheat3StartTime = currentTime;
+                this.cheat3Active = true;
+            } else if (currentTime - this.cheat3StartTime >= 2000) { // 2 seconds
+                this.coins = 10000;
+                this.saveCoins();
+                this.cheat3Active = false;
+            }
+        }
+
+        // T + 4 cheat code (clear all progress)
+        if (this.tKeyPressed && this.keys['4']) {
+            if (!this.cheat4Active) {
+                this.cheat4StartTime = currentTime;
+                this.cheat4Active = true;
+            } else if (currentTime - this.cheat4StartTime >= 2000) { // 2 seconds
+                // Clear all progress
+                this.coins = 0;
+                this.saveCoins();
+                this.reset();
+                this.cheat4Active = false;
+            }
+        }
     }
 
     drawBossBar() {
-        if (this.boss) {
+        const bossToShow = this.finalBoss || this.boss;
+        if (bossToShow) {
             const barWidth = SCREEN_WIDTH - 40;
             const barHeight = 25;
             const barX = 20;
@@ -400,21 +494,21 @@ class Game {
             ctx.strokeRect(barX, barY, barWidth, barHeight);
 
             // Health
-            const healthPercent = this.boss.health / this.boss.maxHealth;
+            const healthPercent = bossToShow.health / bossToShow.maxHealth;
             const healthWidth = healthPercent * barWidth;
-            ctx.fillStyle = RED;
+            ctx.fillStyle = this.finalBoss ? GOLD : RED;
             ctx.fillRect(barX, barY, healthWidth, barHeight);
 
             // Boss name
             ctx.fillStyle = WHITE;
             ctx.font = '32px Arial';
-            const bossText = 'MAKS GOD OF WAR';
+            const bossText = this.finalBoss ? 'HANAKO DEMON FOX' : 'MAKS GOD OF WAR';
             const textWidth = ctx.measureText(bossText).width;
             ctx.fillText(bossText, (SCREEN_WIDTH - textWidth) / 2, barY - 20);
 
             // Health text
             ctx.font = '24px Arial';
-            const healthText = `${this.boss.health}/${this.boss.maxHealth}`;
+            const healthText = `${bossToShow.health}/${bossToShow.maxHealth}`;
             const healthTextWidth = ctx.measureText(healthText).width;
             ctx.fillText(healthText, (SCREEN_WIDTH - healthTextWidth) / 2, barY + barHeight / 2 + 8);
         }
@@ -431,8 +525,12 @@ class Game {
         // Update cheat codes
         this.updateCheatCodes();
 
-        // Check if boss should spawn
-        if (this.level >= 15 && !this.bossSpawned && !this.bossDefeated) {
+        // Check if final boss should spawn
+        if (this.level >= 25 && !this.finalBossSpawned && !this.finalBossDefeated) {
+            this.spawnFinalBoss();
+        }
+        // Check if first boss should spawn (only between levels 15-24)
+        else if (this.level >= 15 && this.level < 25 && !this.bossSpawned && !this.bossDefeated) {
             this.spawnBoss();
         }
 
@@ -456,6 +554,13 @@ class Game {
             this.boss.update(this.player);
             const bossBullets = this.boss.shoot(currentTime);
             this.bullets.push(...bossBullets);
+        }
+
+        // Update final boss
+        if (this.finalBoss) {
+            this.finalBoss.update(this.player);
+            const finalBossBullets = this.finalBoss.shoot(currentTime);
+            this.bullets.push(...finalBossBullets);
         }
 
         // Update zombies
@@ -511,15 +616,23 @@ class Game {
     }
 
     drawCheatProgress() {
-        if (this.cheatActive || this.cheat2Active) {
+        if (this.cheatActive || this.cheat2Active || this.cheat3Active || this.cheat4Active) {
             const currentTime = Date.now();
-            const progress = this.cheatActive ? 
-                (currentTime - this.cheatStartTime) / 2000 :
-                (currentTime - this.cheat2StartTime) / 2000;
+            let progress, text;
             
-            const text = this.cheatActive ? 
-                `Skip to Level 15: ${Math.min(100, progress * 100).toFixed(0)}%` :
-                `Skip to Final Boss: ${Math.min(100, progress * 100).toFixed(0)}%`;
+            if (this.cheatActive) {
+                progress = (currentTime - this.cheatStartTime) / 2000;
+                text = `Skip to Level 15: ${Math.min(100, progress * 100).toFixed(0)}%`;
+            } else if (this.cheat2Active) {
+                progress = (currentTime - this.cheat2StartTime) / 2000;
+                text = `Skip to Final Boss: ${Math.min(100, progress * 100).toFixed(0)}%`;
+            } else if (this.cheat3Active) {
+                progress = (currentTime - this.cheat3StartTime) / 2000;
+                text = `Set Coins to 10000: ${Math.min(100, progress * 100).toFixed(0)}%`;
+            } else if (this.cheat4Active) {
+                progress = (currentTime - this.cheat4StartTime) / 2000;
+                text = `Clear All Progress: ${Math.min(100, progress * 100).toFixed(0)}%`;
+            }
 
             ctx.font = '32px Arial';
             ctx.fillStyle = YELLOW;
