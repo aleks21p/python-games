@@ -2156,7 +2156,7 @@ class Game {
     drawOrbBar() {
         const barWidth = 300;
         const barHeight = 15;
-        const barX = 350;  // Moved right to avoid overlap with score
+        const barX = 250;  // Shifted right by 50px to avoid overlapping autofire button
         const barY = 40;   // Lowered to align with score and coins
 
         ctx.fillStyle = GRAY;
