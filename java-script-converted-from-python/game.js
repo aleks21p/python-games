@@ -124,15 +124,16 @@ class Player {
                 let damage = 1;
                 let numStreams = 1;
 
-                // Red-wave special attack unlocks at level 26
+                // Strong red special attack unlocks at level 26 and replaces white bullets
                 if (level >= 26) {
-                    // Only fire the red wave every 4 seconds
-                    if (currentTime - (this.lastRedShot || 0) >= 4000) {
-                        // Single-direction red wave: fires one large bullet in aim direction
+                    // Only fire the strong red bullet every 3 seconds
+                    if (currentTime - (this.lastRedShot || 0) >= 3000) {
+                        // Single-direction strong red: fires one large bullet in aim direction
                         const waveBaseWhiteDamage = 15; // white bullet base damage
-                        const waveDamage = waveBaseWhiteDamage * 20; // 20x white
+                        let waveDamage = waveBaseWhiteDamage * 20; // 20x white damage
+                        waveDamage = waveDamage * 10; // further increase: 10x stronger than current
                         const smallRedSize = 3; // base small bullet size
-                        const waveSize = smallRedSize * 20; // 20x bigger than small red
+                        const waveSize = smallRedSize * 3; // 3x bigger than small red
 
                         const angle = baseAngle; // fire in the direction the player is aiming
                         const speed = 12;
@@ -148,6 +149,9 @@ class Player {
                         this.lastShot = currentTime;
                         this.fireAnimationTime = 150;
                         return [waveBullet];
+                    } else {
+                        // Replace normal/white bullets while at level 26+: do not fire the usual stream
+                        return [];
                     }
                 }
 
