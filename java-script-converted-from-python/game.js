@@ -41,17 +41,22 @@ class Player {
     }
 
     updatePetBonuses() {
-        // Apply turtle health bonus
+        // Apply pet health bonuses
         if (this.equippedPet === 'turtle') {
             this.maxHealth = this.baseHealth * 2; // 2x health
-            if (this.health < this.maxHealth) {
-                this.health = Math.min(this.health * 2, this.maxHealth); // Scale current health up
-            }
+        } else if (this.equippedPet === 'parrot') {
+            this.maxHealth = this.baseHealth * 2; // 2x health
+        } else if (this.equippedPet === 'capybarra') {
+            this.maxHealth = Math.floor(this.baseHealth * 5 * 0.5); // 5x health but 50% less (2.5x total)
         } else {
             this.maxHealth = this.baseHealth;
-            if (this.health > this.maxHealth) {
-                this.health = this.maxHealth; // Scale health down if needed
-            }
+        }
+        
+        // Scale current health appropriately
+        if (this.health < this.maxHealth) {
+            this.health = Math.min(this.health * (this.maxHealth / this.baseHealth), this.maxHealth);
+        } else if (this.health > this.maxHealth) {
+            this.health = this.maxHealth;
         }
     }
 
@@ -145,9 +150,13 @@ class Player {
                     let skinDamage = damage * (this.damageMultiplier || 1);
                     let finalDamage = skinDamage * (this.gunDamageMultiplier || 1);
                     
-                    // Apply turtle damage bonus
+                    // Apply pet damage bonuses
                     if (this.equippedPet === 'turtle') {
                         finalDamage *= 1.2; // 1.2x damage bonus
+                    } else if (this.equippedPet === 'parrot') {
+                        finalDamage *= 3; // 3x damage bonus
+                    } else if (this.equippedPet === 'capybarra') {
+                        finalDamage *= 3; // 3x damage bonus
                     }
                     
                     // Calculate gun tip position
@@ -305,6 +314,59 @@ class Player {
                 ctx.fillStyle = '#0088AA';
                 ctx.beginPath();
                 ctx.arc(petX + 8, petY - 2, 3, 0, Math.PI * 2);
+                ctx.fill();
+            } else if (this.equippedPet === 'parrot') {
+                // Draw parrot (rainbow colored - epic pet)
+                ctx.fillStyle = '#FF6B35'; // Orange-red
+                ctx.beginPath();
+                ctx.arc(petX, petY, petSize, 0, Math.PI * 2);
+                ctx.fill();
+                
+                // Rainbow wing pattern
+                ctx.fillStyle = '#FFE66D'; // Yellow
+                ctx.fillRect(petX - 5, petY - 3, 8, 3);
+                ctx.fillStyle = '#06FFA5'; // Green
+                ctx.fillRect(petX - 5, petY, 8, 3);
+                ctx.fillStyle = '#4ECDC4'; // Blue
+                ctx.fillRect(petX - 5, petY + 3, 8, 3);
+                
+                // Beak
+                ctx.fillStyle = '#FFD93D';
+                ctx.beginPath();
+                ctx.moveTo(petX + 8, petY - 2);
+                ctx.lineTo(petX + 12, petY);
+                ctx.lineTo(petX + 8, petY + 2);
+                ctx.fill();
+            } else if (this.equippedPet === 'capybarra') {
+                // Draw capybarra (golden - legendary pet)
+                ctx.fillStyle = '#FFD700'; // Gold
+                ctx.beginPath();
+                ctx.arc(petX, petY, petSize + 2, 0, Math.PI * 2); // Slightly bigger
+                ctx.fill();
+                
+                // Legendary glow effect
+                for (let i = 0; i < 3; i++) {
+                    const glowSize = petSize + 5 + (i * 3);
+                    ctx.beginPath();
+                    ctx.arc(petX, petY, glowSize, 0, Math.PI * 2);
+                    ctx.strokeStyle = `rgba(255, 215, 0, ${0.3 - i * 0.1})`;
+                    ctx.lineWidth = 2;
+                    ctx.stroke();
+                }
+                
+                // Eyes
+                ctx.fillStyle = '#000000';
+                ctx.beginPath();
+                ctx.arc(petX - 3, petY - 3, 1, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.beginPath();
+                ctx.arc(petX + 3, petY - 3, 1, 0, Math.PI * 2);
+                ctx.fill();
+                
+                // Nose
+                ctx.fillStyle = '#8B4513';
+                ctx.beginPath();
+                ctx.arc(petX, petY + 2, 2, 0, Math.PI * 2);
                 ctx.fill();
             }
         }
@@ -1063,6 +1125,15 @@ class Game {
                     { name: 'dog', rarity: 'common', chance: 45 },
                     { name: 'turtle', rarity: 'rare', chance: 10 }
                 ]
+            },
+            rare: {
+                name: 'Rare Crate',
+                cost: 10000,
+                pets: [
+                    { name: 'turtle', rarity: 'rare', chance: 90 },
+                    { name: 'parrot', rarity: 'epic', chance: 9 },
+                    { name: 'capybarra', rarity: 'legendary', chance: 1 }
+                ]
             }
         };
         
@@ -1331,10 +1402,10 @@ class Game {
                     }
                     
                     // Common crate button
-                    const crateX = SCREEN_WIDTH/2 - 200;
-                    const crateY = SCREEN_HEIGHT/2 - 100;
-                    const crateWidth = 200;
-                    const crateHeight = 200;
+                    const crateX = SCREEN_WIDTH/2 - 270;
+                    const crateY = SCREEN_HEIGHT/2 - 80;
+                    const crateWidth = 160;
+                    const crateHeight = 160;
                     
                     if (clickX >= crateX && clickX <= crateX + crateWidth &&
                         clickY >= crateY && clickY <= crateY + crateHeight) {
@@ -1344,6 +1415,38 @@ class Game {
                             
                             // Random pet from common crate with chances
                             const possiblePets = this.petCrates.common.pets;
+                            const rand = Math.random() * 100; // 0-100
+                            let currentChance = 0;
+                            let selectedPet = null;
+                            
+                            for (const pet of possiblePets) {
+                                currentChance += pet.chance;
+                                if (rand <= currentChance) {
+                                    selectedPet = pet.name;
+                                    break;
+                                }
+                            }
+                            
+                            if (selectedPet && !this.ownedPets.includes(selectedPet)) {
+                                this.ownedPets.push(selectedPet);
+                                this.saveOwnedPets();
+                                console.log(`Got ${selectedPet}! (${possiblePets.find(p => p.name === selectedPet).rarity})`);
+                            }
+                        }
+                    }
+                    
+                    // Rare crate button
+                    const rareCrateX = SCREEN_WIDTH/2 - 80;
+                    const rareCrateY = SCREEN_HEIGHT/2 - 80;
+                    
+                    if (clickX >= rareCrateX && clickX <= rareCrateX + crateWidth &&
+                        clickY >= rareCrateY && clickY <= rareCrateY + crateHeight) {
+                        if (this.coins >= this.petCrates.rare.cost) {
+                            this.coins -= this.petCrates.rare.cost;
+                            this.saveCoins();
+                            
+                            // Random pet from rare crate with chances
+                            const possiblePets = this.petCrates.rare.pets;
                             const rand = Math.random() * 100; // 0-100
                             let currentChance = 0;
                             let selectedPet = null;
@@ -2749,8 +2852,8 @@ class Game {
         ctx.textAlign = 'center';
         ctx.fillText('Back', backButtonX + backButtonWidth/2, backButtonY + 20);
 
-        // Common crate (left half) - Enhanced
-        const crateX = SCREEN_WIDTH/2 - 180;
+        // Common crate (left side) - Enhanced
+        const crateX = SCREEN_WIDTH/2 - 270;
         const crateY = SCREEN_HEIGHT/2 - 80;
         const crateWidth = 160;
         const crateHeight = 160;
@@ -2806,8 +2909,67 @@ class Game {
         ctx.fillStyle = '#4169E1';
         ctx.fillText('Turtle (2x Health, 1.2x Damage) - Rare', crateX + crateWidth/2, crateY + 200);
 
-        // Owned pets section (right half)
-        const petListX = SCREEN_WIDTH/2 + 50;
+        // Rare crate (center) - Enhanced
+        const rareCrateX = SCREEN_WIDTH/2 - 80;
+        const rareCrateY = SCREEN_HEIGHT/2 - 80;
+        
+        // Rare crate background with epic glow effect
+        const canAffordRare = this.coins >= this.petCrates.rare.cost;
+        if (canAffordRare) {
+            ctx.shadowColor = '#9932CC';
+            ctx.shadowBlur = 30;
+        }
+        
+        ctx.fillStyle = canAffordRare ? '#9932CC' : '#444444';
+        ctx.fillRect(rareCrateX, rareCrateY, crateWidth, crateHeight);
+        ctx.shadowBlur = 0;
+        
+        ctx.strokeStyle = canAffordRare ? '#9932CC' : WHITE;
+        ctx.lineWidth = 3;
+        ctx.strokeRect(rareCrateX, rareCrateY, crateWidth, crateHeight);
+        
+        // Rare crate label
+        ctx.fillStyle = '#9932CC';
+        ctx.font = 'bold 18px Arial';
+        ctx.textAlign = 'center';
+        ctx.fillText('💎 RARE CRATE', rareCrateX + crateWidth/2, rareCrateY + 25);
+        
+        // Epic treasure chest icon
+        ctx.fillStyle = '#9932CC';
+        ctx.fillRect(rareCrateX + 55, rareCrateY + 50, 50, 35);
+        ctx.fillStyle = '#8B008B';
+        ctx.fillRect(rareCrateX + 60, rareCrateY + 60, 40, 15);
+        
+        // Magical sparkles
+        ctx.fillStyle = '#FFD700';
+        for (let i = 0; i < 5; i++) {
+            const sparkleX = rareCrateX + 20 + Math.random() * 120;
+            const sparkleY = rareCrateY + 20 + Math.random() * 120;
+            ctx.fillRect(sparkleX, sparkleY, 2, 2);
+        }
+        
+        // Rare chest lock
+        ctx.fillStyle = '#FFD700';
+        ctx.fillRect(rareCrateX + 75, rareCrateY + 65, 10, 10);
+        
+        // Rare price
+        ctx.fillStyle = this.coins >= this.petCrates.rare.cost ? '#00FF00' : '#FF0000';
+        ctx.font = '16px Arial';
+        ctx.fillText(`${this.petCrates.rare.cost} Coins`, rareCrateX + crateWidth/2, rareCrateY + 130);
+        
+        // Rare possible pets preview
+        ctx.fillStyle = WHITE;
+        ctx.font = '12px Arial';
+        ctx.fillText('Contains:', rareCrateX + crateWidth/2, rareCrateY + 155);
+        ctx.fillStyle = '#4169E1';
+        ctx.fillText('Turtle (2x Health, 1.2x Damage) - 90%', rareCrateX + crateWidth/2, rareCrateY + 170);
+        ctx.fillStyle = '#FF6B35';
+        ctx.fillText('Parrot (2x Health, 3x Damage) - 9%', rareCrateX + crateWidth/2, rareCrateY + 185);
+        ctx.fillStyle = '#FFD700';
+        ctx.fillText('Capybarra (2.5x Health, 3x Damage) - 1%', rareCrateX + crateWidth/2, rareCrateY + 200);
+
+        // Owned pets section (right side)
+        const petListX = SCREEN_WIDTH/2 + 120;
         const petListY = SCREEN_HEIGHT/2 - 100;
         
         ctx.fillStyle = GOLD;
@@ -2888,9 +3050,59 @@ class Game {
                     ctx.beginPath();
                     ctx.arc(petListX + 26, petY + 18, 2, 0, Math.PI * 2);
                     ctx.fill();
+                } else if (pet === 'parrot') {
+                    // Parrot icon (rainbow colored - epic)
+                    ctx.fillStyle = '#FF6B35';
+                    ctx.beginPath();
+                    ctx.arc(petListX + 20, petY + 20, 8, 0, Math.PI * 2);
+                    ctx.fill();
+                    
+                    // Rainbow wing pattern
+                    ctx.fillStyle = '#FFE66D';
+                    ctx.fillRect(petListX + 15, petY + 17, 6, 2);
+                    ctx.fillStyle = '#06FFA5';
+                    ctx.fillRect(petListX + 15, petY + 20, 6, 2);
+                    ctx.fillStyle = '#4ECDC4';
+                    ctx.fillRect(petListX + 15, petY + 23, 6, 2);
+                    
+                    // Beak
+                    ctx.fillStyle = '#FFD93D';
+                    ctx.beginPath();
+                    ctx.moveTo(petListX + 26, petY + 18);
+                    ctx.lineTo(petListX + 30, petY + 20);
+                    ctx.lineTo(petListX + 26, petY + 22);
+                    ctx.fill();
+                } else if (pet === 'capybarra') {
+                    // Capybarra icon (golden - legendary)
+                    ctx.fillStyle = '#FFD700';
+                    ctx.beginPath();
+                    ctx.arc(petListX + 20, petY + 20, 10, 0, Math.PI * 2);
+                    ctx.fill();
+                    
+                    // Legendary glow
+                    ctx.strokeStyle = '#FFD700';
+                    ctx.lineWidth = 2;
+                    ctx.beginPath();
+                    ctx.arc(petListX + 20, petY + 20, 12, 0, Math.PI * 2);
+                    ctx.stroke();
+                    
+                    // Eyes
+                    ctx.fillStyle = '#000000';
+                    ctx.beginPath();
+                    ctx.arc(petListX + 17, petY + 17, 1, 0, Math.PI * 2);
+                    ctx.fill();
+                    ctx.beginPath();
+                    ctx.arc(petListX + 23, petY + 17, 1, 0, Math.PI * 2);
+                    ctx.fill();
+                    
+                    // Nose
+                    ctx.fillStyle = '#8B4513';
+                    ctx.beginPath();
+                    ctx.arc(petListX + 20, petY + 22, 2, 0, Math.PI * 2);
+                    ctx.fill();
                 }
                 
-                // Pet name and effect (updated for turtle)
+                // Pet name and effect (updated for all pets)
                 ctx.fillStyle = WHITE;
                 ctx.font = '14px Arial';
                 ctx.textAlign = 'left';
@@ -2903,6 +3115,12 @@ class Game {
                 } else if (pet === 'turtle') {
                     effect = '(2x Health, 1.2x Damage)';
                     ctx.fillStyle = '#4169E1'; // Blue text for rare pet
+                } else if (pet === 'parrot') {
+                    effect = '(2x Health, 3x Damage)';
+                    ctx.fillStyle = '#FF6B35'; // Orange text for epic pet
+                } else if (pet === 'capybarra') {
+                    effect = '(2.5x Health, 3x Damage)';
+                    ctx.fillStyle = '#FFD700'; // Gold text for legendary pet
                 }
                 ctx.fillText(`${petName} ${effect}`, petListX + 40, petY + 16);
                 
