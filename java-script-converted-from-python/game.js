@@ -21,6 +21,9 @@ class Player {
         this.color = 'white';
         this.scale = 1;
         this.speedBoost = 1;
+        this.speedMultiplier = 1;
+        this.damageMultiplier = 1;
+        this.isMultiColor = false;
         this.lastShot = 0;
         this.baseShootDelay = 200;
         this.shootDelay = 200;
@@ -36,7 +39,7 @@ class Player {
     }
 
     update(keys) {
-        const actualSpeed = this.speed * (this.speedBoost || 1);
+        const actualSpeed = this.speed * (this.speedBoost || 1) * (this.speedMultiplier || 1);
 
         if (keys['w'] || keys['W'] || keys['ArrowUp']) {
             this.y -= actualSpeed;
@@ -79,7 +82,8 @@ class Player {
                     const angle = startAngle + i * angleStep;
                     const bulletDx = Math.cos(angle) * 10;
                     const bulletDy = Math.sin(angle) * 10;
-                    bullets.push(new Bullet(this.x, this.y, bulletDx, bulletDy, damage, isRed));
+                    const finalDamage = damage * (this.damageMultiplier || 1);
+                    bullets.push(new Bullet(this.x, this.y, bulletDx, bulletDy, finalDamage, isRed));
                 }
             }
 
@@ -99,10 +103,23 @@ class Player {
     }
 
     draw(ctx) {
-        ctx.beginPath();
-        ctx.arc(this.x, this.y, this.size * this.scale, 0, Math.PI * 2);
-        ctx.fillStyle = this.color || 'white';
-        ctx.fill();
+        if (this.isMultiColor) {
+            // Draw multi-colored player (red and blue halves)
+            ctx.fillStyle = '#FF0000';
+            ctx.beginPath();
+            ctx.arc(this.x, this.y, this.size * this.scale, 0, Math.PI, false);
+            ctx.fill();
+            
+            ctx.fillStyle = '#0000FF';
+            ctx.beginPath();
+            ctx.arc(this.x, this.y, this.size * this.scale, 0, Math.PI, true);
+            ctx.fill();
+        } else {
+            ctx.beginPath();
+            ctx.arc(this.x, this.y, this.size * this.scale, 0, Math.PI * 2);
+            ctx.fillStyle = this.color || 'white';
+            ctx.fill();
+        }
 
         const barWidth = 40;
         const barHeight = 6;
@@ -701,7 +718,9 @@ class Game {
         this.shopItems = {
             purple: { name: 'Purple Skin', cost: 5, owned: false, color: '#800080' },
             small: { name: 'Small & Green', cost: 10, owned: false, color: '#00FF00', scale: 0.5 },
-            bigge: { name: 'Bigge', cost: 30, owned: false, color: '#FFA500', scale: 1.2, speedBoost: 2 }
+            bigge: { name: 'Bigge', cost: 30, owned: false, color: '#FFA500', scale: 1.2, speedBoost: 2 },
+            angry: { name: 'Angry', cost: 100, owned: false, color: '#FF4500', damageMultiplier: 2, speedMultiplier: 0.3 },
+            multi: { name: 'Multi', cost: 150, owned: false, color: '#8A2BE2', damageMultiplier: 5, speedMultiplier: 0.7, isMultiColor: true }
         };
         this.activePlayerSkin = 'default';
         
@@ -880,9 +899,9 @@ class Game {
                 // Check shop item clicks
                 if (this.inShop) {
                     const itemHeight = 100;
-                    const itemWidth = 150;
-                    const itemSpacing = 20;
-                    const startX = SCREEN_WIDTH/2 - ((itemWidth * 3 + itemSpacing * 2) / 2);
+                    const itemWidth = 120;
+                    const itemSpacing = 15;
+                    const startX = SCREEN_WIDTH/2 - ((itemWidth * 5 + itemSpacing * 4) / 2);
                     const startY = SCREEN_HEIGHT/2 - 50;
 
                     let index = 0;
@@ -1387,10 +1406,16 @@ class Game {
             this.player.color = skin.color;
             this.player.scale = skin.scale || 1;
             this.player.speedBoost = skin.speedBoost || 1;
+            this.player.speedMultiplier = skin.speedMultiplier || 1;
+            this.player.damageMultiplier = skin.damageMultiplier || 1;
+            this.player.isMultiColor = skin.isMultiColor || false;
         } else {
             this.player.color = 'white';
             this.player.scale = 1;
             this.player.speedBoost = 1;
+            this.player.speedMultiplier = 1;
+            this.player.damageMultiplier = 1;
+            this.player.isMultiColor = false;
         }
 
         // Update countdown if active
@@ -1688,9 +1713,9 @@ class Game {
                         
                         // Draw each cheat option as a button
                         cheatOptions.forEach((option, index) => {
-                            const btnY = contentY + (index * 50);
-                            const btnWidth = 400;
-                            const btnHeight = 40;
+                            const btnY = contentY + (index * 55);
+                            const btnWidth = 450;
+                            const btnHeight = 45;
                             const btnX = contentX - btnWidth/2;
                             
                             // Button background
@@ -1699,11 +1724,15 @@ class Game {
                             ctx.strokeStyle = WHITE;
                             ctx.strokeRect(btnX, btnY, btnWidth, btnHeight);
                             
-                            // Button text - split into key and description
+                            // Button text - key and description on separate lines
                             ctx.fillStyle = '#FFD700';  // Gold color for key
-                            ctx.fillText(option.key, btnX + 20, btnY + 28);
+                            ctx.font = '18px Arial';
+                            ctx.textAlign = 'center';
+                            ctx.fillText(option.key, contentX, btnY + 18);
+                            
                             ctx.fillStyle = WHITE;
-                            ctx.fillText('- ' + option.desc, btnX + 80, btnY + 28);
+                            ctx.font = '14px Arial';
+                            ctx.fillText(option.desc, contentX, btnY + 35);
                         });
                         break;
 
@@ -1757,9 +1786,9 @@ class Game {
 
             // Draw shop items
             const itemHeight = 100;
-            const itemWidth = 150;
-            const itemSpacing = 20;
-            const startX = SCREEN_WIDTH/2 - ((itemWidth * 3 + itemSpacing * 2) / 2);
+            const itemWidth = 120;
+            const itemSpacing = 15;
+            const startX = SCREEN_WIDTH/2 - ((itemWidth * 5 + itemSpacing * 4) / 2);
             const startY = SCREEN_HEIGHT/2 - 50;
 
             let index = 0;
@@ -1773,43 +1802,68 @@ class Game {
                 ctx.strokeRect(itemX, startY, itemWidth, itemHeight);
 
                 // Draw preview circle (player appearance)
-                const previewSize = 20;
+                const previewSize = 15;
                 const scale = item.scale || 1;
-                ctx.fillStyle = item.color;
-                ctx.beginPath();
-                ctx.arc(itemX + itemWidth/2, startY + 25, previewSize * scale, 0, Math.PI * 2);
-                ctx.fill();
+                
+                if (item.isMultiColor) {
+                    // Draw multi-colored circle (red and blue)
+                    ctx.fillStyle = '#FF0000';
+                    ctx.beginPath();
+                    ctx.arc(itemX + itemWidth/2, startY + 25, previewSize * scale, 0, Math.PI, false);
+                    ctx.fill();
+                    
+                    ctx.fillStyle = '#0000FF';
+                    ctx.beginPath();
+                    ctx.arc(itemX + itemWidth/2, startY + 25, previewSize * scale, 0, Math.PI, true);
+                    ctx.fill();
+                } else {
+                    ctx.fillStyle = item.color;
+                    ctx.beginPath();
+                    ctx.arc(itemX + itemWidth/2, startY + 25, previewSize * scale, 0, Math.PI * 2);
+                    ctx.fill();
+                }
+                
+                // Draw special effects indicators
                 if (item.speedBoost) {
                     // Draw speed indicator arrows
                     ctx.strokeStyle = WHITE;
+                    ctx.lineWidth = 2;
                     ctx.beginPath();
-                    ctx.moveTo(itemX + itemWidth/2 + 25, startY + 25);
-                    ctx.lineTo(itemX + itemWidth/2 + 35, startY + 25);
-                    ctx.lineTo(itemX + itemWidth/2 + 30, startY + 20);
-                    ctx.moveTo(itemX + itemWidth/2 + 35, startY + 25);
-                    ctx.lineTo(itemX + itemWidth/2 + 30, startY + 30);
+                    ctx.moveTo(itemX + itemWidth/2 + 20, startY + 25);
+                    ctx.lineTo(itemX + itemWidth/2 + 30, startY + 25);
+                    ctx.lineTo(itemX + itemWidth/2 + 25, startY + 20);
+                    ctx.moveTo(itemX + itemWidth/2 + 30, startY + 25);
+                    ctx.lineTo(itemX + itemWidth/2 + 25, startY + 30);
                     ctx.stroke();
+                }
+                
+                if (item.damageMultiplier && item.damageMultiplier > 1) {
+                    // Draw damage indicator (sword/star)
+                    ctx.fillStyle = '#FFD700';
+                    ctx.font = '16px Arial';
+                    ctx.textAlign = 'center';
+                    ctx.fillText('⚔', itemX + itemWidth/2 + 25, startY + 30);
                 }
 
                 // Draw item name
                 ctx.fillStyle = WHITE;
-                ctx.font = '20px Arial';
-                ctx.textAlign = 'center';  // Center align the text
-                ctx.fillText(item.name, itemX + itemWidth/2, startY + 60);
+                ctx.font = '16px Arial';
+                ctx.textAlign = 'center';
+                ctx.fillText(item.name, itemX + itemWidth/2, startY + 55);
 
                 // Draw price or status
-                ctx.font = '16px Arial';
+                ctx.font = '14px Arial';
                 if (item.owned) {
                     if (this.activePlayerSkin === itemId) {
                         ctx.fillStyle = '#00FF00';
-                        ctx.fillText('EQUIPPED', itemX + itemWidth/2, startY + 85);
+                        ctx.fillText('EQUIPPED', itemX + itemWidth/2, startY + 75);
                     } else {
                         ctx.fillStyle = '#FFFF00';
-                        ctx.fillText('Click to Equip', itemX + itemWidth/2, startY + 85);
+                        ctx.fillText('Click to Equip', itemX + itemWidth/2, startY + 75);
                     }
                 } else {
                     ctx.fillStyle = this.coins >= item.cost ? '#FFFF00' : '#FF0000';
-                    ctx.fillText(`${item.cost} Coins`, itemX + itemWidth/2, startY + 85);
+                    ctx.fillText(`${item.cost} Coins`, itemX + itemWidth/2, startY + 75);
                 }
 
                 index++;
@@ -1976,9 +2030,11 @@ class Game {
             return;
         }
 
-        // Draw pause menu if game is paused
-        if (this.paused && !this.countdownActive) {
+        // Draw pause menu if game is paused (but not in main menu)
+        if (this.paused && !this.countdownActive && !this.inMenu) {
             this.drawPauseMenu();
+            ctx.restore();
+            return;
         }
 
         // Draw game objects
