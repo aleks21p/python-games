@@ -196,13 +196,13 @@ class Player {
 
     draw(ctx) {
         if (this.isMultiColor) {
-            // Draw multi-colored player (red and blue halves)
+            // Draw multi-colored player (red and white halves)
             ctx.fillStyle = '#FF0000';
             ctx.beginPath();
             ctx.arc(this.x, this.y, this.size * this.scale, 0, Math.PI, false);
             ctx.fill();
             
-            ctx.fillStyle = '#0000FF';
+            ctx.fillStyle = '#FFFFFF';
             ctx.beginPath();
             ctx.arc(this.x, this.y, this.size * this.scale, 0, Math.PI, true);
             ctx.fill();
@@ -1028,7 +1028,7 @@ class Game {
             small: { name: 'Small & Green', cost: 10, owned: false, color: '#00FF00', scale: 0.5 },
             bigge: { name: 'Bigge', cost: 30, owned: false, color: '#FFA500', scale: 1.2, speedBoost: 2 },
             angry: { name: 'Angry', cost: 100, owned: false, color: '#FF4500', damageMultiplier: 2, speedMultiplier: 1.5 },
-            multi: { name: 'Multi', cost: 150, owned: false, color: '#8A2BE2', damageMultiplier: 5, speedMultiplier: 0.7, isMultiColor: true }
+            multi: { name: 'Multi', cost: 150, owned: false, color: '#8A2BE2', damageMultiplier: 5, speedMultiplier: 0.5, isMultiColor: true }
         };
         this.activePlayerSkin = 'default';
         
@@ -2725,7 +2725,7 @@ class Game {
                 ctx.arc(previewX, previewY, previewRadius, 0, Math.PI, false);
                 ctx.fill();
                 
-                ctx.fillStyle = '#0000FF';
+                ctx.fillStyle = '#FFFFFF';
                 ctx.beginPath();
                 ctx.arc(previewX, previewY, previewRadius, 0, Math.PI, true);
                 ctx.fill();
