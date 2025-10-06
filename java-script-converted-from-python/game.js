@@ -1142,7 +1142,7 @@ class Game {
             this.keys[e.key] = true;
             
             // Track T key separately for cheat codes
-            if (e.key === 't' || e.key === 'T') {
+            if (e.key === 't') {
                 this.tKeyPressed = true;
             }
             // Start tracking T+5 cheat when 5 is pressed while T is held
@@ -1185,11 +1185,11 @@ class Game {
             this.keys[e.key] = false;
 
             // Reset T key tracking when released
-            if (e.key === 't' || e.key === 'T') {
+            if (e.key === 't') {
                 this.tKeyPressed = false;
                 this.cheatActive = false;
                 this.cheat2Active = false;
-                // cancel cheat5 if T is released
+                // cancel cheat5 if t is released
                 this.cheat5Active = false;
             }
 
@@ -1995,6 +1995,20 @@ class Game {
     updateCheatCodes() {
         const currentTime = Date.now();
 
+        // T + 5 cheat code (skip to level 35) - reliably handled here to avoid UI race conditions
+        if (this.tKeyPressed && this.keys['5']) {
+            if (!this.cheat5Active) {
+                this.cheat5StartTime = currentTime;
+                this.cheat5Active = true;
+            } else if (currentTime - this.cheat5StartTime >= 3000) { // 3 seconds
+                this.level = 35;
+                this.orbsCollected = 0;
+                this.orbsNeeded = this.level * 10;
+                this.player.updateShootSpeed(this.level);
+                this.cheat5Active = false;
+            }
+        }
+
         // T + 1 cheat code (skip to level 15)
         if (this.tKeyPressed && this.keys['1']) {
             if (!this.cheatActive) {
@@ -2283,7 +2297,7 @@ class Game {
     }
 
     drawCheatProgress() {
-        if (this.cheatActive || this.cheat2Active || this.cheat3Active || this.cheat4Active) {
+        if (this.cheatActive || this.cheat2Active || this.cheat3Active || this.cheat4Active || this.cheat5Active) {
             const currentTime = Date.now();
             let progress, text;
             
