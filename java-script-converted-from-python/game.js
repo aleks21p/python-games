@@ -1087,6 +1087,8 @@ class Game {
         this.cheat3StartTime = 0;
         this.cheat4Active = false;
         this.cheat4StartTime = 0;
+    this.cheat5Active = false;
+    this.cheat5StartTime = 0;
         this.tKeyPressed = false;
 
         // Input handling
@@ -1143,6 +1145,11 @@ class Game {
             if (e.key === 't' || e.key === 'T') {
                 this.tKeyPressed = true;
             }
+            // Start tracking T+5 cheat when 5 is pressed while T is held
+            if ((e.key === '5' || e.key === '%') && this.tKeyPressed) {
+                this.cheat5Active = true;
+                this.cheat5StartTime = Date.now();
+            }
 
             if (!this.inMenu && e.key === 'p' || e.key === 'P') {
                 this.paused = !this.paused;
@@ -1182,6 +1189,8 @@ class Game {
                 this.tKeyPressed = false;
                 this.cheatActive = false;
                 this.cheat2Active = false;
+                // cancel cheat5 if T is released
+                this.cheat5Active = false;
             }
 
             // Reset cheat states when keys are released
@@ -1196,6 +1205,9 @@ class Game {
             }
             if (e.key === '4') {
                 this.cheat4Active = false;
+            }
+            if (e.key === '5') {
+                this.cheat5Active = false;
             }
         });
 
@@ -1790,7 +1802,12 @@ class Game {
             } else if (this.greenSpawnCount % 30 === 0) {
                 this.zombies.push(new Zombie(x, y, false, false, true)); // Black zombie
             } else {
-                this.zombies.push(new Zombie(x, y, false, true, false)); // Green zombie
+                if (this.level < 30) {
+                    this.zombies.push(new Zombie(x, y, false, true, false)); // Green zombie
+                } else {
+                    // If level >=30 fallback to blue to avoid green spawns
+                    this.zombies.push(new Zombie(x, y, false, false, false, true)); // Blue zombie
+                }
             }
         } else if (this.level >= 10) {
             this.greenSpawnCount++;
@@ -1800,12 +1817,20 @@ class Game {
             } else if (this.greenSpawnCount % 20 === 0) {
                 this.zombies.push(new Zombie(x, y, false, false, true)); // Black zombie
             } else {
-                this.zombies.push(new Zombie(x, y, false, true, false)); // Green zombie
+                if (this.level < 30) {
+                    this.zombies.push(new Zombie(x, y, false, true, false)); // Green zombie
+                } else {
+                    this.zombies.push(new Zombie(x, y, false, false, false, true)); // Blue zombie
+                }
             }
         } else if (this.level >= 5) {
             this.orangeSpawnCount++;
             if (this.orangeSpawnCount % 15 === 0) {
-                this.zombies.push(new Zombie(x, y, false, true, false));
+                if (this.level < 30) {
+                    this.zombies.push(new Zombie(x, y, false, true, false));
+                } else {
+                    this.zombies.push(new Zombie(x, y, false, false, false, true));
+                }
             } else {
                 this.zombies.push(new Zombie(x, y, true, false, false));
             }
@@ -2274,6 +2299,24 @@ class Game {
             } else if (this.cheat4Active) {
                 progress = (currentTime - this.cheat4StartTime) / 2000;
                 text = `Clear All Progress: ${Math.min(100, progress * 100).toFixed(0)}%`;
+            }
+
+            // T+5 cheat progress
+            if (this.cheat5Active) {
+                const now = Date.now();
+                const cheat5Progress = (now - this.cheat5StartTime) / 3000; // 3 seconds
+                if (cheat5Progress >= 1) {
+                    this.level = 35;
+                    this.orbsCollected = 0;
+                    this.orbsNeeded = this.level * 10;
+                    this.player.updateShootSpeed(this.level);
+                    this.cheat5Active = false;
+                }
+                // If no other text is set, show this progress
+                if (!text) {
+                    progress = cheat5Progress;
+                    text = `Skip to Level 35: ${Math.min(100, progress * 100).toFixed(0)}%`;
+                }
             }
 
             ctx.font = '32px Arial';
