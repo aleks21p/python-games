@@ -99,8 +99,9 @@ class Player {
         }
     }
 
-    shoot(mousePos, currentTime, level) {
-        if (currentTime - this.lastShot > this.shootDelay && this.isMouseShooting) {
+    shoot(mousePos, currentTime, level, autoFire = false) {
+        const shouldShoot = autoFire || this.isMouseShooting;
+        if (currentTime - this.lastShot > this.shootDelay && shouldShoot) {
             const dx = mousePos.x - this.x;
             const dy = mousePos.y - this.y;
             const distance = Math.sqrt(dx * dx + dy * dy);
@@ -463,10 +464,10 @@ class Zombie {
         this.shootDelay = 4000;
 
         if (isBlue) {
-            this.size = 21; // 3x the size of green (7 * 3)
+            this.size = 63; // 9x the size of green (7 * 9)
             this.speed = 1.5; // Moderate speed
-            this.health = 67200; // 20x stronger than before (3360 * 20)
-            this.maxHealth = 67200;
+            this.health = 201600; // 60x stronger than before (3360 * 60)
+            this.maxHealth = 201600;
         } else if (isBlack) {
             this.size = 35;
             this.speed = 1.2;
@@ -538,6 +539,14 @@ class Zombie {
 
         // Add blue glow effect for blue zombies
         if (this.isBlue) {
+            // Add MINI BOSS text above blue zombie
+            ctx.fillStyle = '#FF0000';
+            ctx.font = 'bold 20px Arial';
+            ctx.textAlign = 'center';
+            ctx.fillText('MINI BOSS', this.x, this.y - this.size - 10);
+            ctx.textAlign = 'left';
+
+            // Blue glow effect
             for (let i = 0; i < 2; i++) {
                 const glowSize = this.size + (i * 5);
                 ctx.beginPath();
@@ -827,7 +836,7 @@ class Game {
                 credits: 'Credits',
                 cheatLv15: 'Skip to Level 15',
                 cheatBoss: 'Skip to Final Boss',
-                cheatCoins: 'Get 10000 Coins',
+                cheatCoins: 'Get 1,000,000 Coins',
                 cheatReset: 'Reset All Progress',
                 languages: 'Languages',
                 special: 'Special',
@@ -864,7 +873,7 @@ class Game {
                 cheats: 'Astuces',
                 cheatLv15: 'Passer au Niveau 15',
                 cheatBoss: 'Passer au Boss Final',
-                cheatCoins: 'Obtenir 10000 Pieces',
+                cheatCoins: 'Obtenir 1,000,000 Pieces',
                 cheatReset: 'Reinitialiser Tout',
                 difficulty: 'Difficulte',
                 credits: 'Credits',
@@ -903,7 +912,7 @@ class Game {
                 cheats: 'Trucos',
                 cheatLv15: 'Saltar al Nivel 15',
                 cheatBoss: 'Saltar al Jefe Final',
-                cheatCoins: 'Obtener 10000 Monedas',
+                cheatCoins: 'Obtener 1,000,000 Monedas',
                 cheatReset: 'Reiniciar Todo',
                 difficulty: 'Dificultad',
                 credits: 'Creditos',
@@ -981,6 +990,10 @@ class Game {
         this.loadSkins(); // Load saved skins first
         this.loadGunUpgrade(); // Load saved gun upgrade
         this.player = new Player(SCREEN_WIDTH / 2, SCREEN_HEIGHT / 2);
+        
+        // Apply equipped pet
+        this.player.equippedPet = this.equippedPet;
+        this.player.updatePetBonuses();
         this.bullets = [];
         this.zombies = [];
         this.orbs = [];
@@ -1033,6 +1046,9 @@ class Game {
 
         // Animation frame ID
         this.animationId = null;
+        
+        // Autofire system
+        this.autoFireEnabled = false;
         
         // Pet system
         this.inPetsPage = false;
@@ -1135,14 +1151,29 @@ class Game {
 
         // Mouse click for menu buttons
         canvas.addEventListener('click', (e) => {
+            const rect = canvas.getBoundingClientRect();
+            const clickX = e.clientX - rect.left;
+            const clickY = e.clientY - rect.top;
+
+            // Check autofire button click (only during gameplay)
+            if (!this.inMenu && !this.gameOver && !this.paused && !this.countdownActive) {
+                const autoFireButtonX = SCREEN_WIDTH - 130;
+                const autoFireButtonY = 10;
+                const autoFireButtonWidth = 120;
+                const autoFireButtonHeight = 35;
+                
+                if (clickX >= autoFireButtonX && clickX <= autoFireButtonX + autoFireButtonWidth &&
+                    clickY >= autoFireButtonY && clickY <= autoFireButtonY + autoFireButtonHeight) {
+                    this.autoFireEnabled = !this.autoFireEnabled;
+                    return; // Don't process other clicks
+                }
+            }
+
             if (this.inMenu) {
-                const rect = canvas.getBoundingClientRect();
-                const clickX = e.clientX - rect.left;
-                const clickY = e.clientY - rect.top;
 
                 // Check start button (only if options menu is not open)
                 const startBtn = this.menuButtons.start;
-                if (!this.inOptions && clickX >= startBtn.x && clickX <= startBtn.x + startBtn.width &&
+                if (!this.inOptions && !this.inShop && clickX >= startBtn.x && clickX <= startBtn.x + startBtn.width &&
                     clickY >= startBtn.y && clickY <= startBtn.y + startBtn.height) {
                     if (this.gameOver) {
                         this.reset();
@@ -1158,7 +1189,7 @@ class Game {
 
                 // Check options button
                 const optionsBtn = this.menuButtons.options;
-                if (clickX >= optionsBtn.x && clickX <= optionsBtn.x + optionsBtn.width &&
+                if (!this.inShop && clickX >= optionsBtn.x && clickX <= optionsBtn.x + optionsBtn.width &&
                     clickY >= optionsBtn.y && clickY <= optionsBtn.y + optionsBtn.height) {
                     this.inOptions = !this.inOptions;
                     this.inShop = false;  // Close shop when opening options
@@ -1167,7 +1198,7 @@ class Game {
 
                 // Check shop button
                 const shopBtn = this.menuButtons.shop;
-                if (clickX >= shopBtn.x && clickX <= shopBtn.x + shopBtn.width &&
+                if (!this.inOptions && clickX >= shopBtn.x && clickX <= shopBtn.x + shopBtn.width &&
                     clickY >= shopBtn.y && clickY <= shopBtn.y + shopBtn.height) {
                     this.inShop = !this.inShop;
                     this.inOptions = false;  // Close options when opening shop
@@ -1176,6 +1207,15 @@ class Game {
 
                 // Check shop item clicks
                 if (this.inShop && !this.inPetsPage) {
+                    // First check if click is within shop box bounds
+                    const shopBoxX = 100;
+                    const shopBoxY = 50;
+                    const shopBoxWidth = SCREEN_WIDTH - 200;
+                    const shopBoxHeight = SCREEN_HEIGHT - 100;
+                    
+                    if (clickX >= shopBoxX && clickX <= shopBoxX + shopBoxWidth &&
+                        clickY >= shopBoxY && clickY <= shopBoxY + shopBoxHeight) {
+                        // Click is within shop box - process shop interactions
                     // Pets page button (top right of shop window) - Enhanced
                     const petsButtonX = SCREEN_WIDTH - 200 - 100; // Inside shop window with more margin
                     const petsButtonY = 70; // Near top of shop window
@@ -1263,11 +1303,21 @@ class Game {
                         }
                     }
                     
+                    } // End of shop box bounds check
                     return; // Prevent clicking through shop box
                 }
                 
                 // Check pets page clicks
                 if (this.inShop && this.inPetsPage) {
+                    // First check if click is within shop box bounds
+                    const shopBoxX = 100;
+                    const shopBoxY = 50;
+                    const shopBoxWidth = SCREEN_WIDTH - 200;
+                    const shopBoxHeight = SCREEN_HEIGHT - 100;
+                    
+                    if (clickX >= shopBoxX && clickX <= shopBoxX + shopBoxWidth &&
+                        clickY >= shopBoxY && clickY <= shopBoxY + shopBoxHeight) {
+                        // Click is within shop box - process pets page interactions
                     // Back button
                     const backButtonX = 110; // Inside shop window on left
                     const backButtonY = 60; // Near top of shop window
@@ -1330,21 +1380,32 @@ class Game {
                                 this.equippedPet = pet;
                                 this.player.equippedPet = pet;
                             }
+                            this.player.updatePetBonuses(); // Update health bonuses
                             this.saveEquippedPet();
                         }
                     });
                     
+                    } // End of pets page shop box bounds check
                     return; // Prevent clicking through pets page
                 }
 
                 // Check option tab buttons when in options menu
                 if (this.inOptions) {
-                    // Check option tab buttons
-                    for (const [tabName, btn] of Object.entries(this.optionButtons)) {
-                        if (clickX >= btn.x && clickX <= btn.x + btn.width &&
-                            clickY >= btn.y && clickY <= btn.y + btn.height) {
-                            this.activeOptionTab = this.activeOptionTab === tabName ? '' : tabName;
-                            break;
+                    // First check if click is within options box bounds
+                    const optionsBoxX = 100;
+                    const optionsBoxY = 50;
+                    const optionsBoxWidth = SCREEN_WIDTH - 200;
+                    const optionsBoxHeight = SCREEN_HEIGHT - 100;
+                    
+                    if (clickX >= optionsBoxX && clickX <= optionsBoxX + optionsBoxWidth &&
+                        clickY >= optionsBoxY && clickY <= optionsBoxY + optionsBoxHeight) {
+                        // Click is within options box - check option tab buttons
+                        for (const [tabName, btn] of Object.entries(this.optionButtons)) {
+                            if (clickX >= btn.x && clickX <= btn.x + btn.width &&
+                                clickY >= btn.y && clickY <= btn.y + btn.height) {
+                                this.activeOptionTab = this.activeOptionTab === tabName ? '' : tabName;
+                                break;
+                            }
                         }
                     }
                     return; // Prevent clicking through options box
@@ -1573,8 +1634,8 @@ class Game {
 
         if (this.level >= 10) {
             this.greenSpawnCount++;
-            if (this.level >= 17 && this.greenSpawnCount % 15 === 0) {
-                // Every 15 green enemies after level 17, spawn a blue enemy
+            if (this.level >= 17 && this.greenSpawnCount % 20 === 0) {
+                // Every 20 green enemies after level 17, spawn a blue enemy
                 this.zombies.push(new Zombie(x, y, false, false, false, true)); // Blue zombie
             } else if (this.greenSpawnCount % 20 === 0) {
                 this.zombies.push(new Zombie(x, y, false, false, true)); // Black zombie
@@ -1778,13 +1839,13 @@ class Game {
             }
         }
 
-        // T + 3 cheat code (set coins to 10000)
+        // T + 3 cheat code (set coins to 1,000,000)
         if (this.tKeyPressed && this.keys['3']) {
             if (!this.cheat3Active) {
                 this.cheat3StartTime = currentTime;
                 this.cheat3Active = true;
             } else if (currentTime - this.cheat3StartTime >= 2000) { // 2 seconds
-                this.coins = 10000;
+                this.coins = 1000000;
                 this.saveCoins();
                 this.cheat3Active = false;
             }
@@ -1935,7 +1996,7 @@ class Game {
         this.player.equippedPet = this.equippedPet;
 
         // Shooting
-        const newBullets = this.player.shoot(this.mousePos, currentTime, this.level);
+        const newBullets = this.player.shoot(this.mousePos, currentTime, this.level, this.autoFireEnabled);
         this.bullets.push(...newBullets);
 
         // Update bullets
@@ -2025,7 +2086,7 @@ class Game {
                 text = `Skip to Final Boss: ${Math.min(100, progress * 100).toFixed(0)}%`;
             } else if (this.cheat3Active) {
                 progress = (currentTime - this.cheat3StartTime) / 2000;
-                text = `Set Coins to 10000: ${Math.min(100, progress * 100).toFixed(0)}%`;
+                text = `Set Coins to 1,000,000: ${Math.min(100, progress * 100).toFixed(0)}%`;
             } else if (this.cheat4Active) {
                 progress = (currentTime - this.cheat4StartTime) / 2000;
                 text = `Clear All Progress: ${Math.min(100, progress * 100).toFixed(0)}%`;
@@ -2337,6 +2398,25 @@ class Game {
         ctx.font = '28px Arial';
         ctx.fillStyle = GOLD;
         ctx.fillText(`${this.translations[this.selectedLanguage].coins}: ${this.coins}`, 10, 80);
+
+        // Draw autofire toggle button (top-right)
+        const autoFireButtonX = SCREEN_WIDTH - 130;
+        const autoFireButtonY = 10;
+        const autoFireButtonWidth = 120;
+        const autoFireButtonHeight = 35;
+        
+        ctx.fillStyle = this.autoFireEnabled ? '#4CAF50' : '#F44336';
+        ctx.fillRect(autoFireButtonX, autoFireButtonY, autoFireButtonWidth, autoFireButtonHeight);
+        ctx.strokeStyle = WHITE;
+        ctx.lineWidth = 2;
+        ctx.strokeRect(autoFireButtonX, autoFireButtonY, autoFireButtonWidth, autoFireButtonHeight);
+        
+        ctx.fillStyle = WHITE;
+        ctx.font = '14px Arial';
+        ctx.textAlign = 'center';
+        const autoFireText = this.autoFireEnabled ? 'AutoFire: ON' : 'AutoFire: OFF';
+        ctx.fillText(autoFireText, autoFireButtonX + autoFireButtonWidth/2, autoFireButtonY + 23);
+        ctx.textAlign = 'left';
 
         // Draw countdown if active
         if (this.countdownActive) {
