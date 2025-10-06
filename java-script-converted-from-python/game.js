@@ -23,6 +23,8 @@ class Player {
         this.speedBoost = 1;
         this.speedMultiplier = 1;
         this.damageMultiplier = 1;
+        this.gunDamageMultiplier = 1;
+        this.gunSpeedMultiplier = 1;
         this.isMultiColor = false;
         this.lastShot = 0;
         this.baseShootDelay = 200;
@@ -35,7 +37,8 @@ class Player {
 
     updateShootSpeed(level) {
         const speedMultiplier = 2 ** (level - 1);
-        this.shootDelay = Math.max(25, this.baseShootDelay / speedMultiplier);
+        const gunSpeedBonus = this.gunSpeedMultiplier || 1;
+        this.shootDelay = Math.max(25, this.baseShootDelay / (speedMultiplier * gunSpeedBonus));
     }
 
     update(keys) {
@@ -719,10 +722,15 @@ class Game {
             purple: { name: 'Purple Skin', cost: 5, owned: false, color: '#800080' },
             small: { name: 'Small & Green', cost: 10, owned: false, color: '#00FF00', scale: 0.5 },
             bigge: { name: 'Bigge', cost: 30, owned: false, color: '#FFA500', scale: 1.2, speedBoost: 2 },
-            angry: { name: 'Angry', cost: 100, owned: false, color: '#FF4500', damageMultiplier: 2, speedMultiplier: 0.3 },
+            angry: { name: 'Angry', cost: 100, owned: false, color: '#FF4500', damageMultiplier: 2, speedMultiplier: 1.5 },
             multi: { name: 'Multi', cost: 150, owned: false, color: '#8A2BE2', damageMultiplier: 5, speedMultiplier: 0.7, isMultiColor: true }
         };
         this.activePlayerSkin = 'default';
+        
+        // Gun upgrade system
+        this.gunUpgradeLevel = 0;
+        this.maxGunUpgradeLevel = 10;
+        this.gunUpgradeCost = 150;
         
         // Options menu buttons
         const optionButtonWidth = 200;
@@ -737,6 +745,7 @@ class Game {
         };
 
         this.loadSkins(); // Load saved skins first
+        this.loadGunUpgrade(); // Load saved gun upgrade
         this.player = new Player(SCREEN_WIDTH / 2, SCREEN_HEIGHT / 2);
         this.bullets = [];
         this.zombies = [];
@@ -898,17 +907,41 @@ class Game {
 
                 // Check shop item clicks
                 if (this.inShop) {
-                    const itemHeight = 100;
+                    const itemHeight = 80;
                     const itemWidth = 120;
                     const itemSpacing = 15;
-                    const startX = SCREEN_WIDTH/2 - ((itemWidth * 5 + itemSpacing * 4) / 2);
-                    const startY = SCREEN_HEIGHT/2 - 50;
+                    const rowSpacing = 20;
+                    
+                    // First row (3 items)
+                    const firstRowStartX = SCREEN_WIDTH/2 - ((itemWidth * 3 + itemSpacing * 2) / 2);
+                    const firstRowY = SCREEN_HEIGHT/2 - 80;
+                    
+                    // Second row (2 items)
+                    const secondRowStartX = SCREEN_WIDTH/2 - ((itemWidth * 2 + itemSpacing) / 2);
+                    const secondRowY = firstRowY + itemHeight + rowSpacing;
+                    
+                    // Gun upgrade button
+                    const gunUpgradeX = SCREEN_WIDTH/2 - 100;
+                    const gunUpgradeY = secondRowY + itemHeight + 30;
+                    const gunUpgradeWidth = 200;
+                    const gunUpgradeHeight = 40;
 
                     let index = 0;
                     for (const [itemId, item] of Object.entries(this.shopItems)) {
-                        const itemX = startX + (itemWidth + itemSpacing) * index;
+                        let itemX, itemY;
+                        
+                        if (index < 3) {
+                            // First row
+                            itemX = firstRowStartX + (itemWidth + itemSpacing) * index;
+                            itemY = firstRowY;
+                        } else {
+                            // Second row
+                            itemX = secondRowStartX + (itemWidth + itemSpacing) * (index - 3);
+                            itemY = secondRowY;
+                        }
+                        
                         if (clickX >= itemX && clickX <= itemX + itemWidth &&
-                            clickY >= startY && clickY <= startY + itemHeight) {
+                            clickY >= itemY && clickY <= itemY + itemHeight) {
                             // Try to buy/equip the item
                             if (!item.owned) {
                                 // Item not owned - try to buy it
@@ -933,6 +966,18 @@ class Game {
                         }
                         index++;
                     }
+                    
+                    // Check gun upgrade click
+                    if (clickX >= gunUpgradeX && clickX <= gunUpgradeX + gunUpgradeWidth &&
+                        clickY >= gunUpgradeY && clickY <= gunUpgradeY + gunUpgradeHeight) {
+                        if (this.gunUpgradeLevel < this.maxGunUpgradeLevel && this.coins >= this.gunUpgradeCost) {
+                            this.coins -= this.gunUpgradeCost;
+                            this.gunUpgradeLevel++;
+                            this.saveCoins();
+                            this.saveGunUpgrade();
+                        }
+                    }
+                    
                     return; // Prevent clicking through shop box
                 }
 
@@ -983,6 +1028,15 @@ class Game {
             skinData.owned[itemId] = item.owned;
         }
         localStorage.setItem('zombieShooterSkins', JSON.stringify(skinData));
+    }
+
+    loadGunUpgrade() {
+        const savedUpgrade = localStorage.getItem('zombieShooterGunUpgrade');
+        this.gunUpgradeLevel = savedUpgrade ? parseInt(savedUpgrade) : 0;
+    }
+
+    saveGunUpgrade() {
+        localStorage.setItem('zombieShooterGunUpgrade', this.gunUpgradeLevel.toString());
     }
 
     updateCoins() {
@@ -1417,6 +1471,12 @@ class Game {
             this.player.damageMultiplier = 1;
             this.player.isMultiColor = false;
         }
+        
+        // Apply gun upgrade effects
+        const gunDamageMultiplier = Math.pow(1.3, this.gunUpgradeLevel);
+        const gunSpeedMultiplier = Math.pow(1.05, this.gunUpgradeLevel);
+        this.player.gunDamageMultiplier = gunDamageMultiplier;
+        this.player.gunSpeedMultiplier = gunSpeedMultiplier;
 
         // Update countdown if active
         if (this.countdownActive) {
@@ -1785,88 +1845,135 @@ class Game {
             ctx.fillText('Shop', SCREEN_WIDTH/2, 90);
 
             // Draw shop items
-            const itemHeight = 100;
+            const itemHeight = 80;
             const itemWidth = 120;
             const itemSpacing = 15;
-            const startX = SCREEN_WIDTH/2 - ((itemWidth * 5 + itemSpacing * 4) / 2);
-            const startY = SCREEN_HEIGHT/2 - 50;
+            const rowSpacing = 20;
+            
+            // First row (3 items)
+            const firstRowStartX = SCREEN_WIDTH/2 - ((itemWidth * 3 + itemSpacing * 2) / 2);
+            const firstRowY = SCREEN_HEIGHT/2 - 80;
+            
+            // Second row (2 items)
+            const secondRowStartX = SCREEN_WIDTH/2 - ((itemWidth * 2 + itemSpacing) / 2);
+            const secondRowY = firstRowY + itemHeight + rowSpacing;
 
             let index = 0;
             for (const [itemId, item] of Object.entries(this.shopItems)) {
-                const itemX = startX + (itemWidth + itemSpacing) * index;
+                let itemX, itemY;
+                
+                if (index < 3) {
+                    // First row
+                    itemX = firstRowStartX + (itemWidth + itemSpacing) * index;
+                    itemY = firstRowY;
+                } else {
+                    // Second row
+                    itemX = secondRowStartX + (itemWidth + itemSpacing) * (index - 3);
+                    itemY = secondRowY;
+                }
                 
                 // Draw item box
                 ctx.fillStyle = item.color;
-                ctx.fillRect(itemX, startY, itemWidth, itemHeight);
+                ctx.fillRect(itemX, itemY, itemWidth, itemHeight);
                 ctx.strokeStyle = WHITE;
-                ctx.strokeRect(itemX, startY, itemWidth, itemHeight);
+                ctx.strokeRect(itemX, itemY, itemWidth, itemHeight);
 
                 // Draw preview circle (player appearance)
-                const previewSize = 15;
+                const previewSize = 12;
                 const scale = item.scale || 1;
                 
                 if (item.isMultiColor) {
                     // Draw multi-colored circle (red and blue)
                     ctx.fillStyle = '#FF0000';
                     ctx.beginPath();
-                    ctx.arc(itemX + itemWidth/2, startY + 25, previewSize * scale, 0, Math.PI, false);
+                    ctx.arc(itemX + itemWidth/2, itemY + 20, previewSize * scale, 0, Math.PI, false);
                     ctx.fill();
                     
                     ctx.fillStyle = '#0000FF';
                     ctx.beginPath();
-                    ctx.arc(itemX + itemWidth/2, startY + 25, previewSize * scale, 0, Math.PI, true);
+                    ctx.arc(itemX + itemWidth/2, itemY + 20, previewSize * scale, 0, Math.PI, true);
                     ctx.fill();
                 } else {
                     ctx.fillStyle = item.color;
                     ctx.beginPath();
-                    ctx.arc(itemX + itemWidth/2, startY + 25, previewSize * scale, 0, Math.PI * 2);
+                    ctx.arc(itemX + itemWidth/2, itemY + 20, previewSize * scale, 0, Math.PI * 2);
                     ctx.fill();
                 }
                 
                 // Draw special effects indicators
-                if (item.speedBoost) {
+                if (item.speedBoost || item.speedMultiplier > 1) {
                     // Draw speed indicator arrows
                     ctx.strokeStyle = WHITE;
-                    ctx.lineWidth = 2;
+                    ctx.lineWidth = 1;
                     ctx.beginPath();
-                    ctx.moveTo(itemX + itemWidth/2 + 20, startY + 25);
-                    ctx.lineTo(itemX + itemWidth/2 + 30, startY + 25);
-                    ctx.lineTo(itemX + itemWidth/2 + 25, startY + 20);
-                    ctx.moveTo(itemX + itemWidth/2 + 30, startY + 25);
-                    ctx.lineTo(itemX + itemWidth/2 + 25, startY + 30);
+                    ctx.moveTo(itemX + itemWidth/2 + 15, itemY + 20);
+                    ctx.lineTo(itemX + itemWidth/2 + 22, itemY + 20);
+                    ctx.lineTo(itemX + itemWidth/2 + 19, itemY + 17);
+                    ctx.moveTo(itemX + itemWidth/2 + 22, itemY + 20);
+                    ctx.lineTo(itemX + itemWidth/2 + 19, itemY + 23);
                     ctx.stroke();
                 }
                 
                 if (item.damageMultiplier && item.damageMultiplier > 1) {
                     // Draw damage indicator (sword/star)
                     ctx.fillStyle = '#FFD700';
-                    ctx.font = '16px Arial';
+                    ctx.font = '12px Arial';
                     ctx.textAlign = 'center';
-                    ctx.fillText('⚔', itemX + itemWidth/2 + 25, startY + 30);
+                    ctx.fillText('⚔', itemX + itemWidth/2 + 20, itemY + 25);
                 }
 
                 // Draw item name
                 ctx.fillStyle = WHITE;
-                ctx.font = '16px Arial';
+                ctx.font = '14px Arial';
                 ctx.textAlign = 'center';
-                ctx.fillText(item.name, itemX + itemWidth/2, startY + 55);
+                ctx.fillText(item.name, itemX + itemWidth/2, itemY + 45);
 
                 // Draw price or status
-                ctx.font = '14px Arial';
+                ctx.font = '12px Arial';
                 if (item.owned) {
                     if (this.activePlayerSkin === itemId) {
                         ctx.fillStyle = '#00FF00';
-                        ctx.fillText('EQUIPPED', itemX + itemWidth/2, startY + 75);
+                        ctx.fillText('EQUIPPED', itemX + itemWidth/2, itemY + 62);
                     } else {
                         ctx.fillStyle = '#FFFF00';
-                        ctx.fillText('Click to Equip', itemX + itemWidth/2, startY + 75);
+                        ctx.fillText('Click to Equip', itemX + itemWidth/2, itemY + 62);
                     }
                 } else {
                     ctx.fillStyle = this.coins >= item.cost ? '#FFFF00' : '#FF0000';
-                    ctx.fillText(`${item.cost} Coins`, itemX + itemWidth/2, startY + 75);
+                    ctx.fillText(`${item.cost} Coins`, itemX + itemWidth/2, itemY + 62);
                 }
 
                 index++;
+            }
+            
+            // Draw gun upgrade button
+            const gunUpgradeX = SCREEN_WIDTH/2 - 100;
+            const gunUpgradeY = secondRowY + itemHeight + 30;
+            const gunUpgradeWidth = 200;
+            const gunUpgradeHeight = 40;
+            
+            // Gun upgrade button background
+            if (this.gunUpgradeLevel >= this.maxGunUpgradeLevel) {
+                ctx.fillStyle = '#666666'; // Maxed out
+            } else if (this.coins >= this.gunUpgradeCost) {
+                ctx.fillStyle = '#4CAF50'; // Can afford
+            } else {
+                ctx.fillStyle = '#F44336'; // Can't afford
+            }
+            ctx.fillRect(gunUpgradeX, gunUpgradeY, gunUpgradeWidth, gunUpgradeHeight);
+            ctx.strokeStyle = WHITE;
+            ctx.strokeRect(gunUpgradeX, gunUpgradeY, gunUpgradeWidth, gunUpgradeHeight);
+            
+            // Gun upgrade text
+            ctx.fillStyle = WHITE;
+            ctx.font = '16px Arial';
+            ctx.textAlign = 'center';
+            if (this.gunUpgradeLevel >= this.maxGunUpgradeLevel) {
+                ctx.fillText('Gun Maxed Out!', gunUpgradeX + gunUpgradeWidth/2, gunUpgradeY + 25);
+            } else {
+                ctx.fillText(`Gun Upgrade ${this.gunUpgradeLevel}/${this.maxGunUpgradeLevel}`, gunUpgradeX + gunUpgradeWidth/2, gunUpgradeY + 18);
+                ctx.font = '12px Arial';
+                ctx.fillText(`${this.gunUpgradeCost} Coins`, gunUpgradeX + gunUpgradeWidth/2, gunUpgradeY + 32);
             }
 
             // Close instruction
