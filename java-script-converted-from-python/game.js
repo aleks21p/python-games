@@ -29,6 +29,7 @@ class Player {
         this.lastShot = 0;
         this.baseShootDelay = 200;
         this.shootDelay = 200;
+    this.lastRedShot = 0; // cooldown tracker for red wave attack
         this.baseHealth = 10;
         this.health = 10;
         this.maxHealth = 10;
@@ -119,8 +120,36 @@ class Player {
 
                 let isRed = level >= 7;
                 let isWhite = level >= 13;
+                let isRedWave = false;
                 let damage = 1;
                 let numStreams = 1;
+
+                // Red-wave special attack unlocks at level 26
+                if (level >= 26) {
+                    // Only fire the red wave every 4 seconds
+                    if (currentTime - (this.lastRedShot || 0) >= 4000) {
+                        // Single-direction red wave: fires one large bullet in aim direction
+                        const waveBaseWhiteDamage = 15; // white bullet base damage
+                        const waveDamage = waveBaseWhiteDamage * 20; // 20x white
+                        const smallRedSize = 3; // base small bullet size
+                        const waveSize = smallRedSize * 20; // 20x bigger than small red
+
+                        const angle = baseAngle; // fire in the direction the player is aiming
+                        const speed = 12;
+                        const dxWave = Math.cos(angle) * speed;
+                        const dyWave = Math.sin(angle) * speed;
+                        const startX = this.x + Math.cos(angle) * (this.size + 6);
+                        const startY = this.y + Math.sin(angle) * (this.size + 6);
+
+                        const waveBullet = new Bullet(startX, startY, dxWave, dyWave, waveDamage, true, false, 1, true);
+                        waveBullet.size = waveSize;
+
+                        this.lastRedShot = currentTime;
+                        this.lastShot = currentTime;
+                        this.fireAnimationTime = 150;
+                        return [waveBullet];
+                    }
+                }
 
                 if (level >= 13) {
                     // Level 13+: White bullets with even more damage
@@ -174,7 +203,7 @@ class Player {
                         coinMultiplier = 2;
                     }
                     
-                    bullets.push(new Bullet(bulletStartX, bulletStartY, bulletDx, bulletDy, finalDamage, isRed, isWhite, coinMultiplier));
+                            bullets.push(new Bullet(bulletStartX, bulletStartY, bulletDx, bulletDy, finalDamage, isRed, isWhite, coinMultiplier));
                 }
             }
 
@@ -388,7 +417,7 @@ class Player {
 
 // Bullet class
 class Bullet {
-    constructor(x, y, dx, dy, damage = 1, isRed = false, isWhite = false, coinMultiplier = 1) {
+    constructor(x, y, dx, dy, damage = 1, isRed = false, isWhite = false, coinMultiplier = 1, isWave = false) {
         this.x = x;
         this.y = y;
         this.dx = dx;
@@ -398,6 +427,7 @@ class Bullet {
         this.isRed = isRed;
         this.isWhite = isWhite;
         this.coinMultiplier = coinMultiplier;
+        this.isWave = isWave; // special wave bullets (pass-through)
     }
 
     update() {
@@ -1914,7 +1944,10 @@ class Game {
                             }
                             this.zombies.splice(j, 1);
                         }
-                        this.bullets.splice(i, 1);
+                        // If the bullet is NOT a wave bullet, remove it on hit. Wave bullets pass through.
+                        if (!bullet.isWave) {
+                            this.bullets.splice(i, 1);
+                        }
                         break;
                     }
                 }
