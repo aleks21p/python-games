@@ -515,17 +515,23 @@ class FinalBossBullet {
 
 // Zombie class
 class Zombie {
-    constructor(x, y, isBuff = false, isGreen = false, isBlack = false, isBlue = false) {
+    constructor(x, y, isBuff = false, isGreen = false, isBlack = false, isBlue = false, isWhite = false) {
         this.x = x;
         this.y = y;
         this.isBuff = isBuff;
         this.isGreen = isGreen;
         this.isBlack = isBlack;
         this.isBlue = isBlue;
+        this.isWhite = isWhite;
         this.lastShot = 0;
         this.shootDelay = 4000;
 
-        if (isBlue) {
+        if (isWhite) {
+            this.size = 25; // Small white glowing enemy
+            this.speed = 2.5; // Fast speed
+            this.health = 4032000; // 20x the health of blue mini boss (201600 * 20)
+            this.maxHealth = 4032000;
+        } else if (isBlue) {
             this.size = 63; // 9x the size of green (7 * 9)
             this.speed = 1.5; // Moderate speed
             this.health = 201600; // 60x stronger than before (3360 * 60)
@@ -588,7 +594,8 @@ class Zombie {
 
     draw(ctx) {
         let color;
-        if (this.isBlue) color = BLUE;
+        if (this.isWhite) color = WHITE;
+        else if (this.isBlue) color = BLUE;
         else if (this.isBlack) color = BLACK;
         else if (this.isGreen) color = GREEN;
         else if (this.isBuff) color = ORANGE;
@@ -598,6 +605,19 @@ class Zombie {
         ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
         ctx.fillStyle = color;
         ctx.fill();
+
+        // Add white glow effect for white zombies
+        if (this.isWhite) {
+            // White glow effect
+            for (let i = 0; i < 3; i++) {
+                const glowSize = this.size + (i * 8);
+                ctx.beginPath();
+                ctx.arc(this.x, this.y, glowSize, 0, Math.PI * 2);
+                ctx.strokeStyle = `rgba(255, 255, 255, ${0.6 - i * 0.2})`;
+                ctx.lineWidth = 4;
+                ctx.stroke();
+            }
+        }
 
         // Add blue glow effect for blue zombies
         if (this.isBlue) {
@@ -620,8 +640,8 @@ class Zombie {
         }
 
         if (this.health < this.maxHealth) {
-            const barWidth = this.isBlue ? 60 : (this.isBlack ? 50 : (this.isGreen ? 40 : (this.isBuff ? 30 : 20)));
-            const barHeight = this.isBlue ? 10 : (this.isBlack ? 8 : (this.isGreen ? 8 : (this.isBuff ? 6 : 4)));
+            const barWidth = this.isWhite ? 70 : (this.isBlue ? 60 : (this.isBlack ? 50 : (this.isGreen ? 40 : (this.isBuff ? 30 : 20))));
+            const barHeight = this.isWhite ? 12 : (this.isBlue ? 10 : (this.isBlack ? 8 : (this.isGreen ? 8 : (this.isBuff ? 6 : 4))));
             const barX = this.x - barWidth / 2;
             const barY = this.y - this.size - 10;
 
@@ -1717,7 +1737,20 @@ class Game {
                 break;
         }
 
-        if (this.level >= 10) {
+        if (this.level >= 25) {
+            this.greenSpawnCount++;
+            if (this.greenSpawnCount % 15 === 0) {
+                // Every 15 enemies after level 25, spawn a white glowing enemy
+                this.zombies.push(new Zombie(x, y, false, false, false, false, true)); // White zombie
+            } else if (this.greenSpawnCount % 20 === 0) {
+                // Every 20 green enemies after level 17, spawn a blue enemy
+                this.zombies.push(new Zombie(x, y, false, false, false, true)); // Blue zombie
+            } else if (this.greenSpawnCount % 30 === 0) {
+                this.zombies.push(new Zombie(x, y, false, false, true)); // Black zombie
+            } else {
+                this.zombies.push(new Zombie(x, y, false, true, false)); // Green zombie
+            }
+        } else if (this.level >= 10) {
             this.greenSpawnCount++;
             if (this.level >= 17 && this.greenSpawnCount % 20 === 0) {
                 // Every 20 green enemies after level 17, spawn a blue enemy
