@@ -81,7 +81,7 @@ class Player {
                 if (level >= 13) {
                     // Level 13+: White bullets with even more damage
                     damage = 15;
-                    numStreams = level - 12; // Level 13 = 1 stream, Level 14 = 2 streams, etc.
+                    numStreams = Math.floor((level - 13) / 2) + 1; // Level 13-14 = 1 stream, 15-16 = 2 streams, etc.
                     isWhite = true;
                     isRed = false;
                 } else if (level >= 7) {
@@ -497,10 +497,16 @@ class Boss {
     }
 
     draw(ctx) {
+        // Draw boss body with enhanced visibility
         ctx.beginPath();
         ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
         ctx.fillStyle = BLACK;
         ctx.fill();
+        
+        // White outline for better visibility
+        ctx.strokeStyle = WHITE;
+        ctx.lineWidth = 3;
+        ctx.stroke();
         
         // Red glow effect
         for (let i = 0; i < 3; i++) {
@@ -572,10 +578,16 @@ class FinalBoss {
     }
 
     draw(ctx) {
+        // Draw final boss body with enhanced visibility
         ctx.beginPath();
         ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
         ctx.fillStyle = GOLD;
         ctx.fill();
+        
+        // Black outline for better visibility
+        ctx.strokeStyle = BLACK;
+        ctx.lineWidth = 3;
+        ctx.stroke();
         
         // Red aura effect
         for (let i = 0; i < 4; i++) {
@@ -1952,7 +1964,7 @@ class Game {
                 }
                 
                 // Draw item box
-                ctx.fillStyle = item.color;
+                ctx.fillStyle = '#333333'; // Dark background for better contrast
                 ctx.fillRect(itemX, itemY, itemWidth, itemHeight);
                 ctx.strokeStyle = WHITE;
                 ctx.strokeRect(itemX, itemY, itemWidth, itemHeight);
@@ -2116,13 +2128,24 @@ class Game {
 
         if (this.inMenu) {
             this.drawMenu();
+            ctx.restore();
             return;
         }
 
-        // Draw game objects
+        // Draw game objects in proper order (back to front)
         this.orbs.forEach(orb => orb.draw(ctx));
-        this.zombies.forEach(zombie => zombie.draw(ctx));
         this.bullets.forEach(bullet => bullet.draw(ctx));
+        this.zombies.forEach(zombie => zombie.draw(ctx));
+        
+        // Draw bosses
+        if (this.boss) {
+            this.boss.draw(ctx);
+        }
+        if (this.finalBoss) {
+            this.finalBoss.draw(ctx);
+        }
+        
+        // Draw player last so it's on top
         this.player.draw(ctx);
 
         // Draw UI elements
@@ -2219,28 +2242,7 @@ class Game {
         // Draw pause menu if game is paused (but not in main menu)
         if (this.paused && !this.countdownActive && !this.inMenu) {
             this.drawPauseMenu();
-            ctx.restore();
-            return;
         }
-
-        // Draw game objects
-        this.orbs.forEach(orb => orb.draw(ctx));
-        this.zombies.forEach(zombie => zombie.draw(ctx));
-        this.bullets.forEach(bullet => bullet.draw(ctx));
-        this.player.draw(ctx);
-
-        // Draw UI
-        this.drawOrbBar();
-        this.drawCheatProgress();
-        this.drawBossBar();
-
-        // Draw score and coins
-        ctx.fillStyle = WHITE;
-        ctx.font = '36px Arial';
-        ctx.fillText(`Score: ${this.score}`, 10, 40);
-        ctx.font = '28px Arial';
-        ctx.fillStyle = GOLD;
-        ctx.fillText(`Coins: ${this.coins}`, 10, 80);
 
         // Draw game state messages
         if (this.gameOver) {
