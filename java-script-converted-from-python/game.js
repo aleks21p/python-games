@@ -1,3 +1,552 @@
+// Game constants
+const SCREEN_WIDTH = 800;
+const SCREEN_HEIGHT = 600;
+const BLACK = '#000000';
+const WHITE = '#FFFFFF';
+const RED = '#FF0000';
+const GREEN = '#00FF00';
+const BLUE = '#0000FF';
+const YELLOW = '#FFFF00';
+const GRAY = '#808080';
+const ORANGE = '#FFA500';
+const GOLD = '#FFD700';
+
+// Player class
+class Player {
+    constructor(x, y) {
+        this.x = x;
+        this.y = y;
+        this.size = 20;
+        this.speed = 5;
+        this.color = 'white';
+        this.scale = 1;
+        this.speedBoost = 1;
+        this.lastShot = 0;
+        this.baseShootDelay = 200;
+        this.shootDelay = 200;
+        this.health = 10;
+        this.maxHealth = 10;
+        this.lastDamageTime = 0;
+        this.damageCooldown = 1000;
+    }
+
+    updateShootSpeed(level) {
+        const speedMultiplier = 2 ** (level - 1);
+        this.shootDelay = Math.max(25, this.baseShootDelay / speedMultiplier);
+    }
+
+    update(keys) {
+        const actualSpeed = this.speed * (this.speedBoost || 1);
+
+        if (keys['w'] || keys['W'] || keys['ArrowUp']) {
+            this.y -= actualSpeed;
+        }
+        if (keys['s'] || keys['S'] || keys['ArrowDown']) {
+            this.y += actualSpeed;
+        }
+        if (keys['a'] || keys['A'] || keys['ArrowLeft']) {
+            this.x -= actualSpeed;
+        }
+        if (keys['d'] || keys['D'] || keys['ArrowRight']) {
+            this.x += actualSpeed;
+        }
+
+        this.x = Math.max(this.size * this.scale, Math.min(SCREEN_WIDTH - this.size * this.scale, this.x));
+        this.y = Math.max(this.size * this.scale, Math.min(SCREEN_HEIGHT - this.size * this.scale, this.y));
+    }
+
+    shoot(mousePos, currentTime, level) {
+        if (currentTime - this.lastShot > this.shootDelay) {
+            const dx = mousePos.x - this.x;
+            const dy = mousePos.y - this.y;
+            const distance = Math.sqrt(dx * dx + dy * dy);
+            const bullets = [];
+
+            if (distance > 0) {
+                const normalizedDx = dx / distance;
+                const normalizedDy = dy / distance;
+                const baseAngle = Math.atan2(normalizedDy, normalizedDx);
+
+                const isRed = level >= 7;
+                const damage = isRed ? 7 : 1;
+                const numStreams = level >= 7 ? (level - 6) : (level < 3 ? 1 : level);
+
+                const spread = Math.PI / 3;
+                const startAngle = numStreams > 1 ? baseAngle - spread/2 : baseAngle;
+                const angleStep = numStreams > 1 ? spread / (numStreams - 1) : 0;
+
+                for (let i = 0; i < numStreams; i++) {
+                    const angle = startAngle + i * angleStep;
+                    const bulletDx = Math.cos(angle) * 10;
+                    const bulletDy = Math.sin(angle) * 10;
+                    bullets.push(new Bullet(this.x, this.y, bulletDx, bulletDy, damage, isRed));
+                }
+            }
+
+            this.lastShot = currentTime;
+            return bullets;
+        }
+        return [];
+    }
+
+    takeDamage(currentTime) {
+        if (currentTime - this.lastDamageTime > this.damageCooldown) {
+            this.health -= 1;
+            this.lastDamageTime = currentTime;
+            return this.health <= 0;
+        }
+        return false;
+    }
+
+    draw(ctx) {
+        ctx.beginPath();
+        ctx.arc(this.x, this.y, this.size * this.scale, 0, Math.PI * 2);
+        ctx.fillStyle = this.color || 'white';
+        ctx.fill();
+
+        const barWidth = 40;
+        const barHeight = 6;
+        const barX = this.x - barWidth / 2;
+        const barY = this.y - (this.size * this.scale) - 15;
+
+        ctx.fillStyle = 'black';
+        ctx.fillRect(barX, barY, barWidth, barHeight);
+
+        const healthWidth = (this.health / this.maxHealth) * barWidth;
+        const healthColor = this.health > 6 ? 'green' : (this.health > 3 ? 'orange' : 'red');
+        ctx.fillStyle = healthColor;
+        ctx.fillRect(barX, barY, healthWidth, barHeight);
+    }
+}
+
+// Bullet class
+class Bullet {
+    constructor(x, y, dx, dy, damage = 1, isRed = false) {
+        this.x = x;
+        this.y = y;
+        this.dx = dx;
+        this.dy = dy;
+        this.size = 3;
+        this.damage = damage;
+        this.isRed = isRed;
+    }
+
+    update() {
+        this.x += this.dx;
+        this.y += this.dy;
+    }
+
+    isOffScreen() {
+        return this.x < 0 || this.x > SCREEN_WIDTH || this.y < 0 || this.y > SCREEN_HEIGHT;
+    }
+
+    draw(ctx) {
+        const color = this.isRed ? RED : YELLOW;
+        ctx.beginPath();
+        ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+        ctx.fillStyle = color;
+        ctx.fill();
+    }
+}
+
+// Boss Bullet class
+class BossBullet {
+    constructor(x, y, dx, dy) {
+        this.x = x;
+        this.y = y;
+        this.dx = dx;
+        this.dy = dy;
+        this.size = 20;
+        this.damage = 2;
+        this.isBossBullet = true;
+    }
+
+    update() {
+        this.x += this.dx;
+        this.y += this.dy;
+    }
+
+    isOffScreen() {
+        return this.x < -50 || this.x > SCREEN_WIDTH + 50 || this.y < -50 || this.y > SCREEN_HEIGHT + 50;
+    }
+
+    draw(ctx) {
+        ctx.beginPath();
+        ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+        ctx.fillStyle = RED;
+        ctx.fill();
+        
+        // Add glow effect
+        for (let i = 0; i < 3; i++) {
+            const glowSize = this.size + (i * 4);
+            ctx.beginPath();
+            ctx.arc(this.x, this.y, glowSize, 0, Math.PI * 2);
+            ctx.strokeStyle = `rgba(255, 0, 0, ${0.3 - i * 0.1})`;
+            ctx.lineWidth = 2;
+            ctx.stroke();
+        }
+    }
+}
+
+// Final Boss Bullet class
+class FinalBossBullet {
+    constructor(x, y, dx, dy) {
+        this.x = x;
+        this.y = y;
+        this.dx = dx;
+        this.dy = dy;
+        this.size = 8;
+        this.damage = 0.5;
+        this.isFinalBossBullet = true;
+    }
+
+    update() {
+        this.x += this.dx;
+        this.y += this.dy;
+    }
+
+    isOffScreen() {
+        return this.x < -50 || this.x > SCREEN_WIDTH + 50 || this.y < -50 || this.y > SCREEN_HEIGHT + 50;
+    }
+
+    draw(ctx) {
+        ctx.beginPath();
+        ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+        ctx.fillStyle = GOLD;
+        ctx.fill();
+        
+        // Add glow effect
+        for (let i = 0; i < 2; i++) {
+            const glowSize = this.size + (i * 3);
+            ctx.beginPath();
+            ctx.arc(this.x, this.y, glowSize, 0, Math.PI * 2);
+            ctx.strokeStyle = `rgba(255, 215, 0, ${0.5 - i * 0.2})`;
+            ctx.lineWidth = 2;
+            ctx.stroke();
+        }
+    }
+}
+
+// Zombie class
+class Zombie {
+    constructor(x, y, isBuff = false, isGreen = false, isBlack = false) {
+        this.x = x;
+        this.y = y;
+        this.isBuff = isBuff;
+        this.isGreen = isGreen;
+        this.isBlack = isBlack;
+        this.lastShot = 0;
+        this.shootDelay = 4000;
+
+        if (isBlack) {
+            this.size = 35;
+            this.speed = 1.2;
+            this.health = 560;
+            this.maxHealth = 560;
+        } else if (isGreen) {
+            this.size = 7;
+            this.speed = 2.0;
+            this.health = 112;
+            this.maxHealth = 112;
+        } else if (isBuff) {
+            this.size = 45;
+            this.speed = 1.0;
+            this.health = 16;
+            this.maxHealth = 16;
+        } else {
+            this.size = 15;
+            this.speed = 1.5;
+            this.health = 2;
+            this.maxHealth = 2;
+        }
+    }
+
+    update(player) {
+        const dx = player.x - this.x;
+        const dy = player.y - this.y;
+        const distance = Math.sqrt(dx * dx + dy * dy);
+
+        if (distance > 0) {
+            const normalizedDx = (dx / distance) * this.speed;
+            const normalizedDy = (dy / distance) * this.speed;
+            this.x += normalizedDx;
+            this.y += normalizedDy;
+        }
+    }
+
+    shoot(currentTime) {
+        if (this.isBlack && currentTime - this.lastShot > this.shootDelay) {
+            const bullets = [];
+            for (let i = 0; i < 10; i++) {
+                const angle = (i / 10) * 2 * Math.PI;
+                const dx = Math.cos(angle) * 4;
+                const dy = Math.sin(angle) * 4;
+                bullets.push(new SmallBullet(this.x, this.y, dx, dy));
+            }
+            this.lastShot = currentTime;
+            return bullets;
+        }
+        return [];
+    }
+
+    takeDamage(damage) {
+        this.health -= damage;
+        return this.health <= 0;
+    }
+
+    draw(ctx) {
+        let color;
+        if (this.isBlack) color = BLACK;
+        else if (this.isGreen) color = GREEN;
+        else if (this.isBuff) color = ORANGE;
+        else color = this.health === this.maxHealth ? RED : '#960000';
+
+        ctx.beginPath();
+        ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+        ctx.fillStyle = color;
+        ctx.fill();
+
+        if (this.health < this.maxHealth) {
+            const barWidth = this.isBlack ? 50 : (this.isGreen ? 40 : (this.isBuff ? 30 : 20));
+            const barHeight = this.isBlack ? 8 : (this.isGreen ? 8 : (this.isBuff ? 6 : 4));
+            const barX = this.x - barWidth / 2;
+            const barY = this.y - this.size - 10;
+
+            ctx.fillStyle = BLACK;
+            ctx.fillRect(barX, barY, barWidth, barHeight);
+            
+            const healthWidth = (this.health / this.maxHealth) * barWidth;
+            ctx.fillStyle = GREEN;
+            ctx.fillRect(barX, barY, healthWidth, barHeight);
+        }
+    }
+}
+
+// Small Bullet class for black zombies
+class SmallBullet {
+    constructor(x, y, dx, dy) {
+        this.x = x;
+        this.y = y;
+        this.dx = dx;
+        this.dy = dy;
+        this.size = 4;
+        this.damage = 1;
+        this.isEnemyBullet = true;
+    }
+
+    update() {
+        this.x += this.dx;
+        this.y += this.dy;
+    }
+
+    isOffScreen() {
+        return this.x < -30 || this.x > SCREEN_WIDTH + 30 || this.y < -30 || this.y > SCREEN_HEIGHT + 30;
+    }
+
+    draw(ctx) {
+        ctx.beginPath();
+        ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+        ctx.fillStyle = RED;
+        ctx.fill();
+    }
+}
+
+// Boss class
+class Boss {
+    constructor(x, y) {
+        this.x = x;
+        this.y = y;
+        this.size = 60;
+        this.speed = 0.8;
+        this.health = 25200;
+        this.maxHealth = 25200;
+        this.damage = 5;
+        this.lastShot = 0;
+        this.shootDelay = 1000;
+        this.lastDamageTime = 0;
+        this.damageCooldown = 5000;
+    }
+
+    update(player) {
+        const dx = player.x - this.x;
+        const dy = player.y - this.y;
+        const distance = Math.sqrt(dx * dx + dy * dy);
+
+        if (distance > 0) {
+            const normalizedDx = (dx / distance) * this.speed;
+            const normalizedDy = (dy / distance) * this.speed;
+            this.x += normalizedDx;
+            this.y += normalizedDy;
+        }
+    }
+
+    shoot(currentTime) {
+        if (currentTime - this.lastShot > this.shootDelay) {
+            const bullets = [];
+            for (let i = 0; i < 20; i++) {
+                const angle = (i / 20) * 2 * Math.PI;
+                const dx = Math.cos(angle) * 6;
+                const dy = Math.sin(angle) * 6;
+                bullets.push(new BossBullet(this.x, this.y, dx, dy));
+            }
+            this.lastShot = currentTime;
+            return bullets;
+        }
+        return [];
+    }
+
+    takeDamage(damage) {
+        this.health -= damage;
+        return this.health <= 0;
+    }
+
+    canDamagePlayer(currentTime) {
+        return currentTime - this.lastDamageTime > this.damageCooldown;
+    }
+
+    damagePlayer(currentTime) {
+        this.lastDamageTime = currentTime;
+    }
+
+    draw(ctx) {
+        ctx.beginPath();
+        ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+        ctx.fillStyle = BLACK;
+        ctx.fill();
+        
+        // Red glow effect
+        for (let i = 0; i < 3; i++) {
+            const glowSize = this.size + (i * 8);
+            ctx.beginPath();
+            ctx.arc(this.x, this.y, glowSize, 0, Math.PI * 2);
+            ctx.strokeStyle = `rgba(150, 0, 0, ${0.4 - i * 0.1})`;
+            ctx.lineWidth = 3;
+            ctx.stroke();
+        }
+    }
+}
+
+// Final Boss class
+class FinalBoss {
+    constructor(x, y) {
+        this.x = x;
+        this.y = y;
+        this.size = 80;
+        this.speed = 0.6;
+        this.health = 50000;
+        this.maxHealth = 50000;
+        this.damage = 5;
+        this.lastShot = 0;
+        this.shootDelay = 500;
+        this.lastDamageTime = 0;
+        this.damageCooldown = 5000;
+    }
+
+    update(player) {
+        const dx = player.x - this.x;
+        const dy = player.y - this.y;
+        const distance = Math.sqrt(dx * dx + dy * dy);
+
+        if (distance > 0) {
+            const normalizedDx = (dx / distance) * this.speed;
+            const normalizedDy = (dy / distance) * this.speed;
+            this.x += normalizedDx;
+            this.y += normalizedDy;
+        }
+    }
+
+    shoot(currentTime) {
+        if (currentTime - this.lastShot > this.shootDelay) {
+            const bullets = [];
+            for (let i = 0; i < 30; i++) {
+                const angle = (i / 30) * 2 * Math.PI;
+                const dx = Math.cos(angle) * 5;
+                const dy = Math.sin(angle) * 5;
+                bullets.push(new FinalBossBullet(this.x, this.y, dx, dy));
+            }
+            this.lastShot = currentTime;
+            return bullets;
+        }
+        return [];
+    }
+
+    takeDamage(damage) {
+        this.health -= damage;
+        return this.health <= 0;
+    }
+
+    canDamagePlayer(currentTime) {
+        return currentTime - this.lastDamageTime > this.damageCooldown;
+    }
+
+    damagePlayer(currentTime) {
+        this.lastDamageTime = currentTime;
+    }
+
+    draw(ctx) {
+        ctx.beginPath();
+        ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+        ctx.fillStyle = GOLD;
+        ctx.fill();
+        
+        // Red aura effect
+        for (let i = 0; i < 4; i++) {
+            const auraSize = this.size + (i * 10);
+            ctx.beginPath();
+            ctx.arc(this.x, this.y, auraSize, 0, Math.PI * 2);
+            ctx.strokeStyle = `rgba(255, 0, 0, ${0.3 - i * 0.07})`;
+            ctx.lineWidth = 4;
+            ctx.stroke();
+        }
+    }
+}
+
+// Orb class
+class Orb {
+    constructor(x, y) {
+        this.x = x;
+        this.y = y;
+        this.size = 5;
+        this.collected = false;
+        this.collectionRange = 20;
+        this.magnetRange = 80;
+        this.magnetSpeed = 6;
+    }
+
+    update(player) {
+        const dx = player.x - this.x;
+        const dy = player.y - this.y;
+        const distance = Math.sqrt(dx * dx + dy * dy);
+
+        if (distance < this.collectionRange) {
+            this.collected = true;
+            return true;
+        } else if (distance < this.magnetRange) {
+            if (distance > 0) {
+                this.x += (dx / distance) * this.magnetSpeed;
+                this.y += (dy / distance) * this.magnetSpeed;
+            }
+        }
+        return false;
+    }
+
+    draw(ctx) {
+        if (!this.collected) {
+            ctx.beginPath();
+            ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+            ctx.fillStyle = GREEN;
+            ctx.fill();
+            
+            // Glow effect
+            ctx.beginPath();
+            ctx.arc(this.x, this.y, this.size + 2, 0, Math.PI * 2);
+            ctx.strokeStyle = 'rgba(0, 150, 0, 0.5)';
+            ctx.lineWidth = 1;
+            ctx.stroke();
+        }
+    }
+}
+
 // Get canvas and context
 const canvas = document.getElementById('gameCanvas');
 const ctx = canvas.getContext('2d');
@@ -160,14 +709,12 @@ class Game {
         const optionButtonWidth = 200;
         const optionButtonHeight = 50;
         const optionButtonSpacing = 30;
-        const startY = SCREEN_HEIGHT/2 - 150; // Moved up to accommodate new buttons
+        const startY = SCREEN_HEIGHT/2 - 100; // Adjusted positioning
         this.optionButtons = {
             controls: { x: SCREEN_WIDTH/2 - optionButtonWidth - 20, y: startY, width: optionButtonWidth, height: optionButtonHeight },
             cheats: { x: SCREEN_WIDTH/2 + 20, y: startY, width: optionButtonWidth, height: optionButtonHeight },
             difficulty: { x: SCREEN_WIDTH/2 - optionButtonWidth - 20, y: startY + optionButtonHeight + optionButtonSpacing, width: optionButtonWidth, height: optionButtonHeight },
-            credits: { x: SCREEN_WIDTH/2 + 20, y: startY + optionButtonHeight + optionButtonSpacing, width: optionButtonWidth, height: optionButtonHeight },
-            languages: { x: SCREEN_WIDTH/2 - optionButtonWidth - 20, y: startY + (optionButtonHeight + optionButtonSpacing) * 2, width: optionButtonWidth, height: optionButtonHeight },
-            special: { x: SCREEN_WIDTH/2 + 20, y: startY + (optionButtonHeight + optionButtonSpacing) * 2, width: optionButtonWidth, height: optionButtonHeight }
+            credits: { x: SCREEN_WIDTH/2 + 20, y: startY + optionButtonHeight + optionButtonSpacing, width: optionButtonWidth, height: optionButtonHeight }
         };
 
         this.loadSkins(); // Load saved skins first
@@ -345,6 +892,7 @@ class Game {
                             clickY >= startY && clickY <= startY + itemHeight) {
                             // Try to buy/equip the item
                             if (!item.owned) {
+                                // Item not owned - try to buy it
                                 if (this.coins >= item.cost) {
                                     this.coins -= item.cost;
                                     item.owned = true;
@@ -353,49 +901,33 @@ class Game {
                                     this.saveSkins();
                                 }
                             } else {
-                                this.activePlayerSkin = this.activePlayerSkin === itemId ? 'default' : itemId;
+                                // Item is owned - toggle equip/unequip
+                                if (this.activePlayerSkin === itemId) {
+                                    // Currently equipped - unequip (set to default)
+                                    this.activePlayerSkin = 'default';
+                                } else {
+                                    // Not equipped - equip it
+                                    this.activePlayerSkin = itemId;
+                                }
                                 this.saveSkins();
                             }
                         }
                         index++;
                     }
+                    return; // Prevent clicking through shop box
                 }
 
                 // Check option tab buttons when in options menu
                 if (this.inOptions) {
-                    // Check language buttons if in language tab
-                    if (this.activeOptionTab === 'languages' && this.languageButtons) {
-                        for (const [lang, btn] of Object.entries(this.languageButtons)) {
-                            if (clickX >= btn.x && clickX <= btn.x + btn.width &&
-                                clickY >= btn.y && clickY <= btn.y + btn.height) {
-                                this.selectedLanguage = lang;
-                                break;
-                            }
-                        }
-                    }
-
-                    // Check special button if in special tab
-                    if (this.activeOptionTab === 'special' && this.specialButton) {
-                        const btn = this.specialButton;
-                        if (clickX >= btn.x && clickX <= btn.x + btn.width &&
-                            clickY >= btn.y && clickY <= btn.y + btn.height) {
-                            this.isUpsideDown = !this.isUpsideDown;
-                            // The actual rotation is handled in the draw method
-                        }
-                    }
-
                     // Check option tab buttons
                     for (const [tabName, btn] of Object.entries(this.optionButtons)) {
                         if (clickX >= btn.x && clickX <= btn.x + btn.width &&
                             clickY >= btn.y && clickY <= btn.y + btn.height) {
                             this.activeOptionTab = this.activeOptionTab === tabName ? '' : tabName;
-                            // Reset language buttons when changing tabs
-                            if (this.activeOptionTab !== 'languages') {
-                                this.languageButtons = {};
-                            }
                             break;
                         }
                     }
+                    return; // Prevent clicking through options box
                 }
             }
         });
@@ -1102,7 +1634,7 @@ class Game {
             if (this.activeOptionTab) {
                 const contentBox = {
                     width: 500,
-                    height: 250,
+                    height: 300,
                     x: SCREEN_WIDTH/2 - 250,
                     y: SCREEN_HEIGHT/2 + 20
                 };
@@ -1114,9 +1646,9 @@ class Game {
                 ctx.strokeRect(contentBox.x, contentBox.y, contentBox.width, contentBox.height);
 
                 const contentX = contentBox.x + contentBox.width/2;
-                const contentY = contentBox.y + 40;
-                ctx.font = '24px Arial';
-                ctx.textAlign = 'center';  // Center align text
+                const contentY = contentBox.y + 50;
+                ctx.font = '20px Arial';
+                ctx.textAlign = 'center';
 
                 switch(this.activeOptionTab) {
                     case 'controls':
@@ -1176,40 +1708,11 @@ class Game {
                         break;
 
                     case 'difficulty':
-                        // Create difficulty option buttons
-                        const difficultyButtons = {
-                            easy: { y: contentY, color: '#00AA00', text: this.translations[this.selectedLanguage].easy },
-                            normal: { y: contentY + 60, color: '#808080', text: this.translations[this.selectedLanguage].normal },
-                            hard: { y: contentY + 120, color: '#AA0000', text: this.translations[this.selectedLanguage].hard }
-                        };
-
-                        // Draw each difficulty button
-                        for (const [difficulty, button] of Object.entries(difficultyButtons)) {
-                            // Button background
-                            const btnWidth = 200;
-                            const btnHeight = 40;
-                            const btnX = contentX - btnWidth/2;  // Center horizontally relative to contentX
-                            
-                            ctx.fillStyle = button.color;
-                            ctx.fillRect(btnX, button.y - 30, btnWidth, btnHeight);
-                            
-                            // Button border
-                            ctx.strokeStyle = WHITE;
-                            ctx.lineWidth = 2;
-                            ctx.strokeRect(btnX, button.y - 30, btnWidth, btnHeight);
-
-                            // Button text
-                            ctx.fillStyle = WHITE;
-                            ctx.font = 'bold 24px Arial';
-                            ctx.textAlign = 'center';  // Center text
-                            ctx.fillText(button.text, contentX, button.y);
-                            ctx.textAlign = 'left';  // Reset text alignment
-                        }
-
-                        // Add note at bottom
-                        ctx.fillStyle = '#808080';
-                        ctx.font = '20px Arial';
-                        ctx.fillText(this.translations[this.selectedLanguage].difficultyNote, contentX + contentBox.width/2 - 120, contentY + 180);
+                        ctx.fillStyle = WHITE;
+                        ctx.fillText(this.translations[this.selectedLanguage].easy, contentX, contentY);
+                        ctx.fillText(this.translations[this.selectedLanguage].normal, contentX, contentY + 40);
+                        ctx.fillText(this.translations[this.selectedLanguage].hard, contentX, contentY + 80);
+                        ctx.fillText(this.translations[this.selectedLanguage].difficultyNote, contentX, contentY + 140);
                         break;
 
                     case 'credits':
@@ -1219,83 +1722,15 @@ class Game {
                         ctx.fillText(this.translations[this.selectedLanguage].art, contentX, contentY + 80);
                         ctx.fillText(this.translations[this.selectedLanguage].sponsors, contentX, contentY + 120);
                         break;
-
-                    case 'languages':
-                        // Create language option buttons
-                        const languageButtons = {
-                            english: { y: contentY, color: '#4CAF50', text: 'English' },
-                            french: { y: contentY + 60, color: '#808080', text: 'French' },
-                            spanish: { y: contentY + 120, color: '#FF0000', text: 'Spanish' }
-                        };
-
-                        // Draw each language button
-                        for (const [lang, button] of Object.entries(languageButtons)) {
-                            const btnWidth = 200;
-                            const btnHeight = 40;
-                            const btnX = contentX - btnWidth/2;
-                            
-                            // Highlight selected language
-                            ctx.fillStyle = this.selectedLanguage === lang ? '#FFFF00' : button.color;
-                            ctx.fillRect(btnX, button.y - 30, btnWidth, btnHeight);
-                            
-                            ctx.strokeStyle = WHITE;
-                            ctx.lineWidth = 2;
-                            ctx.strokeRect(btnX, button.y - 30, btnWidth, btnHeight);
-
-                            ctx.fillStyle = WHITE;
-                            ctx.font = 'bold 24px Arial';
-                            ctx.textAlign = 'center';
-                            ctx.fillText(button.text, contentX, button.y);
-                            ctx.textAlign = 'left';
-
-                            // Store button position and dimensions for click handling
-                            this.languageButtons = this.languageButtons || {};
-                            this.languageButtons[lang] = {
-                                x: btnX,
-                                y: button.y - 30,
-                                width: btnWidth,
-                                height: btnHeight
-                            };
-                        }
-                        break;
-
-                    case 'special':
-                        // Special effects button
-                        const specialBtn = {
-                            x: contentX - 100,
-                            y: contentY + 50,
-                            width: 200,
-                            height: 40
-                        };
-
-                        // Draw special button
-                        ctx.fillStyle = this.isUpsideDown ? '#FFFF00' : '#808080';
-                        ctx.fillRect(specialBtn.x, specialBtn.y, specialBtn.width, specialBtn.height);
-                        ctx.strokeStyle = WHITE;
-                        ctx.strokeRect(specialBtn.x, specialBtn.y, specialBtn.width, specialBtn.height);
-
-                        // Button text
-                        ctx.fillStyle = WHITE;
-                        ctx.font = 'bold 24px Arial';
-                        ctx.textAlign = 'center';
-                        ctx.fillText('Broken Mode', contentX, specialBtn.y + 30);
-                        ctx.textAlign = 'left';
-
-                        // Store special button position for click handling
-                        this.specialButton = {
-                            x: specialBtn.x,
-                            y: specialBtn.y,
-                            width: specialBtn.width,
-                            height: specialBtn.height
-                        };
-                        break;
                 }
-                ctx.textAlign = 'left';  // Reset text alignment
+                ctx.textAlign = 'left';
             } else {
                 ctx.fillStyle = '#808080';
                 ctx.font = '24px Arial';
+                ctx.textAlign = 'center';
                 const text = this.translations[this.selectedLanguage].selectOption;
-                ctx.fillText(text, SCREEN_WIDTH/2 - 180, SCREEN_HEIGHT/2 + 50);
+                ctx.fillText(text, SCREEN_WIDTH/2, SCREEN_HEIGHT/2 + 50);
+                ctx.textAlign = 'left';
             }
 
             // Close instruction at bottom
@@ -1365,12 +1800,16 @@ class Game {
                 // Draw price or status
                 ctx.font = '16px Arial';
                 if (item.owned) {
-                    ctx.fillStyle = '#00FF00';
-                    ctx.fillText(this.activePlayerSkin === itemId ? 'Equipped' : 'Click to Equip', 
-                               itemX + itemWidth/2, startY + 85);  // Moved down
+                    if (this.activePlayerSkin === itemId) {
+                        ctx.fillStyle = '#00FF00';
+                        ctx.fillText('EQUIPPED', itemX + itemWidth/2, startY + 85);
+                    } else {
+                        ctx.fillStyle = '#FFFF00';
+                        ctx.fillText('Click to Equip', itemX + itemWidth/2, startY + 85);
+                    }
                 } else {
                     ctx.fillStyle = this.coins >= item.cost ? '#FFFF00' : '#FF0000';
-                    ctx.fillText(`${item.cost} Coins`, itemX + itemWidth/2, startY + 85);  // Moved down
+                    ctx.fillText(`${item.cost} Coins`, itemX + itemWidth/2, startY + 85);
                 }
 
                 index++;
@@ -1386,16 +1825,16 @@ class Game {
 
     drawPauseMenu() {
         // Semi-transparent background
-        ctx.fillStyle = 'rgba(0, 0, 0, 0.7)';
+        ctx.fillStyle = 'rgba(0, 0, 0, 0.8)';
         ctx.fillRect(0, 0, SCREEN_WIDTH, SCREEN_HEIGHT);
 
-        // Pause menu box (2x bigger)
-        const boxWidth = 600;  // Doubled from 300
-        const boxHeight = 400; // Doubled from 200
+        // Pause menu box
+        const boxWidth = 500;
+        const boxHeight = 300;
         const boxX = SCREEN_WIDTH/2 - boxWidth/2;
         const boxY = SCREEN_HEIGHT/2 - boxHeight/2;
 
-        // Draw box with gradient for better appearance
+        // Draw box with gradient
         const gradient = ctx.createLinearGradient(boxX, boxY, boxX, boxY + boxHeight);
         gradient.addColorStop(0, '#444444');
         gradient.addColorStop(1, '#222222');
@@ -1404,26 +1843,21 @@ class Game {
         
         // Box border
         ctx.strokeStyle = WHITE;
-        ctx.lineWidth = 2;
+        ctx.lineWidth = 3;
         ctx.strokeRect(boxX, boxY, boxWidth, boxHeight);
 
         // Menu title
         ctx.fillStyle = WHITE;
-        ctx.font = 'bold 48px Arial';  // Larger font
-        const pausedText = 'PAUSED';
-        const pausedWidth = ctx.measureText(pausedText).width;
-        ctx.fillText(pausedText, boxX + (boxWidth - pausedWidth)/2, boxY + 100);
+        ctx.font = 'bold 48px Arial';
+        ctx.textAlign = 'center';
+        ctx.fillText('PAUSED', SCREEN_WIDTH/2, boxY + 80);
 
         // Instructions
-        ctx.font = '32px Arial';  // Larger font
-        const resumeText = 'Press P to Resume';
-        const menuText = 'Press ESC for Menu';
-        const resumeWidth = ctx.measureText(resumeText).width;
-        const menuWidth = ctx.measureText(menuText).width;
-
-        // Center align text
-        ctx.fillText(resumeText, boxX + (boxWidth - resumeWidth)/2, boxY + 200);
-        ctx.fillText(menuText, boxX + (boxWidth - menuWidth)/2, boxY + 280);
+        ctx.font = '28px Arial';
+        ctx.fillText('Press P to Resume', SCREEN_WIDTH/2, boxY + 150);
+        ctx.fillText('Press ESC for Menu', SCREEN_WIDTH/2, boxY + 200);
+        
+        ctx.textAlign = 'left'; // Reset alignment
     }
 
     draw() {
@@ -1599,4 +2033,4 @@ class Game {
 
 // Start the game
 const game = new Game();
-game.start();
+game.start(); 
