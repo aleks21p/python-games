@@ -959,6 +959,16 @@ class Game {
         this.maxGunUpgradeLevel = 10;
         this.gunUpgradeCost = 150;
         
+        // Health upgrade system
+        this.healthUpgradeLevel = 0;
+        this.maxHealthUpgradeLevel = 10;
+        this.healthUpgradeCost = 10;
+        
+        // Speed upgrade system
+        this.speedUpgradeLevel = 0;
+        this.maxSpeedUpgradeLevel = 10;
+        this.speedUpgradeCost = 15;
+        
         // Options menu buttons
         const optionButtonWidth = 200;
         const optionButtonHeight = 50;
@@ -973,6 +983,8 @@ class Game {
 
         this.loadSkins(); // Load saved skins first
         this.loadGunUpgrade(); // Load saved gun upgrade
+        this.loadHealthUpgrade(); // Load saved health upgrade
+        this.loadSpeedUpgrade(); // Load saved speed upgrade
         this.player = new Player(SCREEN_WIDTH / 2, SCREEN_HEIGHT / 2);
         
         // Apply equipped pet
@@ -1200,18 +1212,18 @@ class Game {
 
                 // Check shop item clicks
                 if (this.inShop && !this.inPetsPage) {
-                    // First check if click is within shop box bounds
-                    const shopBoxX = 100;
-                    const shopBoxY = 50;
-                    const shopBoxWidth = SCREEN_WIDTH - 200;
-                    const shopBoxHeight = SCREEN_HEIGHT - 100;
+                    // First check if click is within shop box bounds (expanded box)
+                    const shopBoxX = 40;
+                    const shopBoxY = 20;
+                    const shopBoxWidth = SCREEN_WIDTH - 80;
+                    const shopBoxHeight = SCREEN_HEIGHT - 40;
                     
                     if (clickX >= shopBoxX && clickX <= shopBoxX + shopBoxWidth &&
                         clickY >= shopBoxY && clickY <= shopBoxY + shopBoxHeight) {
                         // Click is within shop box - process shop interactions
                     // Pets page button (top right of shop window) - Enhanced
-                    const petsButtonX = SCREEN_WIDTH - 200 - 100; // Inside shop window with more margin
-                    const petsButtonY = 70; // Near top of shop window
+                    const petsButtonX = shopBoxX + shopBoxWidth - 120; // inside expanded shop window
+                    const petsButtonY = shopBoxY + 50; // Near top of shop window
                     const petsButtonWidth = 90;
                     const petsButtonHeight = 35;
                     
@@ -1296,17 +1308,47 @@ class Game {
                         }
                     }
                     
+                    // Check health upgrade click
+                    const healthUpgradeX = gunUpgradeX - 220;
+                    const healthUpgradeY = gunUpgradeY;
+                    const upgradeWidth = 200;
+                    const upgradeHeight = 40;
+                    
+                    if (clickX >= healthUpgradeX && clickX <= healthUpgradeX + upgradeWidth &&
+                        clickY >= healthUpgradeY && clickY <= healthUpgradeY + upgradeHeight) {
+                        if (this.healthUpgradeLevel < this.maxHealthUpgradeLevel && this.coins >= this.healthUpgradeCost) {
+                            this.coins -= this.healthUpgradeCost;
+                            this.healthUpgradeLevel++;
+                            this.saveCoins();
+                            this.saveHealthUpgrade();
+                        }
+                    }
+                    
+                    // Check speed upgrade click
+                    const speedUpgradeX = gunUpgradeX + 220;
+                    const speedUpgradeY = gunUpgradeY;
+                    
+                    if (clickX >= speedUpgradeX && clickX <= speedUpgradeX + upgradeWidth &&
+                        clickY >= speedUpgradeY && clickY <= speedUpgradeY + upgradeHeight) {
+                        if (this.speedUpgradeLevel < this.maxSpeedUpgradeLevel && this.coins >= this.speedUpgradeCost) {
+                            this.coins -= this.speedUpgradeCost;
+                            this.speedUpgradeLevel++;
+                            this.saveCoins();
+                            this.saveSpeedUpgrade();
+                        }
+                    }
+                    
                     } // End of shop box bounds check
                     return; // Prevent clicking through shop box
                 }
                 
                 // Check pets page clicks
                 if (this.inShop && this.inPetsPage) {
-                    // First check if click is within shop box bounds
-                    const shopBoxX = 100;
-                    const shopBoxY = 50;
-                    const shopBoxWidth = SCREEN_WIDTH - 200;
-                    const shopBoxHeight = SCREEN_HEIGHT - 100;
+                    // First check if click is within shop box bounds (expanded box)
+                    const shopBoxX = 40;
+                    const shopBoxY = 20;
+                    const shopBoxWidth = SCREEN_WIDTH - 80;
+                    const shopBoxHeight = SCREEN_HEIGHT - 40;
                     
                     if (clickX >= shopBoxX && clickX <= shopBoxX + shopBoxWidth &&
                         clickY >= shopBoxY && clickY <= shopBoxY + shopBoxHeight) {
@@ -1419,7 +1461,7 @@ class Game {
                     // First check if click is within options box bounds
                     const optionsBoxX = 100;
                     const optionsBoxY = 50;
-                    const optionsBoxWidth = SCREEN_WIDTH - 200;
+                    const optionsBoxWidth = SCREEN_WIDTH - 80;
                     const optionsBoxHeight = SCREEN_HEIGHT - 100;
                     
                     if (clickX >= optionsBoxX && clickX <= optionsBoxX + optionsBoxWidth &&
@@ -1490,6 +1532,24 @@ class Game {
 
     saveGunUpgrade() {
         localStorage.setItem('zombieShooterGunUpgrade', this.gunUpgradeLevel.toString());
+    }
+
+    loadHealthUpgrade() {
+        const savedUpgrade = localStorage.getItem('zombieShooterHealthUpgrade');
+        this.healthUpgradeLevel = savedUpgrade ? parseInt(savedUpgrade) : 0;
+    }
+
+    saveHealthUpgrade() {
+        localStorage.setItem('zombieShooterHealthUpgrade', this.healthUpgradeLevel.toString());
+    }
+
+    loadSpeedUpgrade() {
+        const savedUpgrade = localStorage.getItem('zombieShooterSpeedUpgrade');
+        this.speedUpgradeLevel = savedUpgrade ? parseInt(savedUpgrade) : 0;
+    }
+
+    saveSpeedUpgrade() {
+        localStorage.setItem('zombieShooterSpeedUpgrade', this.speedUpgradeLevel.toString());
     }
 
     loadOwnedPets() {
@@ -1897,6 +1957,14 @@ class Game {
                 this.gunUpgradeLevel = 0;
                 this.saveGunUpgrade();
                 
+                // Reset health upgrades
+                this.healthUpgradeLevel = 0;
+                this.saveHealthUpgrade();
+                
+                // Reset speed upgrades
+                this.speedUpgradeLevel = 0;
+                this.saveSpeedUpgrade();
+                
                 // Reset pets
                 this.ownedPets = [];
                 this.equippedPet = null;
@@ -1965,6 +2033,14 @@ class Game {
             this.player.damageMultiplier = 1;
             this.player.isMultiColor = false;
         }
+        
+        // Apply health upgrades to base health
+        this.player.baseHealth = 10 + (this.healthUpgradeLevel * 2);
+        this.player.updatePetBonuses();
+        
+        // Apply speed upgrades
+        const speedUpgradeMultiplier = Math.pow(1.2, this.speedUpgradeLevel);
+        this.player.speedMultiplier = (this.player.speedMultiplier || 1) * speedUpgradeMultiplier;
         
         // Apply gun upgrade effects
         const gunDamageMultiplier = Math.pow(1.3, this.gunUpgradeLevel);
@@ -2189,9 +2265,9 @@ class Game {
         if (this.inOptions) {
             // Semi-transparent black background
             ctx.fillStyle = 'rgba(0, 0, 0, 0.9)';
-            ctx.fillRect(100, 50, SCREEN_WIDTH - 200, SCREEN_HEIGHT - 100);
+            ctx.fillRect(40, 20, SCREEN_WIDTH - 80, SCREEN_HEIGHT - 40);
             ctx.strokeStyle = WHITE;
-            ctx.strokeRect(100, 50, SCREEN_WIDTH - 200, SCREEN_HEIGHT - 100);
+            ctx.strokeRect(40, 20, SCREEN_WIDTH - 80, SCREEN_HEIGHT - 40);
 
             // Title
             ctx.fillStyle = WHITE;
@@ -2558,11 +2634,11 @@ class Game {
     }
 
     drawShopPage(ctx) {
-        // Semi-transparent black background
-        ctx.fillStyle = 'rgba(0, 0, 0, 0.9)';
-        ctx.fillRect(100, 50, SCREEN_WIDTH - 200, SCREEN_HEIGHT - 100);
-        ctx.strokeStyle = WHITE;
-        ctx.strokeRect(100, 50, SCREEN_WIDTH - 200, SCREEN_HEIGHT - 100);
+    // Semi-transparent black background (expanded)
+    ctx.fillStyle = 'rgba(0, 0, 0, 0.95)';
+    ctx.fillRect(40, 20, SCREEN_WIDTH - 80, SCREEN_HEIGHT - 40);
+    ctx.strokeStyle = WHITE;
+    ctx.strokeRect(40, 20, SCREEN_WIDTH - 80, SCREEN_HEIGHT - 40);
 
         // Title
         ctx.fillStyle = GOLD;
@@ -2570,11 +2646,17 @@ class Game {
         ctx.textAlign = 'center';
         ctx.fillText('Shop', SCREEN_WIDTH/2, 90);
 
-        // Pets button (top right of shop window) - Enhanced visibility
-        const petsButtonX = SCREEN_WIDTH - 200 - 100; // Inside shop window with more margin
-        const petsButtonY = 70; // Near top of shop window
-        const petsButtonWidth = 90;
-        const petsButtonHeight = 35;
+    // Shop box coordinates (consistent with expanded shop window)
+    const shopBoxX = 40;
+    const shopBoxY = 20;
+    const shopBoxWidth = SCREEN_WIDTH - 80;
+    const shopBoxHeight = SCREEN_HEIGHT - 40;
+
+    // Pets button (top right of shop window) - Enhanced visibility
+    const petsButtonWidth = 90;
+    const petsButtonHeight = 35;
+    const petsButtonX = shopBoxX + shopBoxWidth - petsButtonWidth - 20; // 20px margin from right edge
+    const petsButtonY = shopBoxY + 30; // Near top of shop window
         
         // Glowing pets button
         ctx.shadowColor = '#4CAF50';
@@ -2736,6 +2818,60 @@ class Game {
             ctx.fillText(`${this.gunUpgradeCost} Coins`, gunUpgradeX + gunUpgradeWidth/2, gunUpgradeY + 32);
         }
 
+        // Health upgrade button (left side below gun upgrade)
+        const healthUpgradeX = gunUpgradeX - 220;
+        const healthUpgradeY = gunUpgradeY;
+        const upgradeWidth = 200;
+        const upgradeHeight = 40;
+        
+        if (this.healthUpgradeLevel >= this.maxHealthUpgradeLevel) {
+            ctx.fillStyle = '#666666';
+        } else if (this.coins >= this.healthUpgradeCost) {
+            ctx.fillStyle = '#4CAF50';
+        } else {
+            ctx.fillStyle = '#F44336';
+        }
+        ctx.fillRect(healthUpgradeX, healthUpgradeY, upgradeWidth, upgradeHeight);
+        ctx.strokeStyle = WHITE;
+        ctx.strokeRect(healthUpgradeX, healthUpgradeY, upgradeWidth, upgradeHeight);
+        
+        ctx.fillStyle = WHITE;
+        ctx.font = '16px Arial';
+        ctx.textAlign = 'center';
+        if (this.healthUpgradeLevel >= this.maxHealthUpgradeLevel) {
+            ctx.fillText('Health Maxed Out!', healthUpgradeX + upgradeWidth/2, healthUpgradeY + 25);
+        } else {
+            ctx.fillText(`Health Upgrade ${this.healthUpgradeLevel}/${this.maxHealthUpgradeLevel}`, healthUpgradeX + upgradeWidth/2, healthUpgradeY + 18);
+            ctx.font = '12px Arial';
+            ctx.fillText(`${this.healthUpgradeCost} Coins (+2 Health)`, healthUpgradeX + upgradeWidth/2, healthUpgradeY + 32);
+        }
+
+        // Speed upgrade button (right side below gun upgrade)
+        const speedUpgradeX = gunUpgradeX + 220;
+        const speedUpgradeY = gunUpgradeY;
+        
+        if (this.speedUpgradeLevel >= this.maxSpeedUpgradeLevel) {
+            ctx.fillStyle = '#666666';
+        } else if (this.coins >= this.speedUpgradeCost) {
+            ctx.fillStyle = '#4CAF50';
+        } else {
+            ctx.fillStyle = '#F44336';
+        }
+        ctx.fillRect(speedUpgradeX, speedUpgradeY, upgradeWidth, upgradeHeight);
+        ctx.strokeStyle = WHITE;
+        ctx.strokeRect(speedUpgradeX, speedUpgradeY, upgradeWidth, upgradeHeight);
+        
+        ctx.fillStyle = WHITE;
+        ctx.font = '16px Arial';
+        ctx.textAlign = 'center';
+        if (this.speedUpgradeLevel >= this.maxSpeedUpgradeLevel) {
+            ctx.fillText('Speed Maxed Out!', speedUpgradeX + upgradeWidth/2, speedUpgradeY + 25);
+        } else {
+            ctx.fillText(`Speed Upgrade ${this.speedUpgradeLevel}/${this.maxSpeedUpgradeLevel}`, speedUpgradeX + upgradeWidth/2, speedUpgradeY + 18);
+            ctx.font = '12px Arial';
+            ctx.fillText(`${this.speedUpgradeCost} Coins (1.2x Speed)`, speedUpgradeX + upgradeWidth/2, speedUpgradeY + 32);
+        }
+
         // Close instruction
         ctx.fillStyle = '#808080';
         ctx.font = '20px Arial';
@@ -2746,12 +2882,12 @@ class Game {
     drawPetsPage(ctx) {
         console.log('Drawing pets page!');
         
-        // Semi-transparent black background with enhanced visibility
-        ctx.fillStyle = 'rgba(0, 0, 0, 0.95)';
-        ctx.fillRect(100, 50, SCREEN_WIDTH - 200, SCREEN_HEIGHT - 100);
-        ctx.strokeStyle = GOLD;
-        ctx.lineWidth = 3;
-        ctx.strokeRect(100, 50, SCREEN_WIDTH - 200, SCREEN_HEIGHT - 100);
+    // Semi-transparent black background with enhanced visibility (expanded)
+    ctx.fillStyle = 'rgba(0, 0, 0, 0.95)';
+    ctx.fillRect(40, 20, SCREEN_WIDTH - 80, SCREEN_HEIGHT - 40);
+    ctx.strokeStyle = GOLD;
+    ctx.lineWidth = 3;
+    ctx.strokeRect(40, 20, SCREEN_WIDTH - 80, SCREEN_HEIGHT - 40);
 
         // Enhanced title with glow
         ctx.fillStyle = GOLD;
