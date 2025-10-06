@@ -47,7 +47,7 @@ class Player {
         } else if (this.equippedPet === 'parrot') {
             this.maxHealth = this.baseHealth * 2; // 2x health
         } else if (this.equippedPet === 'capybarra') {
-            this.maxHealth = Math.floor(this.baseHealth * 5 * 0.5); // 5x health but 50% less (2.5x total)
+            this.maxHealth = this.baseHealth * 5; // 5x health
         } else {
             this.maxHealth = this.baseHealth;
         }
@@ -156,7 +156,7 @@ class Player {
                     } else if (this.equippedPet === 'parrot') {
                         finalDamage *= 3; // 3x damage bonus
                     } else if (this.equippedPet === 'capybarra') {
-                        finalDamage *= 3; // 3x damage bonus
+                        finalDamage *= 5; // 5x damage bonus
                     }
                     
                     // Calculate gun tip position
@@ -2966,7 +2966,7 @@ class Game {
         ctx.fillStyle = '#FF6B35';
         ctx.fillText('Parrot (2x Health, 3x Damage) - 9%', rareCrateX + crateWidth/2, rareCrateY + 185);
         ctx.fillStyle = '#FFD700';
-        ctx.fillText('Capybarra (2.5x Health, 3x Damage) - 1%', rareCrateX + crateWidth/2, rareCrateY + 200);
+        ctx.fillText('Capybarra (5x Health, 5x Damage) - 1%', rareCrateX + crateWidth/2, rareCrateY + 200);
 
         // Owned pets section (right side)
         const petListX = SCREEN_WIDTH/2 + 120;
@@ -3119,7 +3119,7 @@ class Game {
                     effect = '(2x Health, 3x Damage)';
                     ctx.fillStyle = '#FF6B35'; // Orange text for epic pet
                 } else if (pet === 'capybarra') {
-                    effect = '(2.5x Health, 3x Damage)';
+                    effect = '(5x Health, 5x Damage)';
                     ctx.fillStyle = '#FFD700'; // Gold text for legendary pet
                 }
                 ctx.fillText(`${petName} ${effect}`, petListX + 40, petY + 16);
