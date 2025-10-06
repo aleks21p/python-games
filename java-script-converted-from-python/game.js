@@ -2612,7 +2612,8 @@ class Game {
             ctx.font = '24px Arial';
             ctx.fillText(`${this.translations[this.selectedLanguage].finalScore}: ${this.score}`, SCREEN_WIDTH/2 - 70, SCREEN_HEIGHT/2 + 40);
             ctx.fillText(this.translations[this.selectedLanguage].pressToRestart, SCREEN_WIDTH/2 - 80, SCREEN_HEIGHT/2 + 80);
-        } else if (this.paused) {
+        } else if (this.paused && (this.countdownActive || this.inMenu)) {
+            // Only draw the simple paused text when the full pause menu isn't displayed
             ctx.fillStyle = WHITE;
             ctx.font = '48px Arial';
             ctx.fillText(this.translations[this.selectedLanguage].paused, SCREEN_WIDTH/2 - 80, SCREEN_HEIGHT/2);
