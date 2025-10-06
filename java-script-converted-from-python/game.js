@@ -73,9 +73,27 @@ class Player {
                 const normalizedDy = dy / distance;
                 const baseAngle = Math.atan2(normalizedDy, normalizedDx);
 
-                const isRed = level >= 7;
-                const damage = isRed ? 7 : 1;
-                const numStreams = level >= 7 ? (level - 6) : (level < 3 ? 1 : level);
+                let isRed = level >= 7;
+                let isWhite = level >= 13;
+                let damage = 1;
+                let numStreams = 1;
+
+                if (level >= 13) {
+                    // Level 13+: White bullets with even more damage
+                    damage = 15;
+                    numStreams = level - 12; // Level 13 = 1 stream, Level 14 = 2 streams, etc.
+                    isWhite = true;
+                    isRed = false;
+                } else if (level >= 7) {
+                    // Level 7-12: Red bullets
+                    damage = 7;
+                    numStreams = level - 6;
+                    isRed = true;
+                } else {
+                    // Level 1-6: Yellow bullets
+                    damage = 1;
+                    numStreams = level < 3 ? 1 : level;
+                }
 
                 const spread = Math.PI / 3;
                 const startAngle = numStreams > 1 ? baseAngle - spread/2 : baseAngle;
@@ -87,7 +105,7 @@ class Player {
                     const bulletDy = Math.sin(angle) * 10;
                     const skinDamage = damage * (this.damageMultiplier || 1);
                     const finalDamage = skinDamage * (this.gunDamageMultiplier || 1);
-                    bullets.push(new Bullet(this.x, this.y, bulletDx, bulletDy, finalDamage, isRed));
+                    bullets.push(new Bullet(this.x, this.y, bulletDx, bulletDy, finalDamage, isRed, isWhite));
                 }
             }
 
@@ -125,6 +143,18 @@ class Player {
             ctx.fill();
         }
 
+        // Draw gun
+        const gunLength = 25 * this.scale;
+        const gunWidth = 4 * this.scale;
+        const gunOffsetX = (this.size * this.scale) + 5;
+        
+        ctx.fillStyle = '#444444';
+        ctx.fillRect(this.x + gunOffsetX, this.y - gunWidth/2, gunLength, gunWidth);
+        
+        // Gun tip
+        ctx.fillStyle = '#222222';
+        ctx.fillRect(this.x + gunOffsetX + gunLength - 3, this.y - gunWidth/2 - 1, 3, gunWidth + 2);
+
         const barWidth = 40;
         const barHeight = 6;
         const barX = this.x - barWidth / 2;
@@ -142,7 +172,7 @@ class Player {
 
 // Bullet class
 class Bullet {
-    constructor(x, y, dx, dy, damage = 1, isRed = false) {
+    constructor(x, y, dx, dy, damage = 1, isRed = false, isWhite = false) {
         this.x = x;
         this.y = y;
         this.dx = dx;
@@ -150,6 +180,7 @@ class Bullet {
         this.size = 3;
         this.damage = damage;
         this.isRed = isRed;
+        this.isWhite = isWhite;
     }
 
     update() {
@@ -162,11 +193,28 @@ class Bullet {
     }
 
     draw(ctx) {
-        const color = this.isRed ? RED : YELLOW;
+        let color;
+        if (this.isWhite) {
+            color = WHITE;
+        } else if (this.isRed) {
+            color = RED;
+        } else {
+            color = YELLOW;
+        }
+        
         ctx.beginPath();
         ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
         ctx.fillStyle = color;
         ctx.fill();
+        
+        // Add glow effect for white bullets
+        if (this.isWhite) {
+            ctx.beginPath();
+            ctx.arc(this.x, this.y, this.size + 2, 0, Math.PI * 2);
+            ctx.strokeStyle = 'rgba(255, 255, 255, 0.5)';
+            ctx.lineWidth = 2;
+            ctx.stroke();
+        }
     }
 }
 
@@ -250,16 +298,22 @@ class FinalBossBullet {
 
 // Zombie class
 class Zombie {
-    constructor(x, y, isBuff = false, isGreen = false, isBlack = false) {
+    constructor(x, y, isBuff = false, isGreen = false, isBlack = false, isBlue = false) {
         this.x = x;
         this.y = y;
         this.isBuff = isBuff;
         this.isGreen = isGreen;
         this.isBlack = isBlack;
+        this.isBlue = isBlue;
         this.lastShot = 0;
         this.shootDelay = 4000;
 
-        if (isBlack) {
+        if (isBlue) {
+            this.size = 21; // 3x the size of green (7 * 3)
+            this.speed = 1.5; // Moderate speed
+            this.health = 3360; // 30x green health (112 * 30)
+            this.maxHealth = 3360;
+        } else if (isBlack) {
             this.size = 35;
             this.speed = 1.2;
             this.health = 560;
@@ -317,7 +371,8 @@ class Zombie {
 
     draw(ctx) {
         let color;
-        if (this.isBlack) color = BLACK;
+        if (this.isBlue) color = BLUE;
+        else if (this.isBlack) color = BLACK;
         else if (this.isGreen) color = GREEN;
         else if (this.isBuff) color = ORANGE;
         else color = this.health === this.maxHealth ? RED : '#960000';
@@ -327,9 +382,21 @@ class Zombie {
         ctx.fillStyle = color;
         ctx.fill();
 
+        // Add blue glow effect for blue zombies
+        if (this.isBlue) {
+            for (let i = 0; i < 2; i++) {
+                const glowSize = this.size + (i * 5);
+                ctx.beginPath();
+                ctx.arc(this.x, this.y, glowSize, 0, Math.PI * 2);
+                ctx.strokeStyle = `rgba(0, 0, 255, ${0.4 - i * 0.2})`;
+                ctx.lineWidth = 3;
+                ctx.stroke();
+            }
+        }
+
         if (this.health < this.maxHealth) {
-            const barWidth = this.isBlack ? 50 : (this.isGreen ? 40 : (this.isBuff ? 30 : 20));
-            const barHeight = this.isBlack ? 8 : (this.isGreen ? 8 : (this.isBuff ? 6 : 4));
+            const barWidth = this.isBlue ? 60 : (this.isBlack ? 50 : (this.isGreen ? 40 : (this.isBuff ? 30 : 20)));
+            const barHeight = this.isBlue ? 10 : (this.isBlack ? 8 : (this.isGreen ? 8 : (this.isBuff ? 6 : 4)));
             const barX = this.x - barWidth / 2;
             const barY = this.y - this.size - 10;
 
@@ -454,8 +521,8 @@ class FinalBoss {
         this.y = y;
         this.size = 80;
         this.speed = 0.6;
-        this.health = 50000;
-        this.maxHealth = 50000;
+        this.health = 250000; // 5x more HP (50000 * 5)
+        this.maxHealth = 250000;
         this.damage = 5;
         this.lastShot = 0;
         this.shootDelay = 500;
@@ -766,6 +833,7 @@ class Game {
         // Enemy spawn tracking
         this.greenSpawnCount = 0;
         this.orangeSpawnCount = 0;
+        this.blueSpawnCount = 0;
 
         // Boss system
         this.boss = null;
@@ -1182,10 +1250,13 @@ class Game {
 
         if (this.level >= 10) {
             this.greenSpawnCount++;
-            if (this.greenSpawnCount % 20 === 0) {
-                this.zombies.push(new Zombie(x, y, false, false, true));
+            if (this.level >= 17 && this.greenSpawnCount % 15 === 0) {
+                // Every 15 green enemies after level 17, spawn a blue enemy
+                this.zombies.push(new Zombie(x, y, false, false, false, true)); // Blue zombie
+            } else if (this.greenSpawnCount % 20 === 0) {
+                this.zombies.push(new Zombie(x, y, false, false, true)); // Black zombie
             } else {
-                this.zombies.push(new Zombie(x, y, false, true, false));
+                this.zombies.push(new Zombie(x, y, false, true, false)); // Green zombie
             }
         } else if (this.level >= 5) {
             this.orangeSpawnCount++;
@@ -1259,7 +1330,7 @@ class Game {
             const bullet = this.bullets[i];
 
             // Check if enemy bullet hits player (boss bullets)
-            if (bullet.isBossBullet) {
+            if (bullet.isBossBullet || bullet.isFinalBossBullet || bullet.isEnemyBullet) {
                 const dx = bullet.x - this.player.x;
                 const dy = bullet.y - this.player.y;
                 const distance = Math.sqrt(dx * dx + dy * dy);
@@ -1326,7 +1397,10 @@ class Game {
 
                     if (distance < bullet.size + zombie.size) {
                         if (zombie.takeDamage(bullet.damage)) {
-                            if (zombie.isBuff) {
+                            if (zombie.isBlue) {
+                                this.spawnOrbs(zombie.x, zombie.y, 20);  // 20 orbs for blue enemies
+                                this.score += 200;
+                            } else if (zombie.isBuff) {
                                 this.spawnOrbs(zombie.x, zombie.y, 7);
                                 this.score += 80;
                             } else if (zombie.isGreen) {
