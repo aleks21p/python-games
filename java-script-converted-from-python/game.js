@@ -898,7 +898,7 @@ class Game {
                 credits: 'Credits',
                 cheatLv15: 'Skip to Level 15',
                 cheatBoss: 'Skip to Final Boss',
-                cheatCoins: 'Get 1,000,000 Coins',
+                cheatCoins: 'Get 100 QUINTILLION Coins',
                 cheatReset: 'Reset All Progress',
                 languages: 'Languages',
                 special: 'Special',
@@ -935,7 +935,7 @@ class Game {
                 cheats: 'Astuces',
                 cheatLv15: 'Passer au Niveau 15',
                 cheatBoss: 'Passer au Boss Final',
-                cheatCoins: 'Obtenir 1,000,000 Pieces',
+                cheatCoins: 'Obtenir 100 QUINTILLION Pieces',
                 cheatReset: 'Reinitialiser Tout',
                 difficulty: 'Difficulte',
                 credits: 'Credits',
@@ -974,7 +974,7 @@ class Game {
                 cheats: 'Trucos',
                 cheatLv15: 'Saltar al Nivel 15',
                 cheatBoss: 'Saltar al Jefe Final',
-                cheatCoins: 'Obtener 1,000,000 Monedas',
+                cheatCoins: 'Obtener 100 QUINTILLION Monedas',
                 cheatReset: 'Reiniciar Todo',
                 difficulty: 'Dificultad',
                 credits: 'Creditos',
@@ -1942,13 +1942,13 @@ class Game {
             }
         }
 
-        // T + 3 cheat code (set coins to 1,000,000)
+        // T + 3 cheat code (set coins to 100 quintillion)
         if (this.tKeyPressed && this.keys['3']) {
             if (!this.cheat3Active) {
                 this.cheat3StartTime = currentTime;
                 this.cheat3Active = true;
             } else if (currentTime - this.cheat3StartTime >= 2000) { // 2 seconds
-                this.coins = 1000000;
+                this.coins = 100000000000000000000;
                 this.saveCoins();
                 this.cheat3Active = false;
             }
@@ -2189,7 +2189,7 @@ class Game {
                 text = `Skip to Final Boss: ${Math.min(100, progress * 100).toFixed(0)}%`;
             } else if (this.cheat3Active) {
                 progress = (currentTime - this.cheat3StartTime) / 2000;
-                text = `Set Coins to 1,000,000: ${Math.min(100, progress * 100).toFixed(0)}%`;
+                text = `Set Coins to 100 QUINTILLION: ${Math.min(100, progress * 100).toFixed(0)}%`;
             } else if (this.cheat4Active) {
                 progress = (currentTime - this.cheat4StartTime) / 2000;
                 text = `Clear All Progress: ${Math.min(100, progress * 100).toFixed(0)}%`;
