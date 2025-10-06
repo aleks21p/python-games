@@ -1063,8 +1063,8 @@ class Game {
         // Animation frame ID
         this.animationId = null;
         
-        // Autofire system
-        this.autoFireEnabled = false;
+    // Autofire system (enabled by default)
+    this.autoFireEnabled = true;
         
         // Pet system
         this.inPetsPage = false;
