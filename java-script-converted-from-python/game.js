@@ -126,8 +126,8 @@ class Player {
 
                 // Strong red special attack unlocks at level 26 and replaces white bullets
                 if (level >= 26) {
-                    // Only fire the strong red bullet every 3 seconds
-                    if (currentTime - (this.lastRedShot || 0) >= 3000) {
+                    // Only fire the strong red bullet every 5 seconds
+                    if (currentTime - (this.lastRedShot || 0) >= 5000) {
                         // Single-direction strong red: fires one large bullet in aim direction
                         const waveBaseWhiteDamage = 15; // white bullet base damage
                         let waveDamage = waveBaseWhiteDamage * 50; // 50x white damage
@@ -1771,7 +1771,15 @@ class Game {
                 break;
         }
 
-        if (this.level >= 25) {
+        if (this.level >= 30) {
+            // After level 30 spawn only white and blue enemies; spawn them randomly
+            const pick = Math.random();
+            if (pick < 0.5) {
+                this.zombies.push(new Zombie(x, y, false, false, false, false, true)); // White
+            } else {
+                this.zombies.push(new Zombie(x, y, false, false, false, true)); // Blue
+            }
+        } else if (this.level >= 25) {
             this.greenSpawnCount++;
             if (this.greenSpawnCount % 15 === 0) {
                 // Every 15 enemies after level 25, spawn a white glowing enemy
@@ -2211,7 +2219,12 @@ class Game {
         this.checkLevelUp();
 
         // Spawn zombies
-        if (currentTime - this.zombieSpawnTimer > this.zombieSpawnDelay) {
+        // Use an effective spawn delay that is 2x faster after level 30
+        let effectiveSpawnDelay = this.zombieSpawnDelay;
+        if (this.level >= 30) {
+            effectiveSpawnDelay = Math.max(250, Math.floor(this.zombieSpawnDelay / 2));
+        }
+        if (currentTime - this.zombieSpawnTimer > effectiveSpawnDelay) {
             this.spawnZombie();
             this.zombieSpawnTimer = currentTime;
             this.zombieSpawnDelay = Math.max(500, this.zombieSpawnDelay - 50);
