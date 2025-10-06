@@ -130,10 +130,9 @@ class Player {
                     if (currentTime - (this.lastRedShot || 0) >= 3000) {
                         // Single-direction strong red: fires one large bullet in aim direction
                         const waveBaseWhiteDamage = 15; // white bullet base damage
-                        let waveDamage = waveBaseWhiteDamage * 20; // 20x white damage
-                        waveDamage = waveDamage * 10; // further increase: 10x stronger than current
+                        const waveDamage = waveBaseWhiteDamage * 50; // 50x white damage
                         const smallRedSize = 3; // base small bullet size
-                        const waveSize = smallRedSize * 3; // 3x bigger than small red
+                        const waveSize = smallRedSize * 100; // 100x bigger than small red
 
                         const angle = baseAngle; // fire in the direction the player is aiming
                         const speed = 12;
