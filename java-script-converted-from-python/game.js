@@ -85,7 +85,8 @@ class Player {
                     const angle = startAngle + i * angleStep;
                     const bulletDx = Math.cos(angle) * 10;
                     const bulletDy = Math.sin(angle) * 10;
-                    const finalDamage = damage * (this.damageMultiplier || 1);
+                    const skinDamage = damage * (this.damageMultiplier || 1);
+                    const finalDamage = skinDamage * (this.gunDamageMultiplier || 1);
                     bullets.push(new Bullet(this.x, this.y, bulletDx, bulletDy, finalDamage, isRed));
                 }
             }
@@ -1408,6 +1409,10 @@ class Game {
                 }
                 this.activePlayerSkin = 'default';
                 this.saveSkins();
+                
+                // Reset gun upgrades
+                this.gunUpgradeLevel = 0;
+                this.saveGunUpgrade();
                 
                 this.reset();
                 this.cheat4Active = false;
