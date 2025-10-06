@@ -1060,7 +1060,7 @@ class Game {
         this.zombies = [];
         this.orbs = [];
         this.score = 0;
-        this.coins = Math.max(this.loadCoins(), 2000); // Load saved coins with minimum 2000 for testing
+        this.coins = this.loadCoins(); // Load saved coins (no minimum)
         this.lastCoinScore = 0; // Track when to award next coin
         this.zombieSpawnTimer = 0;
         this.zombieSpawnDelay = 2000;
