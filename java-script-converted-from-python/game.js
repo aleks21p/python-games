@@ -29,6 +29,7 @@ class Player {
         this.lastShot = 0;
         this.baseShootDelay = 200;
         this.shootDelay = 200;
+        this.baseHealth = 10;
         this.health = 10;
         this.maxHealth = 10;
         this.lastDamageTime = 0;
@@ -37,6 +38,21 @@ class Player {
         this.fireAnimationTime = 0;
         this.isMouseShooting = false;
         this.equippedPet = null;
+    }
+
+    updatePetBonuses() {
+        // Apply turtle health bonus
+        if (this.equippedPet === 'turtle') {
+            this.maxHealth = this.baseHealth * 2; // 2x health
+            if (this.health < this.maxHealth) {
+                this.health = Math.min(this.health * 2, this.maxHealth); // Scale current health up
+            }
+        } else {
+            this.maxHealth = this.baseHealth;
+            if (this.health > this.maxHealth) {
+                this.health = this.maxHealth; // Scale health down if needed
+            }
+        }
     }
 
     updateShootSpeed(level) {
@@ -125,8 +141,13 @@ class Player {
                     const angle = startAngle + i * angleStep;
                     const bulletDx = Math.cos(angle) * 10;
                     const bulletDy = Math.sin(angle) * 10;
-                    const skinDamage = damage * (this.damageMultiplier || 1);
-                    const finalDamage = skinDamage * (this.gunDamageMultiplier || 1);
+                    let skinDamage = damage * (this.damageMultiplier || 1);
+                    let finalDamage = skinDamage * (this.gunDamageMultiplier || 1);
+                    
+                    // Apply turtle damage bonus
+                    if (this.equippedPet === 'turtle') {
+                        finalDamage *= 1.2; // 1.2x damage bonus
+                    }
                     
                     // Calculate gun tip position
                     const gunLength = 25 * this.scale;
@@ -255,6 +276,34 @@ class Player {
                 
                 ctx.beginPath();
                 ctx.ellipse(petX + 8, petY - 5, 4, 8, -Math.PI * 0.3, 0, Math.PI * 2);
+                ctx.fill();
+            } else if (this.equippedPet === 'turtle') {
+                // Draw turtle (blue - rare pet)
+                ctx.fillStyle = '#0066FF'; // Blue shell
+                ctx.beginPath();
+                ctx.arc(petX, petY, petSize, 0, Math.PI * 2);
+                ctx.fill();
+                
+                // Shell pattern
+                ctx.strokeStyle = '#004499';
+                ctx.lineWidth = 2;
+                ctx.beginPath();
+                ctx.arc(petX, petY, petSize - 2, 0, Math.PI * 2);
+                ctx.stroke();
+                
+                // Shell segments
+                ctx.lineWidth = 1;
+                ctx.beginPath();
+                ctx.moveTo(petX - 6, petY);
+                ctx.lineTo(petX + 6, petY);
+                ctx.moveTo(petX, petY - 6);
+                ctx.lineTo(petX, petY + 6);
+                ctx.stroke();
+                
+                // Head
+                ctx.fillStyle = '#0088AA';
+                ctx.beginPath();
+                ctx.arc(petX + 8, petY - 2, 3, 0, Math.PI * 2);
                 ctx.fill();
             }
         }
@@ -416,8 +465,8 @@ class Zombie {
         if (isBlue) {
             this.size = 21; // 3x the size of green (7 * 3)
             this.speed = 1.5; // Moderate speed
-            this.health = 3360; // 30x green health (112 * 30)
-            this.maxHealth = 3360;
+            this.health = 67200; // 20x stronger than before (3360 * 20)
+            this.maxHealth = 67200;
         } else if (isBlack) {
             this.size = 35;
             this.speed = 1.2;
@@ -936,7 +985,7 @@ class Game {
         this.zombies = [];
         this.orbs = [];
         this.score = 0;
-        this.coins = this.loadCoins(); // Load saved coins
+        this.coins = Math.max(this.loadCoins(), 2000); // Load saved coins with minimum 2000 for testing
         this.lastCoinScore = 0; // Track when to award next coin
         this.zombieSpawnTimer = 0;
         this.zombieSpawnDelay = 2000;
@@ -990,7 +1039,15 @@ class Game {
         this.ownedPets = this.loadOwnedPets();
         this.equippedPet = this.loadEquippedPet();
         this.petCrates = {
-            common: { name: 'Common Crate', cost: 1000, pets: ['cat', 'dog'] }
+            common: { 
+                name: 'Common Crate', 
+                cost: 1000, 
+                pets: [
+                    { name: 'cat', rarity: 'common', chance: 45 },
+                    { name: 'dog', rarity: 'common', chance: 45 },
+                    { name: 'turtle', rarity: 'rare', chance: 10 }
+                ]
+            }
         };
         
         // Debug logging
@@ -1018,6 +1075,16 @@ class Game {
             if (e.key === 'r' || e.key === 'R') {
                 if (this.gameOver) {
                     this.reset();
+                }
+            }
+            
+            // Pet cheat code - Press P in menu for free pets
+            if (e.key === 'p' || e.key === 'P') {
+                if (this.inMenu && !this.inOptions && !this.inShop) {
+                    // Give both pets for testing
+                    this.ownedPets = ['cat', 'dog'];
+                    this.saveOwnedPets();
+                    console.log('Cheat activated: Free pets given!');
                 }
             }
             if (e.key === 'Escape') {
@@ -1109,14 +1176,18 @@ class Game {
 
                 // Check shop item clicks
                 if (this.inShop && !this.inPetsPage) {
-                    // Pets page button (top right of shop window)
-                    const petsButtonX = SCREEN_WIDTH - 200 - 90; // Inside shop window
-                    const petsButtonY = 60; // Near top of shop window
-                    const petsButtonWidth = 80;
-                    const petsButtonHeight = 30;
+                    // Pets page button (top right of shop window) - Enhanced
+                    const petsButtonX = SCREEN_WIDTH - 200 - 100; // Inside shop window with more margin
+                    const petsButtonY = 70; // Near top of shop window
+                    const petsButtonWidth = 90;
+                    const petsButtonHeight = 35;
+                    
+                    // Debug click detection
+                    console.log('Click at:', clickX, clickY, 'Button bounds:', petsButtonX, petsButtonY, petsButtonX + petsButtonWidth, petsButtonY + petsButtonHeight);
                     
                     if (clickX >= petsButtonX && clickX <= petsButtonX + petsButtonWidth &&
                         clickY >= petsButtonY && clickY <= petsButtonY + petsButtonHeight) {
+                        console.log('Pets button clicked!');
                         this.inPetsPage = true;
                         return;
                     }
@@ -1221,13 +1292,24 @@ class Game {
                             this.coins -= this.petCrates.common.cost;
                             this.saveCoins();
                             
-                            // Random pet from common crate
+                            // Random pet from common crate with chances
                             const possiblePets = this.petCrates.common.pets;
-                            const randomPet = possiblePets[Math.floor(Math.random() * possiblePets.length)];
+                            const rand = Math.random() * 100; // 0-100
+                            let currentChance = 0;
+                            let selectedPet = null;
                             
-                            if (!this.ownedPets.includes(randomPet)) {
-                                this.ownedPets.push(randomPet);
+                            for (const pet of possiblePets) {
+                                currentChance += pet.chance;
+                                if (rand <= currentChance) {
+                                    selectedPet = pet.name;
+                                    break;
+                                }
+                            }
+                            
+                            if (selectedPet && !this.ownedPets.includes(selectedPet)) {
+                                this.ownedPets.push(selectedPet);
                                 this.saveOwnedPets();
+                                console.log(`Got ${selectedPet}! (${possiblePets.find(p => p.name === selectedPet).rarity})`);
                             }
                         }
                     }
@@ -1729,6 +1811,12 @@ class Game {
                 this.gunUpgradeLevel = 0;
                 this.saveGunUpgrade();
                 
+                // Reset pets
+                this.ownedPets = [];
+                this.equippedPet = null;
+                this.saveOwnedPets();
+                this.saveEquippedPet();
+                
                 this.reset();
                 this.cheat4Active = false;
             }
@@ -2155,155 +2243,12 @@ class Game {
 
         // Draw Shop menu if active
         if (this.inShop) {
-            // Semi-transparent black background
-            ctx.fillStyle = 'rgba(0, 0, 0, 0.9)';
-            ctx.fillRect(100, 50, SCREEN_WIDTH - 200, SCREEN_HEIGHT - 100);
-            ctx.strokeStyle = WHITE;
-            ctx.strokeRect(100, 50, SCREEN_WIDTH - 200, SCREEN_HEIGHT - 100);
-
-            // Title
-            ctx.fillStyle = GOLD;
-            ctx.font = '32px Arial';
-            ctx.textAlign = 'center';
-            ctx.fillText('Shop', SCREEN_WIDTH/2, 90);
-
-            // Draw shop items
-            const itemHeight = 80;
-            const itemWidth = 120;
-            const itemSpacing = 15;
-            const rowSpacing = 20;
-            
-            // First row (3 items)
-            const firstRowStartX = SCREEN_WIDTH/2 - ((itemWidth * 3 + itemSpacing * 2) / 2);
-            const firstRowY = SCREEN_HEIGHT/2 - 80;
-            
-            // Second row (2 items)
-            const secondRowStartX = SCREEN_WIDTH/2 - ((itemWidth * 2 + itemSpacing) / 2);
-            const secondRowY = firstRowY + itemHeight + rowSpacing;
-
-            let index = 0;
-            for (const [itemId, item] of Object.entries(this.shopItems)) {
-                let itemX, itemY;
-                
-                if (index < 3) {
-                    // First row
-                    itemX = firstRowStartX + (itemWidth + itemSpacing) * index;
-                    itemY = firstRowY;
-                } else {
-                    // Second row
-                    itemX = secondRowStartX + (itemWidth + itemSpacing) * (index - 3);
-                    itemY = secondRowY;
-                }
-                
-                // Draw item box
-                ctx.fillStyle = '#333333'; // Dark background for better contrast
-                ctx.fillRect(itemX, itemY, itemWidth, itemHeight);
-                ctx.strokeStyle = WHITE;
-                ctx.strokeRect(itemX, itemY, itemWidth, itemHeight);
-
-                // Draw preview circle (player appearance)
-                const previewSize = 12;
-                const scale = item.scale || 1;
-                
-                if (item.isMultiColor) {
-                    // Draw multi-colored circle (red and blue)
-                    ctx.fillStyle = '#FF0000';
-                    ctx.beginPath();
-                    ctx.arc(itemX + itemWidth/2, itemY + 20, previewSize * scale, 0, Math.PI, false);
-                    ctx.fill();
-                    
-                    ctx.fillStyle = '#0000FF';
-                    ctx.beginPath();
-                    ctx.arc(itemX + itemWidth/2, itemY + 20, previewSize * scale, 0, Math.PI, true);
-                    ctx.fill();
-                } else {
-                    ctx.fillStyle = item.color;
-                    ctx.beginPath();
-                    ctx.arc(itemX + itemWidth/2, itemY + 20, previewSize * scale, 0, Math.PI * 2);
-                    ctx.fill();
-                }
-                
-                // Draw special effects indicators
-                if (item.speedBoost || item.speedMultiplier > 1) {
-                    // Draw speed indicator arrows
-                    ctx.strokeStyle = WHITE;
-                    ctx.lineWidth = 1;
-                    ctx.beginPath();
-                    ctx.moveTo(itemX + itemWidth/2 + 15, itemY + 20);
-                    ctx.lineTo(itemX + itemWidth/2 + 22, itemY + 20);
-                    ctx.lineTo(itemX + itemWidth/2 + 19, itemY + 17);
-                    ctx.moveTo(itemX + itemWidth/2 + 22, itemY + 20);
-                    ctx.lineTo(itemX + itemWidth/2 + 19, itemY + 23);
-                    ctx.stroke();
-                }
-                
-                if (item.damageMultiplier && item.damageMultiplier > 1) {
-                    // Draw damage indicator (sword/star)
-                    ctx.fillStyle = '#FFD700';
-                    ctx.font = '12px Arial';
-                    ctx.textAlign = 'center';
-                    ctx.fillText('⚔', itemX + itemWidth/2 + 20, itemY + 25);
-                }
-
-                // Draw item name
-                ctx.fillStyle = WHITE;
-                ctx.font = '14px Arial';
-                ctx.textAlign = 'center';
-                ctx.fillText(item.name, itemX + itemWidth/2, itemY + 45);
-
-                // Draw price or status
-                ctx.font = '12px Arial';
-                if (item.owned) {
-                    if (this.activePlayerSkin === itemId) {
-                        ctx.fillStyle = '#00FF00';
-                        ctx.fillText('EQUIPPED', itemX + itemWidth/2, itemY + 62);
-                    } else {
-                        ctx.fillStyle = '#FFFF00';
-                        ctx.fillText('Click to Equip', itemX + itemWidth/2, itemY + 62);
-                    }
-                } else {
-                    ctx.fillStyle = this.coins >= item.cost ? '#FFFF00' : '#FF0000';
-                    ctx.fillText(`${item.cost} Coins`, itemX + itemWidth/2, itemY + 62);
-                }
-
-                index++;
-            }
-            
-            // Draw gun upgrade button
-            const gunUpgradeX = SCREEN_WIDTH/2 - 100;
-            const gunUpgradeY = secondRowY + itemHeight + 30;
-            const gunUpgradeWidth = 200;
-            const gunUpgradeHeight = 40;
-            
-            // Gun upgrade button background
-            if (this.gunUpgradeLevel >= this.maxGunUpgradeLevel) {
-                ctx.fillStyle = '#666666'; // Maxed out
-            } else if (this.coins >= this.gunUpgradeCost) {
-                ctx.fillStyle = '#4CAF50'; // Can afford
+            console.log('Drawing shop. Pets page:', this.inPetsPage);
+            if (this.inPetsPage) {
+                this.drawPetsPage(ctx);
             } else {
-                ctx.fillStyle = '#F44336'; // Can't afford
+                this.drawShopPage(ctx);
             }
-            ctx.fillRect(gunUpgradeX, gunUpgradeY, gunUpgradeWidth, gunUpgradeHeight);
-            ctx.strokeStyle = WHITE;
-            ctx.strokeRect(gunUpgradeX, gunUpgradeY, gunUpgradeWidth, gunUpgradeHeight);
-            
-            // Gun upgrade text
-            ctx.fillStyle = WHITE;
-            ctx.font = '16px Arial';
-            ctx.textAlign = 'center';
-            if (this.gunUpgradeLevel >= this.maxGunUpgradeLevel) {
-                ctx.fillText('Gun Maxed Out!', gunUpgradeX + gunUpgradeWidth/2, gunUpgradeY + 25);
-            } else {
-                ctx.fillText(`Gun Upgrade ${this.gunUpgradeLevel}/${this.maxGunUpgradeLevel}`, gunUpgradeX + gunUpgradeWidth/2, gunUpgradeY + 18);
-                ctx.font = '12px Arial';
-                ctx.fillText(`${this.gunUpgradeCost} Coins`, gunUpgradeX + gunUpgradeWidth/2, gunUpgradeY + 32);
-            }
-
-            // Close instruction
-            ctx.fillStyle = '#808080';
-            ctx.font = '20px Arial';
-            ctx.fillText('Click Shop again to close', SCREEN_WIDTH/2, SCREEN_HEIGHT - 80);
-            ctx.textAlign = 'left';
         }
     }
 
@@ -2519,21 +2464,34 @@ class Game {
         ctx.textAlign = 'center';
         ctx.fillText('Shop', SCREEN_WIDTH/2, 90);
 
-        // Pets button (top right of shop window)
-        const petsButtonX = SCREEN_WIDTH - 200 - 90; // Inside shop window
-        const petsButtonY = 60; // Near top of shop window
-        const petsButtonWidth = 80;
-        const petsButtonHeight = 30;
+        // Pets button (top right of shop window) - Enhanced visibility
+        const petsButtonX = SCREEN_WIDTH - 200 - 100; // Inside shop window with more margin
+        const petsButtonY = 70; // Near top of shop window
+        const petsButtonWidth = 90;
+        const petsButtonHeight = 35;
         
+        // Glowing pets button
+        ctx.shadowColor = '#4CAF50';
+        ctx.shadowBlur = 10;
         ctx.fillStyle = '#4CAF50';
         ctx.fillRect(petsButtonX, petsButtonY, petsButtonWidth, petsButtonHeight);
+        ctx.shadowBlur = 0;
+        
+        // White border
         ctx.strokeStyle = WHITE;
+        ctx.lineWidth = 2;
         ctx.strokeRect(petsButtonX, petsButtonY, petsButtonWidth, petsButtonHeight);
         
+        // Text
         ctx.fillStyle = WHITE;
-        ctx.font = '14px Arial';
+        ctx.font = 'bold 16px Arial';
         ctx.textAlign = 'center';
-        ctx.fillText('Pets', petsButtonX + petsButtonWidth/2, petsButtonY + 20);
+        ctx.fillText('🐾 PETS', petsButtonX + petsButtonWidth/2, petsButtonY + 23);
+        
+        // Debug: Draw button bounds
+        ctx.strokeStyle = 'red';
+        ctx.lineWidth = 1;
+        ctx.strokeRect(petsButtonX, petsButtonY, petsButtonWidth, petsButtonHeight);
 
         // Draw shop items
         const itemHeight = 80;
@@ -2680,17 +2638,20 @@ class Game {
     }
 
     drawPetsPage(ctx) {
-        // Semi-transparent black background
-        ctx.fillStyle = 'rgba(0, 0, 0, 0.9)';
+        console.log('Drawing pets page!');
+        
+        // Semi-transparent black background with enhanced visibility
+        ctx.fillStyle = 'rgba(0, 0, 0, 0.95)';
         ctx.fillRect(100, 50, SCREEN_WIDTH - 200, SCREEN_HEIGHT - 100);
-        ctx.strokeStyle = WHITE;
+        ctx.strokeStyle = GOLD;
+        ctx.lineWidth = 3;
         ctx.strokeRect(100, 50, SCREEN_WIDTH - 200, SCREEN_HEIGHT - 100);
 
-        // Title
+        // Enhanced title with glow
         ctx.fillStyle = GOLD;
-        ctx.font = '32px Arial';
+        ctx.font = 'bold 36px Arial';
         ctx.textAlign = 'center';
-        ctx.fillText('Pets', SCREEN_WIDTH/2, 90);
+        ctx.fillText('PET SHOP', SCREEN_WIDTH/2, 100);
 
         // Back button
         const backButtonX = 110; // Inside shop window on left
@@ -2708,42 +2669,62 @@ class Game {
         ctx.textAlign = 'center';
         ctx.fillText('Back', backButtonX + backButtonWidth/2, backButtonY + 20);
 
-        // Common crate (left half)
-        const crateX = SCREEN_WIDTH/2 - 200;
-        const crateY = SCREEN_HEIGHT/2 - 100;
-        const crateWidth = 200;
-        const crateHeight = 200;
+        // Common crate (left half) - Enhanced
+        const crateX = SCREEN_WIDTH/2 - 180;
+        const crateY = SCREEN_HEIGHT/2 - 80;
+        const crateWidth = 160;
+        const crateHeight = 160;
         
-        // Crate background
-        ctx.fillStyle = this.coins >= this.petCrates.common.cost ? '#8B4513' : '#444444';
+        // Crate background with glow effect
+        const canAfford = this.coins >= this.petCrates.common.cost;
+        if (canAfford) {
+            ctx.shadowColor = '#FFD700';
+            ctx.shadowBlur = 20;
+        }
+        
+        ctx.fillStyle = canAfford ? '#8B4513' : '#444444';
         ctx.fillRect(crateX, crateY, crateWidth, crateHeight);
-        ctx.strokeStyle = WHITE;
+        ctx.shadowBlur = 0;
+        
+        ctx.strokeStyle = canAfford ? GOLD : WHITE;
         ctx.lineWidth = 3;
         ctx.strokeRect(crateX, crateY, crateWidth, crateHeight);
         
         // Crate label
         ctx.fillStyle = GOLD;
-        ctx.font = '20px Arial';
+        ctx.font = 'bold 18px Arial';
         ctx.textAlign = 'center';
-        ctx.fillText('Common Crate', crateX + crateWidth/2, crateY + 30);
+        ctx.fillText('🎁 COMMON CRATE', crateX + crateWidth/2, crateY + 25);
         
-        // Crate icon (treasure chest style)
+        // Treasure chest icon (enhanced)
         ctx.fillStyle = '#FFD700';
-        ctx.fillRect(crateX + 75, crateY + 60, 50, 30);
+        ctx.fillRect(crateX + 55, crateY + 50, 50, 35);
         ctx.fillStyle = '#FFA500';
-        ctx.fillRect(crateX + 85, crateY + 70, 30, 10);
+        ctx.fillRect(crateX + 60, crateY + 60, 40, 15);
+        
+        // Chest lock
+        ctx.fillStyle = '#8B4513';
+        ctx.fillRect(crateX + 75, crateY + 65, 10, 10);
         
         // Price
         ctx.fillStyle = this.coins >= this.petCrates.common.cost ? '#00FF00' : '#FF0000';
         ctx.font = '16px Arial';
         ctx.fillText(`${this.petCrates.common.cost} Coins`, crateX + crateWidth/2, crateY + 130);
         
-        // Possible pets preview
+        // Reset text alignment for next section
+        ctx.textAlign = 'center';
+        
+        // Reset text alignment
+        ctx.textAlign = 'center';
+        
+        // Possible pets preview (updated)
         ctx.fillStyle = WHITE;
         ctx.font = '12px Arial';
         ctx.fillText('Contains:', crateX + crateWidth/2, crateY + 155);
-        ctx.fillText('Cat (2x Coins)', crateX + crateWidth/2, crateY + 170);
-        ctx.fillText('Dog (1.5x Speed)', crateX + crateWidth/2, crateY + 185);
+        ctx.fillText('Cat (2x Coins) - Common', crateX + crateWidth/2, crateY + 170);
+        ctx.fillText('Dog (1.5x Speed) - Common', crateX + crateWidth/2, crateY + 185);
+        ctx.fillStyle = '#4169E1';
+        ctx.fillText('Turtle (2x Health, 1.2x Damage) - Rare', crateX + crateWidth/2, crateY + 200);
 
         // Owned pets section (right half)
         const petListX = SCREEN_WIDTH/2 + 50;
@@ -2800,14 +2781,49 @@ class Game {
                     ctx.beginPath();
                     ctx.ellipse(petListX + 28, petY + 15, 3, 6, -Math.PI * 0.3, 0, Math.PI * 2);
                     ctx.fill();
+                } else if (pet === 'turtle') {
+                    // Turtle icon (blue - rare)
+                    ctx.fillStyle = '#0066FF';
+                    ctx.beginPath();
+                    ctx.arc(petListX + 20, petY + 20, 8, 0, Math.PI * 2);
+                    ctx.fill();
+                    
+                    // Shell pattern
+                    ctx.strokeStyle = '#004499';
+                    ctx.lineWidth = 1;
+                    ctx.beginPath();
+                    ctx.arc(petListX + 20, petY + 20, 6, 0, Math.PI * 2);
+                    ctx.stroke();
+                    
+                    // Shell segments
+                    ctx.beginPath();
+                    ctx.moveTo(petListX + 16, petY + 20);
+                    ctx.lineTo(petListX + 24, petY + 20);
+                    ctx.moveTo(petListX + 20, petY + 16);
+                    ctx.lineTo(petListX + 20, petY + 24);
+                    ctx.stroke();
+                    
+                    // Head
+                    ctx.fillStyle = '#0088AA';
+                    ctx.beginPath();
+                    ctx.arc(petListX + 26, petY + 18, 2, 0, Math.PI * 2);
+                    ctx.fill();
                 }
                 
-                // Pet name and effect
+                // Pet name and effect (updated for turtle)
                 ctx.fillStyle = WHITE;
                 ctx.font = '14px Arial';
                 ctx.textAlign = 'left';
                 const petName = pet.charAt(0).toUpperCase() + pet.slice(1);
-                const effect = pet === 'cat' ? '(2x Coins)' : '(1.5x Speed)';
+                let effect;
+                if (pet === 'cat') {
+                    effect = '(2x Coins)';
+                } else if (pet === 'dog') {
+                    effect = '(1.5x Speed)';
+                } else if (pet === 'turtle') {
+                    effect = '(2x Health, 1.2x Damage)';
+                    ctx.fillStyle = '#4169E1'; // Blue text for rare pet
+                }
                 ctx.fillText(`${petName} ${effect}`, petListX + 40, petY + 16);
                 
                 // Status
