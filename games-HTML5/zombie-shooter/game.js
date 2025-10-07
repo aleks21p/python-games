@@ -1454,14 +1454,30 @@ class Game {
             const baseH = SCREEN_HEIGHT;
 
             // Joystick: positioned on lower-left, sized proportionally
-            const joystickRadius = Math.max(40, Math.min(64, Math.floor(baseW * 0.09)));
+            let joystickRadius = Math.max(40, Math.min(64, Math.floor(baseW * 0.09)));
             const joystickStartX = Math.round(baseW * 0.12);
             const joystickStartY = Math.round(baseH - Math.max(110, baseH * 0.18));
 
             // Fire button: lower-right, roomy hit area
-            const fireRadius = Math.max(36, Math.min(64, Math.floor(baseW * 0.095)));
+            let fireRadius = Math.max(36, Math.min(64, Math.floor(baseW * 0.095)));
             const fireX = Math.round(baseW - baseW * 0.12);
             const fireY = Math.round(baseH - Math.max(110, baseH * 0.18));
+
+            // If page requested a mobile layout, increase touch hit areas and HUD scale
+            try {
+                const isMobileLayout = (typeof document !== 'undefined') && document.body && document.body.classList && document.body.classList.contains('mobile-layout');
+                if (isMobileLayout) {
+                    const mobileMult = 1.25; // increase sizes by 25%
+                    joystickRadius = Math.round(joystickRadius * mobileMult);
+                    fireRadius = Math.round(fireRadius * mobileMult);
+                    this.touchControlsSize = Math.max(this.touchControlsSize, 1.1);
+                    this.hudScale = 1.15; // hint for HUD drawing code to enlarge fonts/elements
+                } else {
+                    this.hudScale = 1.0;
+                }
+            } catch (e) {
+                this.hudScale = 1.0;
+            }
 
             this.touchState = {
                 joystick: {
