@@ -1,0 +1,44 @@
+name: Generate preview and sitemap
+
+on:
+  push:
+    branches: [ main ]
+  workflow_dispatch: {}
+
+permissions:
+  contents: write
+
+concurrency:
+  group: generate-assets
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+
+      - name: Install sharp (no-save)
+        run: npm install sharp --no-save --no-audit --no-fund
+
+      - name: Generate preview PNG from SVG
+        run: node tools/generate-preview.js
+
+      - name: Generate sitemap.xml
+        run: node tools/generate-sitemap.js
+
+      - name: Commit and push generated assets
+        uses: EndBug/add-and-commit@v9
+        with:
+          author_name: GitHub Actions
+          author_email: actions@github.com
+          message: "chore: regenerate preview.png and sitemap.xml"
+          add: "games-HTML5/preview.png sitemap.xml"
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
