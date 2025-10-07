@@ -1133,6 +1133,9 @@ class Game {
             // noop
         }
 
+        // Tutorial overlay for first mobile playthrough
+        this.touchTutorialShown = (localStorage.getItem('zs_touch_tutorial_shown') === '1');
+
     // Create DOM UI for exporting/importing saves (player-save.json)
     this.createSaveUI();
     // Debug UI paging
@@ -1323,6 +1326,14 @@ class Game {
                 const tx = t.clientX - rect.left;
                 const ty = t.clientY - rect.top;
 
+                // Dismiss tutorial overlay if visible (any touch)
+                if (!this.touchTutorialShown) {
+                    this.touchTutorialShown = true;
+                    localStorage.setItem('zs_touch_tutorial_shown', '1');
+                    this._touchTutorialDismissRect = null;
+                    // allow touch to still act as joystick/fire; continue processing
+                }
+
                 // Check if touch is on left side (joystick)
                 const j = this.touchState.joystick;
                 const distToJoy = Math.hypot(tx - j.startX, ty - j.startY);
@@ -1404,6 +1415,25 @@ class Game {
             const rect = canvas.getBoundingClientRect();
             const clickX = e.clientX - rect.left;
             const clickY = e.clientY - rect.top;
+
+            // If tutorial overlay is present, check for dismiss click
+            if (!this.touchTutorialShown) {
+                // If dismiss rect exists and click inside, dismiss
+                const r = this._touchTutorialDismissRect;
+                if (!r) {
+                    this.touchTutorialShown = true;
+                    localStorage.setItem('zs_touch_tutorial_shown', '1');
+                } else if (clickX >= r.x && clickX <= r.x + r.w && clickY >= r.y && clickY <= r.y + r.h) {
+                    this.touchTutorialShown = true;
+                    localStorage.setItem('zs_touch_tutorial_shown', '1');
+                    this._touchTutorialDismissRect = null;
+                    return;
+                } else {
+                    // clicking anywhere dismisses as well
+                    this.touchTutorialShown = true;
+                    localStorage.setItem('zs_touch_tutorial_shown', '1');
+                }
+            }
 
             // Check autofire button click (only during gameplay)
             if (!this.inMenu && !this.gameOver && !this.paused && !this.countdownActive) {
@@ -3415,6 +3445,62 @@ class Game {
             }
         } catch (err) {
             console.warn('Crosshair draw error', err);
+        }
+
+        // Draw first-time mobile tutorial overlay
+        try {
+            const isTouchDevice = ('ontouchstart' in window) || (SCREEN_WIDTH <= 900);
+            if (isTouchDevice && !this.touchTutorialShown) {
+                ctx.save();
+                // dark translucent backdrop
+                ctx.fillStyle = 'rgba(0,0,0,0.85)';
+                ctx.fillRect(0, 0, SCREEN_WIDTH, SCREEN_HEIGHT);
+
+                // Card
+                const cardW = Math.min(640, SCREEN_WIDTH - 80);
+                const cardH = Math.min(360, SCREEN_HEIGHT - 160);
+                const cardX = (SCREEN_WIDTH - cardW) / 2;
+                const cardY = (SCREEN_HEIGHT - cardH) / 2;
+                ctx.fillStyle = '#111';
+                ctx.fillRect(cardX, cardY, cardW, cardH);
+                ctx.strokeStyle = WHITE;
+                ctx.strokeRect(cardX, cardY, cardW, cardH);
+
+                ctx.fillStyle = WHITE;
+                ctx.font = '20px Arial';
+                ctx.textAlign = 'center';
+                ctx.fillText('Touch Controls Tutorial', SCREEN_WIDTH/2, cardY + 36);
+
+                ctx.font = '16px Arial';
+                ctx.textAlign = 'left';
+                const leftX = cardX + 24;
+                let ly = cardY + 70;
+                const lineH = 28;
+                ctx.fillText('- Drag the left joystick to move', leftX, ly); ly += lineH;
+                ctx.fillText('- Hold the right FIRE button to shoot', leftX, ly); ly += lineH;
+                ctx.fillText('- Drag while holding FIRE to aim', leftX, ly); ly += lineH;
+                ctx.fillText('- Tap Options → Controls to tweak size/opacity', leftX, ly); ly += lineH;
+
+                // Dismiss button
+                const btnW = 140; const btnH = 40;
+                const btnX = cardX + (cardW - btnW) / 2;
+                const btnY = cardY + cardH - btnH - 20;
+                ctx.fillStyle = '#4CAF50';
+                ctx.fillRect(btnX, btnY, btnW, btnH);
+                ctx.strokeStyle = WHITE;
+                ctx.strokeRect(btnX, btnY, btnW, btnH);
+                ctx.fillStyle = WHITE;
+                ctx.textAlign = 'center';
+                ctx.font = '18px Arial';
+                ctx.fillText('Got it, thanks', btnX + btnW/2, btnY + btnH/2 + 6);
+
+                // store dismiss rect for click/touch handling
+                this._touchTutorialDismissRect = { x: btnX, y: btnY, w: btnW, h: btnH };
+
+                ctx.restore();
+            }
+        } catch (err) {
+            console.warn('Tutorial draw error', err);
         }
 
         // Restore the original transform
