@@ -1,0 +1,563 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>JavaSnake.com - Epic HTML5 Games</title>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Exo+2:wght@300;400;600;800&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Exo 2', sans-serif;
+            background: linear-gradient(135deg, #0c0c0c 0%, #1a1a2e 25%, #16213e  50%, #0f3460 75%, #533483 100%);
+            background-attachment: fixed;
+            min-height: 100vh;
+            overflow-x: hidden;
+            color: #fff;
+        }
+
+        /* Visible Low Power background + muted effects */
+        body.low-power {
+            /* vivid red background to make low-power state unmistakable */
+            background: linear-gradient(135deg, #b31217 0%, #ff2d2d 100%);
+            transition: background 300ms ease;
+            color: #ffffff; /* ensure readable text */
+        }
+
+        body.low-power .logo {
+            /* mute neon glow but keep readable on red */
+            filter: grayscale(0.2) brightness(0.95);
+            text-shadow: none;
+            -webkit-text-fill-color: #ffffff;
+        }
+
+        body.low-power .play-button {
+            opacity: 0.95;
+            box-shadow: none;
+            background: linear-gradient(90deg, #ff6b6b, #ff8a8a); /* softer on red */
+            color: #111;
+        }
+
+        /* Animated background particles */
+        .particles {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 1;
+        }
+
+        .particle {
+            position: absolute;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 50%;
+            animation: float 6s ease-in-out infinite;
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translateY(0px) rotate(0deg); opacity: 0.1; }
+            50% { transform: translateY(-20px) rotate(180deg); opacity: 0.3; }
+        }
+
+        /* Main container */
+        .container {
+            position: relative;
+            z-index: 10;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+
+        /* Blinking neon header */
+        .header {
+            text-align: center;
+            margin-bottom: 4rem;
+            position: relative;
+            overflow: visible; /* allow neon glow to show and prevent clipping */
+        }
+
+        .logo {
+            font-family: 'Orbitron', monospace;
+            font-size: clamp(3rem, 8vw, 7rem);
+            font-weight: 900;
+            text-transform: uppercase;
+            letter-spacing: 0.2em;
+            background: linear-gradient(45deg, #ff6b6b, #4ecdc4, #45b7d1, #f9ca24, #f0932b, #eb4d4b, #6c5ce7);
+            background-size: 400% 400%;
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+            animation: gradientShift 3s ease-in-out infinite, neonBlink 2s ease-in-out infinite;
+            text-shadow: 
+                0 0 5px rgba(255, 255, 255, 0.5),
+                0 0 10px rgba(255, 255, 255, 0.5),
+                0 0 15px rgba(255, 255, 255, 0.5),
+                0 0 20px #ff6b6b,
+                0 0 35px #ff6b6b,
+                0 0 40px #ff6b6b;
+            position: relative;
+            display: inline-block; /* keep it on one line and allow padding */
+            white-space: nowrap; /* prevent wrapping that can chop characters */
+            -webkit-text-fill-color: transparent; /* ensure gradient clip works in Chrome */
+            padding: 0 8px; /* small horizontal padding so last glyph doesn't get clipped */
+        }
+
+        @keyframes gradientShift {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+
+        @keyframes neonBlink {
+            0%, 100% { 
+                filter: brightness(1) saturate(1);
+                text-shadow: 
+                    0 0 5px rgba(255, 255, 255, 0.5),
+                    0 0 10px rgba(255, 255, 255, 0.5),
+                    0 0 15px rgba(255, 255, 255, 0.5),
+                    0 0 20px #ff6b6b,
+                    0 0 35px #ff6b6b,
+                    0 0 40px #ff6b6b;
+            }
+            50% { 
+                filter: brightness(1.3) saturate(1.5);
+                text-shadow: 
+                    0 0 10px rgba(255, 255, 255, 0.8),
+                    0 0 20px rgba(255, 255, 255, 0.8),
+                    0 0 30px rgba(255, 255, 255, 0.8),
+                    0 0 40px #4ecdc4,
+                    0 0 70px #4ecdc4,
+                    0 0 80px #4ecdc4;
+            }
+        }
+
+        .subtitle {
+            font-size: clamp(1rem, 3vw, 1.5rem);
+            color: rgba(255, 255, 255, 0.8);
+            margin-top: 1rem;
+            font-weight: 300;
+            letter-spacing: 0.1em;
+        }
+
+        /* Low Power Mode toggle */
+        .low-power-toggle {
+            position: absolute;
+            right: 1.5rem;
+            top: 1.5rem;
+            z-index: 30;
+            display: flex;
+            align-items: center;
+            gap: 0.6rem;
+            color: rgba(255,255,255,0.9);
+            font-size: 0.95rem;
+            user-select: none;
+        }
+
+        .toggle-switch {
+            width: 46px;
+            height: 26px;
+            background: rgba(255,255,255,0.15);
+            border-radius: 999px;
+            position: relative;
+            cursor: pointer;
+            transition: background 0.2s ease;
+            border: 1px solid rgba(255,255,255,0.08);
+        }
+
+        .toggle-switch .knob {
+            position: absolute;
+            width: 20px;
+            height: 20px;
+            background: white;
+            border-radius: 50%;
+            top: 3px;
+            left: 3px;
+            transition: left 0.2s ease, transform 0.2s ease;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.3);
+        }
+
+        .toggle-switch.on { background: linear-gradient(90deg, #4ecdc4, #45b7d1); }
+        .toggle-switch.on .knob { left: 23px; transform: scale(0.98); }
+
+        /* Low-power global adjustments */
+        .low-power .particles,
+        .low-power .sparkle { display: none !important; }
+        .low-power .game-card { backdrop-filter: none !important; box-shadow: none !important; }
+
+        /* Low power active badge */
+        .low-power-badge {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            background: rgba(255, 255, 255, 0.08);
+            color: #fff;
+            font-size: 0.7rem;
+            padding: 4px 8px;
+            border-radius: 999px;
+            border: 1px solid rgba(255,255,255,0.06);
+            margin-left: 0.4rem;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.25);
+        }
+
+        /* Games grid */
+        .games-grid {
+            display: grid;
+            /* allow small devices to fit cards better */
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 3rem;
+            margin-top: 4rem;
+        }
+
+        .game-card {
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 20px;
+            padding: 2.5rem;
+            text-align: center;
+            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .game-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.1), transparent);
+            transition: left 0.6s;
+        }
+
+        .game-card:hover::before {
+            left: 100%;
+        }
+
+        .game-card:hover {
+            transform: translateY(-10px) scale(1.02);
+            background: rgba(255, 255, 255, 0.1);
+            border-color: rgba(255, 255, 255, 0.3);
+            box-shadow: 
+                0 20px 40px rgba(0, 0, 0, 0.3),
+                0 0 30px rgba(255, 255, 255, 0.1);
+        }
+
+        .game-icon {
+            font-size: 4rem;
+            margin-bottom: 1.5rem;
+            filter: drop-shadow(0 0 10px rgba(255, 255, 255, 0.3));
+        }
+
+        .game-title {
+            font-family: 'Orbitron', monospace;
+            font-size: 2rem;
+            font-weight: 700;
+            margin-bottom: 1rem;
+            background: linear-gradient(45deg, #4ecdc4, #45b7d1);
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+        }
+
+        .game-description {
+            color: rgba(255, 255, 255, 0.7);
+            margin-bottom: 2rem;
+            line-height: 1.6;
+            font-size: 1.1rem;
+        }
+
+        .play-button {
+            display: inline-block;
+            padding: 1rem 2rem;
+            background: linear-gradient(45deg, #ff6b6b, #4ecdc4);
+            color: white;
+            text-decoration: none;
+            border-radius: 50px;
+            font-weight: 600;
+            font-size: 1.1rem;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .play-button::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(45deg, #4ecdc4, #ff6b6b);
+            transition: left 0.3s ease;
+            z-index: -1;
+        }
+
+        .play-button:hover::before {
+            left: 0;
+        }
+
+        .play-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px rgba(255, 107, 107, 0.3);
+        }
+
+        /* Footer */
+        .footer {
+            text-align: center;
+            margin-top: 4rem;
+            padding: 2rem;
+            color: rgba(255, 255, 255, 0.5);
+            font-size: 0.9rem;
+        }
+
+        /* Responsive design */
+        @media (max-width: 768px) {
+            .games-grid {
+                grid-template-columns: 1fr;
+                gap: 2rem;
+            }
+            
+            .game-card {
+                padding: 2rem;
+            }
+            
+            .container {
+                padding: 1rem;
+            }
+        }
+
+        /* Mobile-specific optimizations */
+        @media (max-width: 600px) {
+            /* Turn off heavy visuals on small screens to save battery/CPU */
+            .particles, .sparkle { display: none !important; }
+            .game-card { backdrop-filter: none; /* fallback for unsupported/expensive blur */ }
+        }
+
+        @media (max-width: 420px) {
+            .logo { font-size: clamp(1.8rem, 12vw, 4.2rem); padding: 0 6px; }
+            .play-button { display: block; width: 100%; box-sizing: border-box; }
+            .game-icon { font-size: 3rem; }
+        }
+
+        /* Glowing border animation */
+        @keyframes borderGlow {
+            0%, 100% { border-color: rgba(255, 255, 255, 0.1); }
+            50% { border-color: rgba(78, 205, 196, 0.5); }
+        }
+
+        .game-card {
+            animation: borderGlow 4s ease-in-out infinite;
+        }
+
+        /* Additional sparkle effects */
+        .sparkle {
+            position: absolute;
+            background: white;
+            border-radius: 50%;
+            pointer-events: none;
+            animation: sparkle 2s linear infinite;
+        }
+
+        @keyframes sparkle {
+            0% { transform: scale(0) rotate(0deg); opacity: 1; }
+            50% { transform: scale(1) rotate(180deg); opacity: 0.5; }
+            100% { transform: scale(0) rotate(360deg); opacity: 0; }
+        }
+    </style>
+</head>
+<body>
+    <!-- Low Power Mode toggle (positioned top-right) -->
+    <div class="low-power-toggle" role="region" aria-label="Low Power Mode">
+        <span id="lowPowerLabel">Low Power</span>
+        <div id="lowPowerSwitch" class="toggle-switch" role="switch" aria-checked="false" tabindex="0">
+            <div class="knob"></div>
+        </div>
+        <span id="lowPowerBadge" class="low-power-badge" style="display:none">Low</span>
+    </div>
+
+    <!-- ARIA live region for assistive announcements -->
+    <div id="ariaLive" aria-live="polite" aria-atomic="true" style="position:absolute; left:-9999px; width:1px; height:1px; overflow:hidden;"> </div>
+
+    <!-- Animated background particles -->
+    <div class="particles" id="particles"></div>
+
+    <div class="container">
+        <header class="header">
+            <h1 class="logo">JavaSnake.com</h1>
+            <p class="subtitle">Epic HTML5 Gaming Experience</p>
+        </header>
+
+        <div class="games-grid">
+            <!-- Zombie Shooter Game -->
+            <div class="game-card">
+                <div class="game-icon">🧟‍♂️</div>
+                <h2 class="game-title">Zombie Shooter</h2>
+                <p class="game-description">
+                    Survive the undead apocalypse! Battle waves of zombies, collect power-ups, 
+                    and upgrade your arsenal in this intense top-down shooter. Features boss battles, 
+                    multiple weapon types, and endless zombie-slaying action!
+                </p>
+                <a href="zombie-shooter/aleks-ZS.html" class="play-button">Play Now</a>
+            </div>
+
+            <!-- Space Shooter Game -->
+            <div class="game-card">
+                <div class="game-icon">🚀</div>
+                <h2 class="game-title">Space Shooter</h2>
+                <p class="game-description">
+                    Defend Earth from alien invasion! Pilot your spaceship through asteroid fields, 
+                    dodge enemy fire, and unleash devastating attacks on hostile aliens. 
+                    Fast-paced arcade action in the depths of space!
+                </p>
+                <a href="space-shooter/shaungame.html" class="play-button">Play Now</a>
+            </div>
+        </div>
+
+        <footer class="footer">
+            <p>&copy; 2025 JavaSnake.com - Premium HTML5 Gaming Platform</p>
+            <p>Built with modern web technologies for the ultimate gaming experience</p>
+        </footer>
+    </div>
+
+    <script>
+        // Low Power initialization and particle creation
+        window.LOW_POWER_MODE = (localStorage.getItem('lowPower') === '1');
+
+        function applyLowPower(enabled) {
+            window.LOW_POWER_MODE = !!enabled;
+            document.body.classList.toggle('low-power', !!enabled);
+            localStorage.setItem('lowPower', !!enabled ? '1' : '0');
+
+            const particlesContainer = document.getElementById('particles');
+            const sw = document.getElementById('lowPowerSwitch');
+            if (sw) { sw.classList.toggle('on', !!enabled); sw.setAttribute('aria-checked', !!enabled ? 'true' : 'false'); }
+
+            // Update visible badge
+            const badge = document.getElementById('lowPowerBadge');
+            if (badge) { badge.style.display = !!enabled ? 'inline-flex' : 'none'; }
+
+            // Announce change for screen readers
+            const live = document.getElementById('ariaLive');
+            if (live) { live.textContent = !!enabled ? 'Low Power Mode enabled' : 'Low Power Mode disabled'; }
+
+            if (enabled) {
+                if (particlesContainer) particlesContainer.innerHTML = '';
+            } else {
+                if (particlesContainer && particlesContainer.children.length === 0) createParticles();
+            }
+        }
+
+        function createParticles() {
+            const particlesContainer = document.getElementById('particles');
+            if (!particlesContainer) return;
+            if (window.LOW_POWER_MODE) return; // respect low power mode
+            // Reduce particle count on narrow screens
+            const isNarrow = window.innerWidth < 600;
+            const particleCount = isNarrow ? 12 : 50;
+
+            for (let i = 0; i < particleCount; i++) {
+                const particle = document.createElement('div');
+                particle.className = 'particle';
+                
+                // Random size and position
+                const size = Math.random() * (isNarrow ? 3 : 4) + 1;
+                particle.style.width = size + 'px';
+                particle.style.height = size + 'px';
+                particle.style.left = Math.random() * 100 + '%';
+                particle.style.top = Math.random() * 100 + '%';
+                
+                // Random animation delay and duration
+                particle.style.animationDelay = Math.random() * 6 + 's';
+                particle.style.animationDuration = (Math.random() * 3 + (isNarrow ? 4 : 3)) + 's';
+                
+                particlesContainer.appendChild(particle);
+            }
+        }
+
+        // Create sparkle effects on mouse move
+        function createSparkle(x, y) {
+            const sparkle = document.createElement('div');
+            sparkle.className = 'sparkle';
+            sparkle.style.left = x + 'px';
+            sparkle.style.top = y + 'px';
+            sparkle.style.width = '4px';
+            sparkle.style.height = '4px';
+            document.body.appendChild(sparkle);
+
+            setTimeout(() => {
+                sparkle.remove();
+            }, 2000);
+        }
+
+        // Add mouse move sparkle effect
+        let sparkleTimer;
+        document.addEventListener('mousemove', (e) => {
+            // Respect low-power mode and disable sparkles on narrow/touch devices to save CPU
+            if (window.LOW_POWER_MODE || window.innerWidth < 600) return;
+            clearTimeout(sparkleTimer);
+            sparkleTimer = setTimeout(() => {
+                if (Math.random() > 0.8) { // Only create sparkles 20% of the time
+                    createSparkle(e.clientX, e.clientY);
+                }
+            }, 100);
+        });
+
+        // Initialize particles and low-power UI when page loads
+        document.addEventListener('DOMContentLoaded', () => {
+            // set toggle UI state and listeners
+            const sw = document.getElementById('lowPowerSwitch');
+            if (sw) {
+                sw.addEventListener('click', () => applyLowPower(!window.LOW_POWER_MODE));
+                sw.addEventListener('keydown', (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); applyLowPower(!window.LOW_POWER_MODE); } });
+            }
+
+            // Apply saved low power setting first and create particles only if low power is off
+            applyLowPower(window.LOW_POWER_MODE);
+            if (!window.LOW_POWER_MODE) createParticles();
+        });
+
+        // Add click sound effect simulation (visual feedback)
+        document.querySelectorAll('.play-button').forEach(button => {
+            button.addEventListener('click', function(e) {
+                // Create temporary glow effect
+                this.style.boxShadow = '0 0 30px rgba(255, 255, 255, 0.8)';
+                setTimeout(() => {
+                    this.style.boxShadow = '';
+                }, 200);
+            });
+        });
+
+        // Konami code easter egg
+        let konamiCode = [];
+        const konamiSequence = ['ArrowUp', 'ArrowUp', 'ArrowDown', 'ArrowDown', 'ArrowLeft', 'ArrowRight', 'ArrowLeft', 'ArrowRight', 'KeyB', 'KeyA'];
+        
+        document.addEventListener('keydown', function(e) {
+            konamiCode.push(e.code);
+            if (konamiCode.length > konamiSequence.length) {
+                konamiCode.shift();
+            }
+            
+            if (JSON.stringify(konamiCode) === JSON.stringify(konamiSequence)) {
+                // Easter egg: extra sparkles!
+                for (let i = 0; i < 20; i++) {
+                    setTimeout(() => {
+                        createSparkle(Math.random() * window.innerWidth, Math.random() * window.innerHeight);
+                    }, i * 100);
+                }
+                konamiCode = [];
+            }
+        });
+    </script>
+</body>
+</html>

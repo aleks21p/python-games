@@ -11,6 +11,8 @@ const GRAY = '#808080';
 const ORANGE = '#FFA500';
 const GOLD = '#FFD700';
 
+// ...existing code...
+
 // Player class
 class Player {
     constructor(x, y) {
