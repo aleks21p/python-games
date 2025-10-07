@@ -99,10 +99,12 @@ class Particle {
     }
     update(dt) {
         this.life -= dt;
-        this.x += this.vx * dt * 0.06; // scale down for sensible speed
-        this.y += this.vy * dt * 0.06;
-        // simple drag
-        this.vx *= 0.98; this.vy *= 0.98;
+        // motion scaled for ms-based dt; slightly slower, smoother travel
+        const motionScale = 0.045;
+        this.x += this.vx * dt * motionScale;
+        this.y += this.vy * dt * motionScale;
+        // gentle drag
+        this.vx *= 0.985; this.vy *= 0.985;
     }
     draw(ctx) {
         const t = Math.max(0, this.life / this.maxLife);
@@ -1339,6 +1341,7 @@ class Game {
         this.shakeStrength = 0;
         this.shakeTimer = 0;
     this.shakeDuration = 0;
+    this.shakeInitialStrength = 0;
 
     // Fullscreen state
     this.isFullscreen = !!(document.fullscreenElement || document.webkitFullscreenElement || document.msFullscreenElement);
@@ -2760,9 +2763,9 @@ class Game {
             const text = (damage >= 1 ? `-${Math.round(damage)}` : `-${damage}`);
             this.damagePopups.push(new DamagePopup(x, y - 8, text, YELLOW));
             if (this.particleQuality >= 1) {
-                const vx = (Math.random()-0.5) * 0.8;
-                const vy = (Math.random()-0.5) * 0.8;
-                this.particles.push(new Particle(x, y, vx, vy, 200, 1.5 * this.particleScale, color || ORANGE));
+                const vx = (Math.random()-0.5) * 1.6;
+                const vy = (Math.random()-0.5) * 1.6;
+                this.particles.push(new Particle(x, y, vx, vy, 300, 1.6 * this.particleScale, color || ORANGE));
             }
             return;
         }
@@ -2773,11 +2776,12 @@ class Game {
         const count = Math.max(1, Math.round(baseCount * qualityMultiplier));
         for (let i = 0; i < count; i++) {
             const angle = Math.random() * Math.PI * 2;
-            const speed = (Math.random() * 3 + 1) * this.particleScale;
+            // slightly slower base speed but longer life for prettier trails with ms-dt
+            const speed = (Math.random() * 2.2 + 0.8) * this.particleScale; // ~0.8..3.0
             const vx = Math.cos(angle) * speed;
             const vy = Math.sin(angle) * speed;
-            const size = (Math.random() * 2 + 1) * this.particleScale;
-            const life = 250 + Math.random() * 350;
+            const size = (Math.random() * 2.2 + 1.0) * this.particleScale;
+            const life = 320 + Math.random() * 480; // 320..800ms
             let p;
             if (this._particlePool.length) p = this._particlePool.pop();
             if (p) p.reset(x, y, vx, vy, life, size, color || ORANGE);
@@ -2799,10 +2803,12 @@ class Game {
 
     // Screen shake helpers
     triggerShake(strength = 6, duration = 300) {
-        this.shakeStrength = Math.max(this.shakeStrength || 0, strength);
-        // store the duration so we can compute falloff
+        // store initial strength and duration so we can compute deterministic falloff
+        this.shakeInitialStrength = Math.max(this.shakeInitialStrength || 0, strength);
         this.shakeDuration = Math.max(this.shakeDuration || 0, duration);
         this.shakeTimer = Math.max(this.shakeTimer || 0, duration);
+        // set current strength to initial immediately
+        this.shakeStrength = this.shakeInitialStrength;
     }
 
     updateCheatCodes() {
@@ -3122,18 +3128,19 @@ class Game {
         // Check collisions
         this.checkCollisions();
 
-        // Update screen shake timer (use ms dt)
+        // Update screen shake timer (use ms dt) - deterministic from initial strength
         if (this.shakeTimer > 0) {
             const dec = dt;
             this.shakeTimer = Math.max(0, this.shakeTimer - dec);
-            // reduce strength proportionally to remaining time
             if (this.shakeDuration > 0) {
                 const pct = this.shakeTimer / this.shakeDuration;
-                this.shakeStrength = this.shakeStrength * pct;
+                // deterministic strength based on initial value
+                this.shakeStrength = (this.shakeInitialStrength || this.shakeStrength) * pct;
             }
         } else {
             this.shakeStrength = 0;
             this.shakeDuration = 0;
+            this.shakeInitialStrength = 0;
         }
     }
 
