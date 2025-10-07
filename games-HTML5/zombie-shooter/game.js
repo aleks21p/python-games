@@ -1193,6 +1193,29 @@ class Game {
             this.audio = new AudioManager();
             // Optionally start background music at lower volume
             // this.audio.startMusic();
+            // Expose audio manager for site-level controls
+            try {
+                if (window) {
+                    window.gameAudio = this.audio;
+                }
+            } catch (e) {}
+            // Listen for postMessage commands (e.g., site-wide mute)
+            try {
+                window.addEventListener('message', (ev) => {
+                    const data = ev && ev.data;
+                    if (!data || typeof data !== 'object') return;
+                    if (data.type === 'site_mute') {
+                        const muted = !!data.muted;
+                        if (this.audio && this.audio.masterGain) {
+                            if (muted) {
+                                this.audio.masterGain.gain.value = 0;
+                            } else {
+                                this.audio.masterGain.gain.value = (this.audio._previousMasterGain || 0.35);
+                            }
+                        }
+                    }
+                }, false);
+            } catch (e) {}
         } catch (err) {
             this.audio = null;
         }

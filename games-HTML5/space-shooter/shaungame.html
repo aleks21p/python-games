@@ -76,6 +76,43 @@
             // Set volume for all sounds
             Object.values(sounds).forEach(sound => sound.volume = 0.3);
 
+            // Expose a simple audio control API for site-wide mute (used by index.html)
+            (function(){
+                // remember default volumes
+                const defaultVolumes = {};
+                Object.keys(sounds).forEach(k => defaultVolumes[k] = sounds[k].volume);
+
+                window.gameAudio = {
+                    _defaultVolumes: defaultVolumes,
+                    // mute or restore volumes
+                    setMuted: function(muted){
+                        if(muted){
+                            Object.values(sounds).forEach(s => { s._prevVolume = s.volume; s.volume = 0; });
+                        } else {
+                            Object.keys(sounds).forEach(k => {
+                                const s = sounds[k];
+                                s.volume = (s._prevVolume !== undefined) ? s._prevVolume : (defaultVolumes[k] || 0.3);
+                                delete s._prevVolume;
+                            });
+                        }
+                    },
+                    // convenience getter
+                    get muted(){ return Object.values(sounds).every(s => s.volume === 0); }
+                };
+
+                // Listen for site-wide mute messages from parent/originating pages
+                window.addEventListener('message', function(ev){
+                    try {
+                        const d = ev.data;
+                        if(d && d.type === 'site_mute'){
+                            window.gameAudio.setMuted(!!d.muted);
+                        }
+                    } catch(e) {
+                        // ignore malformed messages
+                    }
+                }, false);
+            })();
+
             // Ensure canvas is properly sized
             function resize() {
                 canvas.width = window.innerWidth;
