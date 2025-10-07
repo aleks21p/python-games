@@ -1136,6 +1136,11 @@ class Game {
         // Tutorial overlay for first mobile playthrough
         this.touchTutorialShown = (localStorage.getItem('zs_touch_tutorial_shown') === '1');
 
+    // Fullscreen state
+    this.isFullscreen = !!(document.fullscreenElement || document.webkitFullscreenElement || document.msFullscreenElement);
+    document.addEventListener('fullscreenchange', () => { this.isFullscreen = !!document.fullscreenElement; });
+    document.addEventListener('webkitfullscreenchange', () => { this.isFullscreen = !!document.webkitFullscreenElement; });
+
     // Create DOM UI for exporting/importing saves (player-save.json)
     this.createSaveUI();
     // Debug UI paging
@@ -1796,6 +1801,24 @@ class Game {
                                         if (clickX >= toggleX && clickX <= toggleX + toggleW && clickY >= toggleY && clickY <= toggleY + toggleH) {
                                             this.touchControlsVisible = !this.touchControlsVisible;
                                             localStorage.setItem('zs_touch_controls_visible', this.touchControlsVisible ? '1' : '0');
+                                            return;
+                                        }
+
+                                        // Fullscreen button
+                                        const fsX = contentBox.x + contentBox.width - 220;
+                                        const fsY = contentBox.y + 90;
+                                        const fsW = 180;
+                                        const fsH = 36;
+                                        if (clickX >= fsX && clickX <= fsX + fsW && clickY >= fsY && clickY <= fsY + fsH) {
+                                            // Toggle fullscreen
+                                            const canvasEl = canvas;
+                                            const requestFS = canvasEl.requestFullscreen || canvasEl.webkitRequestFullscreen || canvasEl.msRequestFullscreen;
+                                            const exitFS = document.exitFullscreen || document.webkitExitFullscreen || document.msExitFullscreen;
+                                            if (!this.isFullscreen) {
+                                                if (requestFS) requestFS.call(canvasEl).catch(() => {});
+                                            } else {
+                                                if (exitFS) exitFS.call(document).catch(() => {});
+                                            }
                                             return;
                                         }
 
@@ -2956,6 +2979,20 @@ class Game {
                         ctx.strokeRect(toggleX, toggleY, toggleW, toggleH);
                         ctx.fillStyle = WHITE;
                         ctx.font = '14px Arial';
+                        ctx.textAlign = 'left';
+
+                        // Fullscreen toggle button
+                        const fsX = contentBox.x + contentBox.width - 220;
+                        const fsY = contentBox.y + 90;
+                        const fsW = 180;
+                        const fsH = 36;
+                        ctx.fillStyle = '#333333';
+                        ctx.fillRect(fsX, fsY, fsW, fsH);
+                        ctx.strokeStyle = WHITE;
+                        ctx.strokeRect(fsX, fsY, fsW, fsH);
+                        ctx.fillStyle = WHITE;
+                        ctx.textAlign = 'center';
+                        ctx.fillText(this.isFullscreen ? 'Exit Fullscreen' : 'Enter Fullscreen', fsX + fsW/2, fsY + 24);
                         ctx.textAlign = 'left';
                         ctx.fillText('Touch controls: ' + (this.touchControlsVisible ? 'Shown' : 'Hidden'), toggleX + 8, toggleY + 24);
 
