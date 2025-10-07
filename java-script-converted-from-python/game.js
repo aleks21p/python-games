@@ -1003,6 +1003,8 @@ class Game {
             purple: { name: 'Purple Skin', cost: 5, owned: false, color: '#800080' },
             small: { name: 'Small & Green', cost: 10, owned: false, color: '#00FF00', scale: 0.5 },
             bigge: { name: 'Bigge', cost: 30, owned: false, color: '#FFA500', scale: 1.2, speedBoost: 2 },
+            shady: { name: 'Shady', cost: 40, owned: false, color: '#808080', healthBonus: 2 },
+            tank: { name: 'Tank', cost: 67, owned: false, color: '#4B0000', fixedHealth: 67 },
             angry: { name: 'Angry', cost: 100, owned: false, color: '#FF4500', damageMultiplier: 2, speedMultiplier: 1.5 },
             multi: { name: 'Multi', cost: 150, owned: false, color: '#8A2BE2', damageMultiplier: 5, speedMultiplier: 0.5, isMultiColor: true }
         };
@@ -1664,6 +1666,17 @@ class Game {
             this.player.color = skin.color;
             this.player.scale = skin.scale || 1;
             this.player.speedBoost = skin.speedBoost || 1;
+            
+            // Apply health bonuses from skins
+            if (skin.fixedHealth) {
+                this.player.baseHealth = skin.fixedHealth;
+                this.player.health = skin.fixedHealth;
+                this.player.maxHealth = skin.fixedHealth;
+            } else if (skin.healthBonus) {
+                this.player.baseHealth = 10 + skin.healthBonus;
+                this.player.health = this.player.baseHealth;
+                this.player.maxHealth = this.player.baseHealth;
+            }
         }
         
         this.bullets = [];
@@ -2142,6 +2155,15 @@ class Game {
             this.player.speedMultiplier = skin.speedMultiplier || 1;
             this.player.damageMultiplier = skin.damageMultiplier || 1;
             this.player.isMultiColor = skin.isMultiColor || false;
+            
+            // Apply health bonuses from skins before other health calculations
+            if (skin.fixedHealth) {
+                this.player.baseHealth = skin.fixedHealth;
+            } else if (skin.healthBonus) {
+                this.player.baseHealth = 10 + skin.healthBonus;
+            } else {
+                this.player.baseHealth = 10;
+            }
         } else {
             this.player.color = 'white';
             this.player.scale = 1;
@@ -2149,10 +2171,13 @@ class Game {
             this.player.speedMultiplier = 1;
             this.player.damageMultiplier = 1;
             this.player.isMultiColor = false;
+            this.player.baseHealth = 10;
         }
         
-        // Apply health upgrades to base health
-        this.player.baseHealth = 10 + (this.healthUpgradeLevel * 2);
+        // Apply health upgrades to base health (only if not using fixed health)
+        if (this.activePlayerSkin === 'default' || !this.shopItems[this.activePlayerSkin]?.fixedHealth) {
+            this.player.baseHealth = (this.player.baseHealth || 10) + (this.healthUpgradeLevel * 2);
+        }
         this.player.updatePetBonuses();
         
         // Apply speed upgrades
