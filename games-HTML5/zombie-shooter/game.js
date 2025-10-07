@@ -2,7 +2,7 @@
 const SCREEN_WIDTH = 800;
 const SCREEN_HEIGHT = 600;
 // Configurable landing page path for the Home button / keyboard shortcut
-const LANDING_PAGE_PATH = '../../index.html';
+const LANDING_PAGE_PATH = '/';
 const BLACK = '#000000';
 const WHITE = '#FFFFFF';
 const RED = '#FF0000';
@@ -1574,7 +1574,7 @@ class Game {
             }
             // Quick Home shortcut: H or h
             if (e.key === 'h' || e.key === 'H') {
-                try { window.location.href = LANDING_PAGE_PATH; } catch (err) { try { window.location.href = 'index.html'; } catch (e2) {} }
+                try { window.open(LANDING_PAGE_PATH, '_blank'); } catch (err) { try { window.open('index.html', '_blank'); } catch (e2) {} }
             }
         });
 
@@ -1876,7 +1876,7 @@ class Game {
                 if (homeBtn && clickX >= homeBtn.x && clickX <= homeBtn.x + homeBtn.width &&
                     clickY >= homeBtn.y && clickY <= homeBtn.y + homeBtn.height) {
                     if (this.audio && typeof this.audio.playClick === 'function') this.audio.playClick();
-                    try { window.location.href = LANDING_PAGE_PATH; } catch (e) { try { window.location.href = 'index.html'; } catch (e2) {} }
+                    try { window.open(LANDING_PAGE_PATH, '_blank'); } catch (e) { try { window.open('index.html', '_blank'); } catch (e2) {} }
                     return;
                 }
 
@@ -3679,21 +3679,68 @@ class Game {
             const iconPadding = 14;
             const iconX = homeBtn.x + (homeBtn.width - homeTextWidth) / 2 - iconSize - iconPadding;
             const iconY = homeBtn.y + (homeBtn.height / 2) - (iconSize / 2);
-            // house base
+            
+            // Save context for rounded rectangles
+            ctx.save();
+            
+            // Helper function for rounded rectangle
+            const roundedRect = (x, y, w, h, r) => {
+                ctx.beginPath();
+                ctx.moveTo(x + r, y);
+                ctx.lineTo(x + w - r, y);
+                ctx.quadraticCurveTo(x + w, y, x + w, y + r);
+                ctx.lineTo(x + w, y + h - r);
+                ctx.quadraticCurveTo(x + w, y + h, x + w - r, y + h);
+                ctx.lineTo(x + r, y + h);
+                ctx.quadraticCurveTo(x, y + h, x, y + h - r);
+                ctx.lineTo(x, y + r);
+                ctx.quadraticCurveTo(x, y, x + r, y);
+                ctx.closePath();
+            };
+            
+            // Draw house roof (triangle)
             ctx.fillStyle = WHITE;
+            ctx.strokeStyle = '#1a4d73';
+            ctx.lineWidth = 1.5;
             ctx.beginPath();
             ctx.moveTo(iconX + iconSize * 0.5, iconY);
-            ctx.lineTo(iconX + iconSize, iconY + iconSize * 0.45);
-            ctx.lineTo(iconX + iconSize, iconY + iconSize);
-            ctx.lineTo(iconX, iconY + iconSize);
-            ctx.lineTo(iconX, iconY + iconSize * 0.45);
+            ctx.lineTo(iconX + iconSize * 0.1, iconY + iconSize * 0.4);
+            ctx.lineTo(iconX + iconSize * 0.9, iconY + iconSize * 0.4);
             ctx.closePath();
             ctx.fill();
-            // door (cutout)
+            ctx.stroke();
+            
+            // Draw house base (rounded rectangle)
+            const baseY = iconY + iconSize * 0.35;
+            const baseH = iconSize * 0.65;
+            roundedRect(iconX + iconSize * 0.15, baseY, iconSize * 0.7, baseH, 2);
+            ctx.fill();
+            ctx.stroke();
+            
+            // Draw door (rounded rectangle cutout)
             ctx.fillStyle = '#336699';
-            const doorW = iconSize * 0.28;
-            const doorH = iconSize * 0.45;
-            ctx.fillRect(iconX + (iconSize - doorW) / 2, iconY + iconSize - doorH, doorW, doorH);
+            ctx.strokeStyle = '#1a4d73';
+            ctx.lineWidth = 1;
+            const doorW = iconSize * 0.25;
+            const doorH = iconSize * 0.4;
+            const doorX = iconX + (iconSize - doorW) / 2;
+            const doorY = iconY + iconSize - doorH;
+            roundedRect(doorX, doorY, doorW, doorH, 1);
+            ctx.fill();
+            ctx.stroke();
+            
+            // Draw window (small rounded square)
+            ctx.fillStyle = '#87CEEB';
+            ctx.strokeStyle = '#1a4d73';
+            const windowSize = iconSize * 0.15;
+            const windowX = iconX + iconSize * 0.25;
+            const windowY = iconY + iconSize * 0.5;
+            roundedRect(windowX, windowY, windowSize, windowSize, 1);
+            ctx.fill();
+            ctx.stroke();
+            
+            ctx.restore();
+            
             // draw the home text
             ctx.fillStyle = WHITE;
             ctx.fillText(homeText, homeBtn.x + (homeBtn.width - homeTextWidth) / 2, homeBtn.y + 40);
