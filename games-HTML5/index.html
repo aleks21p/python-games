@@ -3,7 +3,28 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <!-- SEO Meta Tags -->
     <title>JavaSnake.com - Epic HTML5 Games</title>
+    <meta name="description" content="Play free HTML5 browser games like Zombie Shooter and Space Shooter. Touch-friendly, mobile-optimized arcade action with upgrades, bosses, and endless waves. Play now in your browser—no installs required.">
+    <meta name="keywords" content="HTML5 games, browser games, zombie shooter, space shooter, mobile games, touch controls, arcade, free games, indie games">
+    <meta name="robots" content="index, follow">
+    <link rel="canonical" href="https://javasnake.com/">
+    <meta name="theme-color" content="#16213e">
+
+    <!-- Open Graph / Social preview -->
+    <meta property="og:site_name" content="JavaSnake.com">
+    <meta property="og:title" content="JavaSnake.com - Epic HTML5 Games">
+    <meta property="og:description" content="Play free HTML5 browser games like Zombie Shooter and Space Shooter. Touch-friendly, mobile-optimized arcade action with upgrades and bosses.">
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://javasnake.com/">
+    <!-- Consider replacing with an actual preview image if available -->
+    <meta property="og:image" content="/games-HTML5/preview.png">
+
+    <!-- Twitter Card -->
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="JavaSnake.com - Epic HTML5 Games">
+    <meta name="twitter:description" content="Play free HTML5 browser games like Zombie Shooter and Space Shooter. Touch-friendly, mobile-optimized arcade action with upgrades and bosses.">
+    <meta name="twitter:image" content="/games-HTML5/preview.png">
     <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Exo+2:wght@300;400;600;800&display=swap" rel="stylesheet">
     <style>
         * {
@@ -431,6 +452,42 @@
     </div>
 
     <script>
+        // Structured data: List of games for search engines (JSON-LD)
+        // NOTE: uses relative URLs; update to absolute URLs if you have a canonical domain.
+        (function(){
+            const ld = {
+                "@context": "https://schema.org",
+                "@type": "ItemList",
+                "name": "JavaSnake.com Games",
+                "description": "Collection of free HTML5 browser games including Zombie Shooter and Space Shooter.",
+                "itemListElement": [
+                    {
+                        "@type": "ListItem",
+                        "position": 1,
+                        "item": {
+                            "@type": "Game",
+                            "name": "Zombie Shooter",
+                            "description": "Top-down zombie shooter with upgrades, pets and boss battles.",
+                            "url": "zombie-shooter/aleks-ZS.html"
+                        }
+                    },
+                    {
+                        "@type": "ListItem",
+                        "position": 2,
+                        "item": {
+                            "@type": "Game",
+                            "name": "Space Shooter",
+                            "description": "Arcade space shooter with asteroids and alien waves.",
+                            "url": "space-shooter/shaungame.html"
+                        }
+                    }
+                ]
+            };
+            const s = document.createElement('script');
+            s.type = 'application/ld+json';
+            s.text = JSON.stringify(ld);
+            document.head.appendChild(s);
+        })();
         // Low Power initialization and particle creation
         window.LOW_POWER_MODE = (localStorage.getItem('lowPower') === '1');
 
