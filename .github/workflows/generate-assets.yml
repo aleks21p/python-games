@@ -30,8 +30,13 @@ jobs:
       - name: Generate preview PNG from SVG
         run: node tools/generate-preview.js
 
-      - name: Generate sitemap.xml
-        run: node tools/generate-sitemap.js
+      - name: Setup Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.x'
+
+      - name: Generate sitemap.xml (Python)
+        run: python tools/generate_sitemap.py
 
       - name: Commit and push generated assets
         uses: EndBug/add-and-commit@v9
