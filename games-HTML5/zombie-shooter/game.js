@@ -109,12 +109,46 @@ class Particle {
     draw(ctx) {
         const t = Math.max(0, this.life / this.maxLife);
         ctx.save();
+        // additive blending for glow
+        const prevComposite = ctx.globalCompositeOperation;
+        ctx.globalCompositeOperation = 'lighter';
         ctx.globalAlpha = Math.pow(t, 0.9);
-        ctx.fillStyle = this.color;
         const s = this.size * (1 + (1 - t) * 0.6);
+
+        // support color as string or gradient object {start,end}
+        if (this.color && typeof this.color === 'object' && this.color.start) {
+            const grad = ctx.createRadialGradient(this.x, this.y, 0, this.x, this.y, s * 1.8);
+            try {
+                grad.addColorStop(0, this.color.start);
+                grad.addColorStop(0.6, this.color.end || '#FFFFFF');
+                grad.addColorStop(1, 'rgba(255,255,255,0)');
+                ctx.fillStyle = grad;
+            } catch (e) {
+                ctx.fillStyle = this.color.start || '#FFFFFF';
+            }
+        } else {
+            ctx.fillStyle = this.color || '#FFFFFF';
+        }
+
+        // Draw a small directional streak behind particle for motion feel
+        const speed = Math.sqrt(this.vx * this.vx + this.vy * this.vy);
+        if (speed > 0.02) {
+            const nx = this.vx / (speed + 1e-6);
+            const ny = this.vy / (speed + 1e-6);
+            ctx.beginPath();
+            ctx.moveTo(this.x - nx * s * 0.6, this.y - ny * s * 0.6);
+            ctx.lineTo(this.x - nx * s * 2.6, this.y - ny * s * 2.6);
+            ctx.lineWidth = Math.max(1, s * 0.6);
+            ctx.strokeStyle = ctx.fillStyle;
+            ctx.stroke();
+        }
+
         ctx.beginPath();
         ctx.arc(this.x, this.y, s, 0, Math.PI*2);
         ctx.fill();
+
+        // restore composite
+        ctx.globalCompositeOperation = prevComposite;
         ctx.restore();
     }
     reset(x, y, vx, vy, life, size, color) {
@@ -2836,8 +2870,11 @@ class Game {
             const life = 320 + Math.random() * 480; // 320..800ms
             let p;
             if (this._particlePool.length) p = this._particlePool.pop();
-            if (p) p.reset(x, y, vx, vy, life, size, color || ORANGE);
-            else p = new Particle(x, y, vx, vy, life, size, color || ORANGE);
+            // allow gradient color objects for nicer visuals
+            const col = color || ORANGE;
+            const gradCol = { start: col, end: '#FFFFFF' };
+            if (p) p.reset(x, y, vx, vy, life, size, gradCol);
+            else p = new Particle(x, y, vx, vy, life, size, gradCol);
             this.particles.push(p);
         }
         // Damage popup
@@ -2849,15 +2886,26 @@ class Game {
     try { popup.font = this.popupFont; } catch (e) {}
     this.damagePopups.push(popup);
 
-        // trigger small screen shake based on damage
-        this.triggerShake(Math.min(12, 1 + Math.round(Math.sqrt(damage))));
+        // trigger small screen shake based on damage (use user-configured settings by default)
+        // call with no args so user settings apply; still allow stronger shakes for big damage
+        if (damage > 4) {
+            // scale up slightly for big hits but still keep user base
+            const s = Math.min(20, Math.max(this.shakeSettingStrength || 6, 1 + Math.round(Math.sqrt(damage))));
+            this.triggerShake(s, this.shakeSettingDuration);
+        } else {
+            this.triggerShake();
+        }
     }
 
     // Screen shake helpers
     triggerShake(strength = 6, duration = 300) {
-        // If no args provided, use user-configured settings
-        if (strength === undefined || strength === null) strength = this.shakeSettingStrength || 6;
-        if (duration === undefined || duration === null) duration = this.shakeSettingDuration || 300;
+        // If called with no args (arguments.length === 0), use user-configured settings
+        if (arguments.length === 0 || strength === null) {
+            strength = this.shakeSettingStrength || 6;
+        }
+        if (arguments.length === 0 || duration === null) {
+            duration = this.shakeSettingDuration || 300;
+        }
         // store initial strength and duration so we can compute deterministic falloff
         this.shakeInitialStrength = Math.max(this.shakeInitialStrength || 0, strength);
         this.shakeDuration = Math.max(this.shakeDuration || 0, duration);
