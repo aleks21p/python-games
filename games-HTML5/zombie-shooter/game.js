@@ -1108,6 +1108,12 @@ class Game {
         this.mousePos = { x: 0, y: 0 };
         this.setupInputHandlers();
 
+    // Create DOM UI for exporting/importing saves (player-save.json)
+    this.createSaveUI();
+    // Debug UI paging
+    this.debugPage = 0;
+    this.debugPageSize = 6; // keys per page
+
         // Animation frame ID
         this.animationId = null;
         
@@ -1149,6 +1155,59 @@ class Game {
     }
 
     setupInputHandlers() {
+        // Mobile touch controls state - compute sizes/positions dynamically for phones
+        {
+            const isPortrait = SCREEN_HEIGHT > SCREEN_WIDTH;
+            const baseW = SCREEN_WIDTH;
+            const baseH = SCREEN_HEIGHT;
+
+            // Joystick: positioned on lower-left, sized proportionally
+            const joystickRadius = Math.max(40, Math.min(64, Math.floor(baseW * 0.09)));
+            const joystickStartX = Math.round(baseW * 0.12);
+            const joystickStartY = Math.round(baseH - Math.max(110, baseH * 0.18));
+
+            // Fire button: lower-right, roomy hit area
+            const fireRadius = Math.max(36, Math.min(64, Math.floor(baseW * 0.095)));
+            const fireX = Math.round(baseW - baseW * 0.12);
+            const fireY = Math.round(baseH - Math.max(110, baseH * 0.18));
+
+            this.touchState = {
+                joystick: {
+                    active: false,
+                    identifier: null,
+                    startX: joystickStartX,
+                    startY: joystickStartY,
+                    x: joystickStartX,
+                    y: joystickStartY,
+                    dx: 0,
+                    dy: 0,
+                    radius: joystickRadius
+                },
+                fireButton: {
+                    active: false,
+                    identifier: null,
+                    x: fireX,
+                    y: fireY,
+                    radius: fireRadius
+                }
+            };
+        }
+
+        // Helper to update movement keys from joystick direction
+        const updateKeysFromJoystick = () => {
+            const j = this.touchState.joystick;
+            // deadzone to avoid tiny movements - relative to joystick radius
+            const dz = Math.max(6, Math.round(j.radius * 0.18));
+            this.keys['w'] = false; this.keys['a'] = false; this.keys['s'] = false; this.keys['d'] = false;
+            if (!j.active) return;
+            if (Math.abs(j.dx) < dz && Math.abs(j.dy) < dz) return;
+            // Up/Down
+            if (j.dy < -dz) this.keys['w'] = true;
+            if (j.dy > dz) this.keys['s'] = true;
+            // Left/Right
+            if (j.dx < -dz) this.keys['a'] = true;
+            if (j.dx > dz) this.keys['d'] = true;
+        };
         // Keyboard events
         document.addEventListener('keydown', (e) => {
             this.keys[e.key] = true;
@@ -1231,6 +1290,89 @@ class Game {
                 y: e.clientY - rect.top
             };
         });
+
+        // Touch events for mobile controls
+        canvas.addEventListener('touchstart', (e) => {
+            const rect = canvas.getBoundingClientRect();
+            for (const t of Array.from(e.changedTouches)) {
+                const tx = t.clientX - rect.left;
+                const ty = t.clientY - rect.top;
+
+                // Check if touch is on left side (joystick)
+                const j = this.touchState.joystick;
+                const distToJoy = Math.hypot(tx - j.startX, ty - j.startY);
+                if (!j.active && (tx < SCREEN_WIDTH / 2) && distToJoy <= j.radius * 1.6) {
+                    j.active = true; j.identifier = t.identifier; j.x = tx; j.y = ty; j.dx = tx - j.startX; j.dy = ty - j.startY;
+                    updateKeysFromJoystick();
+                    e.preventDefault();
+                    continue;
+                }
+
+                // Check fire button area (right-bottom)
+                const fb = this.touchState.fireButton;
+                const distToFire = Math.hypot(tx - fb.x, ty - fb.y);
+                if (!fb.active && (tx > SCREEN_WIDTH / 2) && distToFire <= fb.radius) {
+                    fb.active = true; fb.identifier = t.identifier;
+                    // simulate mouse position to point bullets toward touch
+                    this.mousePos = { x: tx, y: ty };
+                    // enable shooting while pressed
+                    this.player.isMouseShooting = true;
+                    e.preventDefault();
+                    continue;
+                }
+            }
+        }, { passive: false });
+
+        canvas.addEventListener('touchmove', (e) => {
+            const rect = canvas.getBoundingClientRect();
+            for (const t of Array.from(e.changedTouches)) {
+                const tx = t.clientX - rect.left;
+                const ty = t.clientY - rect.top;
+                const j = this.touchState.joystick;
+                if (j.active && t.identifier === j.identifier) {
+                    // clamp joystick displacement to radius
+                    const maxR = j.radius;
+                    const dx = tx - j.startX;
+                    const dy = ty - j.startY;
+                    const mag = Math.hypot(dx, dy);
+                    if (mag > maxR) {
+                        j.dx = dx / mag * maxR;
+                        j.dy = dy / mag * maxR;
+                        j.x = j.startX + j.dx;
+                        j.y = j.startY + j.dy;
+                    } else {
+                        j.dx = dx; j.dy = dy; j.x = tx; j.y = ty;
+                    }
+                    updateKeysFromJoystick();
+                    e.preventDefault();
+                    continue;
+                }
+
+                const fb = this.touchState.fireButton;
+                if (fb.active && t.identifier === fb.identifier) {
+                    // update mousePos so bullets aim at touch
+                    this.mousePos = { x: tx, y: ty };
+                    e.preventDefault();
+                    continue;
+                }
+            }
+        }, { passive: false });
+
+        canvas.addEventListener('touchend', (e) => {
+            for (const t of Array.from(e.changedTouches)) {
+                const j = this.touchState.joystick;
+                if (j.active && t.identifier === j.identifier) {
+                    j.active = false; j.identifier = null; j.dx = 0; j.dy = 0; j.x = j.startX; j.y = j.startY;
+                    // clear movement keys
+                    this.keys['w'] = false; this.keys['a'] = false; this.keys['s'] = false; this.keys['d'] = false;
+                }
+                const fb = this.touchState.fireButton;
+                if (fb.active && t.identifier === fb.identifier) {
+                    fb.active = false; fb.identifier = null;
+                    this.player.isMouseShooting = false;
+                }
+            }
+        }, { passive: false });
 
         // Mouse click for menu buttons
         canvas.addEventListener('click', (e) => {
@@ -1562,11 +1704,15 @@ class Game {
                                 y: SCREEN_HEIGHT/2 + 20
                             };
                             const keys = Object.keys(window.localStorage).sort();
+                            const pageSize = this.debugPageSize || 6;
+                            const page = this.debugPage || 0;
+                            const start = page * pageSize;
+                            const end = Math.min(start + pageSize, keys.length);
                             let y = contentBox.y + 80;
                             const lineHeight = 28;
-                            const visibleCount = Math.min(keys.length, 6);
-                            for (let i = 0; i < visibleCount; i++) {
-                                const k = keys[i];
+
+                            for (let idx = start; idx < end; idx++) {
+                                const keyName = keys[idx];
                                 const btnX = contentBox.x + contentBox.width - 220;
                                 const btnW = 60;
                                 const btnH = 20;
@@ -1575,25 +1721,25 @@ class Game {
                                 const delRect = { x: btnX + (btnW + 10) * 2, y: y - 14, w: btnW, h: btnH };
 
                                 if (clickX >= viewRect.x && clickX <= viewRect.x + viewRect.w && clickY >= viewRect.y && clickY <= viewRect.y + viewRect.h) {
-                                    const val = localStorage.getItem(k);
-                                    alert(`${k}: ${val}`);
+                                    const val = localStorage.getItem(keyName);
+                                    alert(`${keyName}: ${val}`);
                                     return;
                                 }
                                 if (clickX >= editRect.x && clickX <= editRect.x + editRect.w && clickY >= editRect.y && clickY <= editRect.y + editRect.h) {
-                                    const current = localStorage.getItem(k) || '';
-                                    const newVal = prompt(`Edit value for ${k}:`, current);
+                                    const current = localStorage.getItem(keyName) || '';
+                                    const newVal = prompt(`Edit value for ${keyName}:`, current);
                                     if (newVal !== null) {
-                                        localStorage.setItem(k, newVal);
-                                        if (k === 'zombieShooterCoins') {
+                                        localStorage.setItem(keyName, newVal);
+                                        if (keyName === 'zombieShooterCoins') {
                                             this.coins = parseInt(newVal) || 0;
                                         }
                                     }
                                     return;
                                 }
                                 if (clickX >= delRect.x && clickX <= delRect.x + delRect.w && clickY >= delRect.y && clickY <= delRect.y + delRect.h) {
-                                    if (confirm(`Delete localStorage key ${k}? This cannot be undone.`)) {
-                                        localStorage.removeItem(k);
-                                        if (k === 'zombieShooterCoins') {
+                                    if (confirm(`Delete localStorage key ${keyName}? This cannot be undone.`)) {
+                                        localStorage.removeItem(keyName);
+                                        if (keyName === 'zombieShooterCoins') {
                                             this.coins = 0;
                                         }
                                     }
@@ -1602,6 +1748,27 @@ class Game {
 
                                 y += lineHeight;
                             }
+
+                                // Handle Prev/Next clicks
+                                const controlsY = contentBox.y + contentBox.height - 30;
+                                const ctrlW = 80;
+                                const ctrlH = 24;
+                                const ctrlX = contentBox.x + contentBox.width/2 - (ctrlW * 2 + 10)/2;
+                                const prevRect = { x: ctrlX, y: controlsY, w: ctrlW, h: ctrlH };
+                                const nextRect = { x: ctrlX + ctrlW + 140, y: controlsY, w: ctrlW, h: ctrlH };
+
+                                if (clickX >= prevRect.x && clickX <= prevRect.x + prevRect.w && clickY >= prevRect.y && clickY <= prevRect.y + prevRect.h) {
+                                    if (page > 0) {
+                                        this.debugPage = page - 1;
+                                    }
+                                    return;
+                                }
+                                if (clickX >= nextRect.x && clickX <= nextRect.x + nextRect.w && clickY >= nextRect.y && clickY <= nextRect.y + nextRect.h) {
+                                    if (end < keys.length) {
+                                        this.debugPage = page + 1;
+                                    }
+                                    return;
+                                }
                         }
                     }
                     return; // Prevent clicking through options box
@@ -1697,6 +1864,131 @@ class Game {
 
     saveEquippedPet() {
         localStorage.setItem('zombieShooterEquippedPet', this.equippedPet || '');
+    }
+
+    // --- Save / Export / Import helpers ---
+    createSaveUI() {
+        // Create a small DOM panel (hidden visually when not needed)
+        try {
+            const container = document.createElement('div');
+            container.id = 'save-ui-container';
+            container.style.position = 'fixed';
+            container.style.right = '12px';
+            container.style.bottom = '12px';
+            container.style.zIndex = '1000';
+            container.style.display = 'flex';
+            container.style.flexDirection = 'column';
+            container.style.gap = '6px';
+
+            const exportBtn = document.createElement('button');
+            exportBtn.textContent = 'Export Save';
+            exportBtn.title = 'Export current save to player-save.json';
+            exportBtn.onclick = () => this.exportSave();
+
+            const importLabel = document.createElement('label');
+            importLabel.style.display = 'inline-block';
+            importLabel.style.cursor = 'pointer';
+            importLabel.style.fontSize = '13px';
+            importLabel.style.background = '#222';
+            importLabel.style.color = '#fff';
+            importLabel.style.padding = '6px 8px';
+            importLabel.style.borderRadius = '4px';
+            importLabel.textContent = 'Import Save';
+
+            const fileInput = document.createElement('input');
+            fileInput.type = 'file';
+            fileInput.accept = '.json,application/json';
+            fileInput.style.display = 'none';
+            fileInput.onchange = (e) => {
+                if (fileInput.files && fileInput.files.length) {
+                    const f = fileInput.files[0];
+                    this.importSaveFromFile(f);
+                }
+            };
+
+            importLabel.onclick = () => fileInput.click();
+
+            container.appendChild(exportBtn);
+            container.appendChild(importLabel);
+            container.appendChild(fileInput);
+
+            document.body.appendChild(container);
+        } catch (err) {
+            console.warn('Failed to create save UI:', err);
+        }
+    }
+
+    getSaveObject() {
+        // Package up relevant game state into a simple object
+        return {
+            coins: this.coins,
+            score: this.score,
+            level: this.level,
+            activePlayerSkin: this.activePlayerSkin,
+            gunUpgradeLevel: this.gunUpgradeLevel,
+            healthUpgradeLevel: this.healthUpgradeLevel,
+            speedUpgradeLevel: this.speedUpgradeLevel,
+            ownedPets: this.ownedPets,
+            equippedPet: this.equippedPet,
+            shopItems: this.shopItems
+        };
+    }
+
+    exportSave() {
+        const saveObj = this.getSaveObject();
+        const blob = new Blob([JSON.stringify(saveObj, null, 2)], { type: 'application/json' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = 'player-save.json';
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+        URL.revokeObjectURL(url);
+    }
+
+    importSaveFromFile(file) {
+        const reader = new FileReader();
+        reader.onload = () => {
+            try {
+                const text = reader.result;
+                const obj = JSON.parse(text);
+                this.importSaveFromJSON(obj);
+                alert('Save imported successfully.');
+            } catch (err) {
+                alert('Failed to import save: ' + err.message);
+            }
+        };
+        reader.readAsText(file);
+    }
+
+    importSaveFromJSON(obj) {
+        // Be conservative: only set fields that exist
+        if (!obj || typeof obj !== 'object') return;
+        if (typeof obj.coins === 'number') {
+            this.coins = obj.coins;
+            this.saveCoins();
+        }
+        if (typeof obj.score === 'number') this.score = obj.score;
+        if (typeof obj.level === 'number') this.level = obj.level;
+        if (typeof obj.activePlayerSkin === 'string') {
+            this.activePlayerSkin = obj.activePlayerSkin;
+            this.saveSkins();
+        }
+        if (typeof obj.gunUpgradeLevel === 'number') { this.gunUpgradeLevel = obj.gunUpgradeLevel; this.saveGunUpgrade(); }
+        if (typeof obj.healthUpgradeLevel === 'number') { this.healthUpgradeLevel = obj.healthUpgradeLevel; this.saveHealthUpgrade(); }
+        if (typeof obj.speedUpgradeLevel === 'number') { this.speedUpgradeLevel = obj.speedUpgradeLevel; this.saveSpeedUpgrade(); }
+        if (Array.isArray(obj.ownedPets)) { this.ownedPets = obj.ownedPets; this.saveOwnedPets(); }
+        if (typeof obj.equippedPet === 'string' || obj.equippedPet === null) { this.equippedPet = obj.equippedPet; this.saveEquippedPet(); }
+        // Preserve shopItems shape if provided (only ownership flags)
+        if (obj.shopItems && typeof obj.shopItems === 'object') {
+            for (const [id, data] of Object.entries(obj.shopItems)) {
+                if (this.shopItems[id] && typeof data.owned === 'boolean') {
+                    this.shopItems[id].owned = data.owned;
+                }
+            }
+            this.saveSkins();
+        }
     }
 
     updateCoins() {
@@ -2616,7 +2908,7 @@ class Game {
                         ctx.font = '18px Arial';
                         ctx.fillText(this.translations[this.selectedLanguage].debugDescription, contentBox.x + 20, contentBox.y + 40);
 
-                        // List localStorage keys
+                        // List localStorage keys with pagination
                         const keys = Object.keys(window.localStorage).sort();
                         if (keys.length === 0) {
                             ctx.fillStyle = '#808080';
@@ -2625,28 +2917,35 @@ class Game {
                         } else {
                             ctx.font = '14px Arial';
                             ctx.textAlign = 'left';
+                            const pageSize = this.debugPageSize || 6;
+                            const page = this.debugPage || 0;
+                            const start = page * pageSize;
+                            const end = Math.min(start + pageSize, keys.length);
                             let y = contentBox.y + 80;
                             const lineHeight = 28;
-                            // Draw up to ~6 keys in the box (scrolling not implemented)
-                            for (let i = 0; i < Math.min(keys.length, 6); i++) {
+
+                            for (let i = start; i < end; i++) {
                                 const k = keys[i];
                                 ctx.fillStyle = '#FFFF00';
                                 ctx.fillText(k, contentBox.x + 20, y);
-                                // Draw small rectangles as buttons for View / Edit / Delete
+
                                 const btnX = contentBox.x + contentBox.width - 220;
                                 const btnW = 60;
                                 const btnH = 20;
+
                                 // View
                                 ctx.fillStyle = '#4CAF50';
                                 ctx.fillRect(btnX, y - 14, btnW, btnH);
                                 ctx.fillStyle = WHITE;
                                 ctx.font = '12px Arial';
                                 ctx.fillText(this.translations[this.selectedLanguage].view, btnX + 8, y);
+
                                 // Edit
                                 ctx.fillStyle = '#2196F3';
                                 ctx.fillRect(btnX + btnW + 10, y - 14, btnW, btnH);
                                 ctx.fillStyle = WHITE;
                                 ctx.fillText(this.translations[this.selectedLanguage].edit, btnX + btnW + 18, y);
+
                                 // Delete
                                 ctx.fillStyle = '#F44336';
                                 ctx.fillRect(btnX + (btnW + 10) * 2, y - 14, btnW, btnH);
@@ -2655,7 +2954,34 @@ class Game {
 
                                 y += lineHeight;
                             }
+
+                            // Pagination controls
+                            const controlsY = contentBox.y + contentBox.height - 30;
+                            const ctrlW = 80;
+                            const ctrlH = 24;
+                            const ctrlX = contentBox.x + contentBox.width/2 - (ctrlW * 2 + 10)/2;
+
+                            // Prev
+                            ctx.fillStyle = page > 0 ? '#666666' : '#333333';
+                            ctx.fillRect(ctrlX, controlsY, ctrlW, ctrlH);
+                            ctx.fillStyle = WHITE;
+                            ctx.font = '12px Arial';
                             ctx.textAlign = 'center';
+                            ctx.fillText('Prev', ctrlX + ctrlW/2, controlsY + 16);
+
+                            // Page label
+                            const pageLabel = `Page ${page + 1} / ${Math.max(1, Math.ceil(keys.length / pageSize))}`;
+                            ctx.fillStyle = '#CCCCCC';
+                            ctx.fillText(pageLabel, ctrlX + ctrlW + 10 + 60, controlsY + 16);
+
+                            // Next
+                            const nextX = ctrlX + ctrlW + 140;
+                            ctx.fillStyle = end < keys.length ? '#666666' : '#333333';
+                            ctx.fillRect(nextX, controlsY, ctrlW, ctrlH);
+                            ctx.fillStyle = WHITE;
+                            ctx.fillText('Next', nextX + ctrlW/2, controlsY + 16);
+
+                            ctx.textAlign = 'left';
                         }
                         ctx.textAlign = 'left';
                         break;
@@ -2677,6 +3003,14 @@ class Game {
             const closeTextWidth = ctx.measureText(closeText).width;
             ctx.fillText(closeText, SCREEN_WIDTH/2 - closeTextWidth/2, SCREEN_HEIGHT - 80);
         }
+
+    // Quick save/import instructions (small)
+    ctx.fillStyle = '#CCCCCC';
+    ctx.font = '14px Arial';
+    ctx.textAlign = 'center';
+    ctx.fillText('Export your progress: Export Save → player-save.json', SCREEN_WIDTH/2, SCREEN_HEIGHT/2 + 220);
+    ctx.fillText('Import saved file: Options → Import Save (choose player-save.json)', SCREEN_WIDTH/2, SCREEN_HEIGHT/2 + 240);
+    ctx.textAlign = 'left';
 
         // Draw Shop menu if active
         if (this.inShop) {
@@ -2894,6 +3228,49 @@ class Game {
             ctx.fillText(this.translations[this.selectedLanguage].pressToResume, SCREEN_WIDTH/2 - 80, SCREEN_HEIGHT/2 + 40);
         }
         
+        // Draw on-screen touch controls for mobile (joystick + fire)
+        try {
+            const j = this.touchState.joystick;
+            const fb = this.touchState.fireButton;
+            // Show controls if touch input was used or on small screens
+            const showControls = ('ontouchstart' in window) || (SCREEN_WIDTH <= 900);
+            if (showControls) {
+                // Joystick base
+                ctx.save();
+                ctx.globalAlpha = 0.6;
+                ctx.fillStyle = '#222222';
+                ctx.beginPath();
+                ctx.arc(j.startX, j.startY, j.radius + 8, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.globalAlpha = 0.95;
+                // Joystick knob (size relative to radius)
+                const knobR = Math.max(14, Math.round(j.radius * 0.42));
+                ctx.fillStyle = j.active ? '#4CAF50' : '#888888';
+                ctx.beginPath();
+                ctx.arc(j.x, j.y, knobR, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.restore();
+
+                // Fire button
+                ctx.save();
+                ctx.globalAlpha = 0.85;
+                ctx.fillStyle = fb.active ? '#FF7043' : '#E53935';
+                ctx.beginPath();
+                ctx.arc(fb.x, fb.y, fb.radius, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.fillStyle = WHITE;
+                const fireFontSize = Math.max(14, Math.round(fb.radius * 0.42));
+                ctx.font = `bold ${fireFontSize}px Arial`;
+                ctx.textAlign = 'center';
+                ctx.fillText('FIRE', fb.x, fb.y + Math.round(fireFontSize/3));
+                ctx.textAlign = 'left';
+                ctx.restore();
+            }
+        } catch (err) {
+            // Don't crash draw on odd platforms
+            console.warn('Touch control draw error', err);
+        }
+
         // Restore the original transform
         ctx.restore();
     }
