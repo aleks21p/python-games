@@ -2781,6 +2781,12 @@ class Game {
         this.cheatActive = false;
         this.cheat2Active = false;
         this.tKeyPressed = false;
+        
+        // Reset screen shake state
+        this.shakeStrength = 0;
+        this.shakeTimer = 0;
+        this.shakeDuration = 0;
+        this.shakeInitialStrength = 0;
     }
 
     spawnOrbs(x, y, count) {
