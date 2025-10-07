@@ -1165,7 +1165,7 @@ class Game {
                 normal: 'Normal',
                 hard: 'Hard',
                 difficultyNote: '(Difficulty selection coming soon)',
-                developer: 'Game Developer: Aleks P',
+                developer: 'Developer Options',
                 soundDesign: 'Sound Design: Miles',
                 art: 'Art & Textures: Aleks P',
                 sponsors: 'Sponsors: Shaun & Flecher'
