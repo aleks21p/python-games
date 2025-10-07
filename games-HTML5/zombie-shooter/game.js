@@ -1216,6 +1216,25 @@ class Game {
                     }
                 }, false);
             } catch (e) {}
+            // Ensure AudioContext is resumed on first user gesture (autoplay policies)
+            try {
+                if (this.audio && this.audio.ctx && typeof this.audio.ctx.resume === 'function') {
+                    const _resumeAudio = async () => {
+                        try {
+                            if (this.audio.ctx.state === 'suspended') {
+                                await this.audio.ctx.resume();
+                            }
+                            // play a subtle click to indicate audio is enabled (non-intrusive)
+                            if (typeof this.audio.playClick === 'function') {
+                                try { this.audio.playClick(); } catch (e) {}
+                            }
+                        } catch (e) {}
+                    };
+                    // Use pointerdown and keydown as common user gestures; once:true ensures handler removes itself
+                    document.addEventListener('pointerdown', _resumeAudio, { once: true, passive: true });
+                    document.addEventListener('keydown', _resumeAudio, { once: true, passive: true });
+                }
+            } catch (e) {}
         } catch (err) {
             this.audio = null;
         }
