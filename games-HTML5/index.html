@@ -10,6 +10,8 @@
     <meta name="robots" content="index, follow">
     <link rel="canonical" href="https://javasnake.com/">
     <meta name="theme-color" content="#16213e">
+    <meta name="msapplication-TileColor" content="#16213e">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 
     <!-- Open Graph / Social preview -->
     <meta property="og:site_name" content="JavaSnake.com">
@@ -407,6 +409,13 @@
         <span id="lowPowerBadge" class="low-power-badge" style="display:none">Low</span>
     </div>
 
+    <!-- Site-wide mute toggle -->
+    <div class="low-power-toggle" style="right:7.5rem;" role="region" aria-label="Mute site audio">
+        <button id="siteMuteBtn" class="toggle-switch" aria-pressed="false" title="Mute / Unmute site audio" style="display:flex;align-items:center;justify-content:center;padding:6px 10px;">
+            <span id="siteMuteIcon">🔊</span>
+        </button>
+    </div>
+
     <!-- ARIA live region for assistive announcements -->
     <div id="ariaLive" aria-live="polite" aria-atomic="true" style="position:absolute; left:-9999px; width:1px; height:1px; overflow:hidden;"> </div>
 
@@ -594,6 +603,47 @@
                 }, 200);
             });
         });
+
+        // Site-wide mute button behavior
+        (function(){
+            const muteBtn = document.getElementById('siteMuteBtn');
+            const muteIcon = document.getElementById('siteMuteIcon');
+            const saved = localStorage.getItem('site_mute') === '1';
+            let muted = saved;
+
+            function updateIcon() {
+                muteIcon.textContent = muted ? '🔇' : '🔊';
+                muteBtn.setAttribute('aria-pressed', muted ? 'true' : 'false');
+            }
+
+            function applyMute() {
+                // Try to mute any AudioManager exposed on the page (convention: window.audio or audio)
+                try {
+                    const candidates = [window.audio, window.game && window.game.audio, window.audioManager];
+                    for (const c of candidates) {
+                        if (c && c.masterGain && typeof c.masterGain.gain !== 'undefined') {
+                            c.masterGain.gain.value = muted ? 0 : (c._previousMasterGain || 0.35);
+                            // remember original gain if not set
+                            if (!c._previousMasterGain) c._previousMasterGain = 0.35;
+                        } else if (c && c.ctx && c.ctx.destination) {
+                            // Best-effort: reduce destination gain by creating a master gain if not present
+                        }
+                    }
+                } catch (err) {
+                    console.warn('Failed to apply site mute to page audio', err);
+                }
+            }
+
+            updateIcon();
+            applyMute();
+
+            muteBtn.addEventListener('click', () => {
+                muted = !muted;
+                localStorage.setItem('site_mute', muted ? '1' : '0');
+                updateIcon();
+                applyMute();
+            });
+        })();
 
         // Konami code easter egg
         let konamiCode = [];
