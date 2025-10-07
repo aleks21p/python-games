@@ -2204,6 +2204,21 @@ class Game {
                                                     localStorage.setItem('zs_debug_overlay', this.debugOverlayEnabled ? '1' : '0');
                                                     return;
                                                 }
+                                                    // Preview Impact button click area (spawn a demo impact)
+                                                    const previewBtnX = contentBox.x + 180;
+                                                    const previewBtnY = contentBox.y + 40 + 256;
+                                                    const previewBtnW = 160; const previewBtnH = 28;
+                                                    if (clickX >= previewBtnX && clickX <= previewBtnX + previewBtnW && clickY >= previewBtnY && clickY <= previewBtnY + previewBtnH) {
+                                                        // Spawn a demo impact at center of screen using current visuals settings
+                                                        const px = SCREEN_WIDTH / 2;
+                                                        const py = SCREEN_HEIGHT / 2 - 40;
+                                                        const demoDamage = 8 + Math.round(Math.random() * 12);
+                                                        const demoColor = '#FF8A65';
+                                                        this.spawnImpact(px, py, demoDamage, demoColor);
+                                                        // play a short impact sound if available
+                                                        if (this.audio && typeof this.audio.playClick === 'function') this.audio.playClick();
+                                                        return;
+                                                    }
                                         }
                                     }
                                 if (clickX >= editRect.x && clickX <= editRect.x + editRect.w && clickY >= editRect.y && clickY <= editRect.y + editRect.h) {
@@ -3636,6 +3651,15 @@ class Game {
                         ctx.fillRect(visX, visY, 160, 28);
                         ctx.strokeStyle = WHITE; ctx.strokeRect(visX, visY, 160, 28);
                         ctx.fillStyle = WHITE; ctx.font = '14px Arial'; ctx.fillText(this.debugOverlayEnabled ? 'Debug Overlay: ON' : 'Debug Overlay: OFF', visX + 8, visY + 19);
+                        // Preview Impact button (live preview of particles/shake)
+                        const previewX = visX + 180;
+                        const previewY = contentBox.y + 40 + 256; // align with debug toggle row
+                        const previewW = 160; const previewH = 28;
+                        ctx.fillStyle = '#2196F3';
+                        ctx.fillRect(previewX, previewY, previewW, previewH);
+                        ctx.strokeStyle = WHITE; ctx.strokeRect(previewX, previewY, previewW, previewH);
+                        ctx.fillStyle = WHITE; ctx.font = '14px Arial'; ctx.textAlign = 'center'; ctx.fillText('Preview Impact', previewX + previewW/2, previewY + 19);
+                        ctx.textAlign = 'left';
                         break;
 
                     case 'credits':
