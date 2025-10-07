@@ -2869,8 +2869,8 @@ class Game {
                 itemX = firstRowStartX + (itemWidth + itemSpacing) * index;
                 itemY = firstRowY;
             } else {
-                // Second row
-                itemX = secondRowStartX + (itemWidth + itemSpacing) * (index - 3);
+                // Second row (shifted left by 100px)
+                itemX = secondRowStartX + (itemWidth + itemSpacing) * (index - 3) - 100;
                 itemY = secondRowY;
             }
 
