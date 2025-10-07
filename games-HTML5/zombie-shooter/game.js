@@ -11,6 +11,86 @@ const GRAY = '#808080';
 const ORANGE = '#FFA500';
 const GOLD = '#FFD700';
 
+// --- Simple WebAudio-based sound helper (synthesized) ---
+class AudioManager {
+    constructor() {
+        try {
+            this.ctx = new (window.AudioContext || window.webkitAudioContext)();
+            this.masterGain = this.ctx.createGain();
+            this.masterGain.gain.value = 0.35;
+            this.masterGain.connect(this.ctx.destination);
+            this.enabled = true;
+        } catch (err) {
+            this.ctx = null;
+            this.enabled = false;
+        }
+        this.musicOsc = null;
+    }
+
+    playClick() {
+        if (!this.ctx) return;
+        const t = this.ctx.currentTime;
+        const o = this.ctx.createOscillator();
+        const g = this.ctx.createGain();
+        o.type = 'sine';
+        o.frequency.setValueAtTime(900, t);
+        g.gain.setValueAtTime(0, t);
+        g.gain.linearRampToValueAtTime(0.6, t + 0.01);
+        g.gain.exponentialRampToValueAtTime(0.001, t + 0.18);
+        o.connect(g); g.connect(this.masterGain);
+        o.start(t); o.stop(t + 0.2);
+    }
+
+    playShoot() {
+        if (!this.ctx) return;
+        const t = this.ctx.currentTime;
+        const o = this.ctx.createOscillator();
+        const g = this.ctx.createGain();
+        o.type = 'square';
+        o.frequency.setValueAtTime(1200, t);
+        o.frequency.exponentialRampToValueAtTime(600, t + 0.12);
+        g.gain.setValueAtTime(0.0001, t);
+        g.gain.exponentialRampToValueAtTime(0.6, t + 0.01);
+        g.gain.exponentialRampToValueAtTime(0.0001, t + 0.12);
+        o.connect(g); g.connect(this.masterGain);
+        o.start(t); o.stop(t + 0.15);
+    }
+
+    playDeath() {
+        if (!this.ctx) return;
+        const t = this.ctx.currentTime;
+        const o = this.ctx.createOscillator();
+        const g = this.ctx.createGain();
+        o.type = 'sawtooth';
+        o.frequency.setValueAtTime(600, t);
+        o.frequency.exponentialRampToValueAtTime(200, t + 0.25);
+        g.gain.setValueAtTime(0.001, t);
+        g.gain.exponentialRampToValueAtTime(0.6, t + 0.01);
+        g.gain.exponentialRampToValueAtTime(0.0001, t + 0.25);
+        o.connect(g); g.connect(this.masterGain);
+        o.start(t); o.stop(t + 0.3);
+    }
+
+    startMusic() {
+        if (!this.ctx || this.musicOsc) return;
+        const t = this.ctx.currentTime;
+        const o = this.ctx.createOscillator();
+        const g = this.ctx.createGain();
+        o.type = 'triangle';
+        o.frequency.setValueAtTime(220, t);
+        g.gain.value = 0.06;
+        o.connect(g); g.connect(this.masterGain);
+        o.start(t);
+        this.musicOsc = o;
+    }
+
+    stopMusic() {
+        if (!this.ctx || !this.musicOsc) return;
+        try { this.musicOsc.stop(); } catch (e) {}
+        this.musicOsc = null;
+    }
+}
+
 // ...existing code...
 
 // Player class
@@ -1108,6 +1188,15 @@ class Game {
         this.mousePos = { x: 0, y: 0 };
         this.setupInputHandlers();
 
+        // Audio manager (synthesized sounds)
+        try {
+            this.audio = new AudioManager();
+            // Optionally start background music at lower volume
+            // this.audio.startMusic();
+        } catch (err) {
+            this.audio = null;
+        }
+
     // Touch control settings (persisted)
     this.touchControlsVisible = (localStorage.getItem('zs_touch_controls_visible') !== '0'); // default true
     this.touchControlsOpacity = parseFloat(localStorage.getItem('zs_touch_opacity')) || 0.9;
@@ -1464,6 +1553,7 @@ class Game {
                         this.reset();
                     }
                     // Initialize countdown and game state
+                    if (this.audio && typeof this.audio.playClick === 'function') this.audio.playClick();
                     this.countdownActive = true;
                     this.countdownStart = Date.now();
                     this.inMenu = false;  // Exit menu to show game background
@@ -1476,6 +1566,7 @@ class Game {
                 const optionsBtn = this.menuButtons.options;
                 if (!this.inShop && clickX >= optionsBtn.x && clickX <= optionsBtn.x + optionsBtn.width &&
                     clickY >= optionsBtn.y && clickY <= optionsBtn.y + optionsBtn.height) {
+                    if (this.audio && typeof this.audio.playClick === 'function') this.audio.playClick();
                     this.inOptions = !this.inOptions;
                     this.inShop = false;  // Close shop when opening options
                     this.activeOptionTab = '';  // Reset active tab when opening/closing options
@@ -1485,6 +1576,7 @@ class Game {
                 const shopBtn = this.menuButtons.shop;
                 if (!this.inOptions && clickX >= shopBtn.x && clickX <= shopBtn.x + shopBtn.width &&
                     clickY >= shopBtn.y && clickY <= shopBtn.y + shopBtn.height) {
+                    if (this.audio && typeof this.audio.playClick === 'function') this.audio.playClick();
                     this.inShop = !this.inShop;
                     this.inOptions = false;  // Close options when opening shop
                     this.activeOptionTab = '';
@@ -2018,7 +2110,7 @@ class Game {
             const exportBtn = document.createElement('button');
             exportBtn.textContent = 'Export Save';
             exportBtn.title = 'Export current save to player-save.json';
-            exportBtn.onclick = () => this.exportSave();
+            exportBtn.onclick = () => { if (this.audio && typeof this.audio.playClick === 'function') this.audio.playClick(); this.exportSave(); };
 
             const importLabel = document.createElement('label');
             importLabel.style.display = 'inline-block';
@@ -2041,7 +2133,7 @@ class Game {
                 }
             };
 
-            importLabel.onclick = () => fileInput.click();
+            importLabel.onclick = () => { if (this.audio && typeof this.audio.playClick === 'function') this.audio.playClick(); fileInput.click(); };
 
             container.appendChild(exportBtn);
             container.appendChild(importLabel);
@@ -2480,6 +2572,7 @@ class Game {
                                 this.spawnOrbs(zombie.x, zombie.y, 2);
                                 this.score += 10;
                             }
+                            if (this.audio && typeof this.audio.playDeath === 'function') this.audio.playDeath();
                             this.zombies.splice(j, 1);
                         }
                         // If the bullet is NOT a wave bullet, remove it on hit. Wave bullets pass through.
@@ -2728,6 +2821,9 @@ class Game {
 
         // Shooting
         const newBullets = this.player.shoot(this.mousePos, currentTime, this.level, this.autoFireEnabled);
+        if (newBullets && newBullets.length && this.audio && typeof this.audio.playShoot === 'function') {
+            this.audio.playShoot();
+        }
         this.bullets.push(...newBullets);
 
         // Update bullets
