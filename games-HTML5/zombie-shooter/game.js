@@ -3871,13 +3871,7 @@ class Game {
             ctx.fillText(closeText, SCREEN_WIDTH/2 - closeTextWidth/2, SCREEN_HEIGHT - 80);
         }
 
-    // Quick save/import instructions (small)
-    ctx.fillStyle = '#CCCCCC';
-    ctx.font = '14px Arial';
-    ctx.textAlign = 'center';
-    ctx.fillText('Export your progress: Export Save → player-save.json', SCREEN_WIDTH/2, SCREEN_HEIGHT/2 + 220);
-    ctx.fillText('Import saved file: Options → Import Save (choose player-save.json)', SCREEN_WIDTH/2, SCREEN_HEIGHT/2 + 240);
-    ctx.textAlign = 'left';
+    // (Removed quick save/import instructions to declutter the options UI)
 
         // Draw Shop menu if active
         if (this.inShop) {
