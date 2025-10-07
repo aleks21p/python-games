@@ -1108,6 +1108,31 @@ class Game {
         this.mousePos = { x: 0, y: 0 };
         this.setupInputHandlers();
 
+    // Touch control settings (persisted)
+    this.touchControlsVisible = (localStorage.getItem('zs_touch_controls_visible') !== '0'); // default true
+    this.touchControlsOpacity = parseFloat(localStorage.getItem('zs_touch_opacity')) || 0.9;
+    this.touchControlsSize = parseFloat(localStorage.getItem('zs_touch_size')) || 1.0; // multiplier
+
+        // Ensure touchState radii reflect user size multiplier
+        try {
+            const j = this.touchState && this.touchState.joystick;
+            const fb = this.touchState && this.touchState.fireButton;
+            if (j && fb) {
+                const baseW = SCREEN_WIDTH; const baseH = SCREEN_HEIGHT;
+                const joystickRadius = Math.max(40, Math.min(64, Math.floor(baseW * 0.09)));
+                const fireRadius = Math.max(36, Math.min(64, Math.floor(baseW * 0.095)));
+                j.radius = Math.round(joystickRadius * this.touchControlsSize);
+                j.startX = Math.round(baseW * 0.12);
+                j.startY = Math.round(baseH - Math.max(110, baseH * 0.18));
+                j.x = j.startX; j.y = j.startY; j.dx = 0; j.dy = 0;
+                fb.radius = Math.round(fireRadius * this.touchControlsSize);
+                fb.x = Math.round(baseW - baseW * 0.12);
+                fb.y = Math.round(baseH - Math.max(110, baseH * 0.18));
+            }
+        } catch (err) {
+            // noop
+        }
+
     // Create DOM UI for exporting/importing saves (player-save.json)
     this.createSaveUI();
     // Debug UI paging
@@ -1696,7 +1721,7 @@ class Game {
                         }
 
                         // If debug tab is active, handle clicks on the debug UI buttons
-                        if (this.activeOptionTab === 'debug') {
+                            if (this.activeOptionTab === 'debug') {
                             const contentBox = {
                                 width: 500,
                                 height: 300,
@@ -1725,6 +1750,63 @@ class Game {
                                     alert(`${keyName}: ${val}`);
                                     return;
                                 }
+                                    // If controls tab is active, handle toggle and slider clicks
+                                    if (this.activeOptionTab === 'controls') {
+                                        const contentBox = {
+                                            width: 500,
+                                            height: 300,
+                                            x: SCREEN_WIDTH/2 - 250,
+                                            y: SCREEN_HEIGHT/2 + 20
+                                        };
+                                        const toggleX = contentBox.x + 40;
+                                        const toggleY = contentBox.y + 90;
+                                        const toggleW = 180;
+                                        const toggleH = 36;
+                                        // Toggle hit
+                                        if (clickX >= toggleX && clickX <= toggleX + toggleW && clickY >= toggleY && clickY <= toggleY + toggleH) {
+                                            this.touchControlsVisible = !this.touchControlsVisible;
+                                            localStorage.setItem('zs_touch_controls_visible', this.touchControlsVisible ? '1' : '0');
+                                            return;
+                                        }
+
+                                        // Opacity slider area
+                                        const sliderW = 320;
+                                        const sliderTrackX = toggleX;
+                                        const sliderTrackY = toggleY + 56 + 28;
+                                        const sliderH = 12;
+                                        if (clickX >= sliderTrackX && clickX <= sliderTrackX + sliderW && clickY >= sliderTrackY - 8 && clickY <= sliderTrackY + sliderH + 8) {
+                                            // Map clickX to opacity range 0.2..1.0
+                                            const pct = Math.max(0, Math.min(1, (clickX - sliderTrackX) / sliderW));
+                                            this.touchControlsOpacity = 0.2 + pct * 0.8;
+                                            localStorage.setItem('zs_touch_opacity', String(this.touchControlsOpacity));
+                                            return;
+                                        }
+
+                                        // Size slider area
+                                        const sizeTrackY = sliderTrackY + 36;
+                                        if (clickX >= sliderTrackX && clickX <= sliderTrackX + sliderW && clickY >= sizeTrackY - 8 && clickY <= sizeTrackY + sliderH + 8) {
+                                            // Map clickX to size range 0.6..2.0
+                                            const pct2 = Math.max(0, Math.min(1, (clickX - sliderTrackX) / sliderW));
+                                            this.touchControlsSize = 0.6 + pct2 * 1.4;
+                                            localStorage.setItem('zs_touch_size', String(this.touchControlsSize));
+                                            // Update touchState radii with multiplier
+                                            const j = this.touchState.joystick;
+                                            const fb = this.touchState.fireButton;
+                                            j.radius = Math.round(j.radius * 0.999); // preserve type but we'll recompute below
+                                            // Recompute based on base values
+                                            const baseW = SCREEN_WIDTH; const baseH = SCREEN_HEIGHT;
+                                            const joystickRadius = Math.max(40, Math.min(64, Math.floor(baseW * 0.09)));
+                                            const fireRadius = Math.max(36, Math.min(64, Math.floor(baseW * 0.095)));
+                                            j.radius = Math.round(joystickRadius * this.touchControlsSize);
+                                            j.startX = Math.round(baseW * 0.12);
+                                            j.startY = Math.round(baseH - Math.max(110, baseH * 0.18));
+                                            j.x = j.startX; j.y = j.startY; j.dx = 0; j.dy = 0;
+                                            fb.radius = Math.round(fireRadius * this.touchControlsSize);
+                                            fb.x = Math.round(baseW - baseW * 0.12);
+                                            fb.y = Math.round(baseH - Math.max(110, baseH * 0.18));
+                                            return;
+                                        }
+                                    }
                                 if (clickX >= editRect.x && clickX <= editRect.x + editRect.w && clickY >= editRect.y && clickY <= editRect.y + editRect.h) {
                                     const current = localStorage.getItem(keyName) || '';
                                     const newVal = prompt(`Edit value for ${keyName}:`, current);
@@ -2828,30 +2910,55 @@ class Game {
 
                 switch(this.activeOptionTab) {
                     case 'controls':
-                        const controlOptions = [
-                            this.translations[this.selectedLanguage].move,
-                            this.translations[this.selectedLanguage].aim,
-                            this.translations[this.selectedLanguage].pauseGame,
-                            this.translations[this.selectedLanguage].returnToMenu
-                        ];
-                        
-                        // Draw each control option as a button
-                        controlOptions.forEach((option, index) => {
-                            const btnY = contentY + (index * 50);
-                            const btnWidth = 400;
-                            const btnHeight = 40;
-                            const btnX = contentX - btnWidth/2;
-                            
-                            // Button background
-                            ctx.fillStyle = '#333333';
-                            ctx.fillRect(btnX, btnY, btnWidth, btnHeight);
-                            ctx.strokeStyle = WHITE;
-                            ctx.strokeRect(btnX, btnY, btnWidth, btnHeight);
-                            
-                            // Button text
-                            ctx.fillStyle = WHITE;
-                            ctx.fillText(option, contentX, btnY + 28);
-                        });
+                        // Basic control instructions
+                        ctx.fillStyle = WHITE;
+                        ctx.font = '16px Arial';
+                        ctx.fillText(this.translations[this.selectedLanguage].move + ' / ' + this.translations[this.selectedLanguage].aim, contentX, contentY - 10);
+
+                        // Touch controls visibility toggle
+                        const toggleX = contentBox.x + 40;
+                        const toggleY = contentBox.y + 90;
+                        const toggleW = 180;
+                        const toggleH = 36;
+                        ctx.fillStyle = '#333333';
+                        ctx.fillRect(toggleX, toggleY, toggleW, toggleH);
+                        ctx.strokeStyle = WHITE;
+                        ctx.strokeRect(toggleX, toggleY, toggleW, toggleH);
+                        ctx.fillStyle = WHITE;
+                        ctx.font = '14px Arial';
+                        ctx.textAlign = 'left';
+                        ctx.fillText('Touch controls: ' + (this.touchControlsVisible ? 'Shown' : 'Hidden'), toggleX + 8, toggleY + 24);
+
+                        // Opacity slider
+                        const opacityX = toggleX;
+                        const opacityY = toggleY + 56;
+                        ctx.fillStyle = WHITE;
+                        ctx.font = '14px Arial';
+                        ctx.fillText('Controls opacity: ' + Math.round(this.touchControlsOpacity * 100) + '%', opacityX, opacityY + 14);
+                        const sliderW = 320;
+                        const sliderH = 12;
+                        const sliderTrackX = opacityX;
+                        const sliderTrackY = opacityY + 28;
+                        ctx.fillStyle = '#444';
+                        ctx.fillRect(sliderTrackX, sliderTrackY, sliderW, sliderH);
+                        // thumb
+                        const thumbX = sliderTrackX + Math.round((this.touchControlsOpacity - 0.2) / 0.8 * sliderW);
+                        ctx.fillStyle = '#FFD700';
+                        ctx.fillRect(thumbX - 6, sliderTrackY - 6, 12, sliderH + 12);
+
+                        // Size multiplier slider
+                        const sizeX = opacityX;
+                        const sizeY = sliderTrackY + 36;
+                        ctx.fillStyle = WHITE;
+                        ctx.fillText('Controls size: ' + Math.round(this.touchControlsSize * 100) + '%', sizeX, sizeY + 14);
+                        const sizeTrackY = sizeY + 28;
+                        ctx.fillStyle = '#444';
+                        ctx.fillRect(sizeX, sizeTrackY, sliderW, sliderH);
+                        const sizeThumbX = sizeX + Math.round((this.touchControlsSize - 0.6) / 1.4 * sliderW);
+                        ctx.fillStyle = '#FFD700';
+                        ctx.fillRect(sizeThumbX - 6, sizeTrackY - 6, 12, sliderH + 12);
+
+                        ctx.textAlign = 'left';
                         break;
 
                     case 'cheats':
@@ -3230,45 +3337,84 @@ class Game {
         
         // Draw on-screen touch controls for mobile (joystick + fire)
         try {
-            const j = this.touchState.joystick;
-            const fb = this.touchState.fireButton;
-            // Show controls if touch input was used or on small screens
-            const showControls = ('ontouchstart' in window) || (SCREEN_WIDTH <= 900);
-            if (showControls) {
-                // Joystick base
-                ctx.save();
-                ctx.globalAlpha = 0.6;
-                ctx.fillStyle = '#222222';
-                ctx.beginPath();
-                ctx.arc(j.startX, j.startY, j.radius + 8, 0, Math.PI * 2);
-                ctx.fill();
-                ctx.globalAlpha = 0.95;
-                // Joystick knob (size relative to radius)
-                const knobR = Math.max(14, Math.round(j.radius * 0.42));
-                ctx.fillStyle = j.active ? '#4CAF50' : '#888888';
-                ctx.beginPath();
-                ctx.arc(j.x, j.y, knobR, 0, Math.PI * 2);
-                ctx.fill();
-                ctx.restore();
+            if (!this.touchControlsVisible) {
+                // Nothing to draw
+            } else {
+                const j = this.touchState.joystick;
+                const fb = this.touchState.fireButton;
+                // Show controls if touch input was used or on small screens
+                const showControls = ('ontouchstart' in window) || (SCREEN_WIDTH <= 900);
+                if (showControls) {
+                    // Compute scaled sizes based on user multiplier
+                    const mult = this.touchControlsSize || 1.0;
+                    const baseKnobExtra = 8;
+                    const baseAlpha = this.touchControlsOpacity || 0.9;
 
-                // Fire button
-                ctx.save();
-                ctx.globalAlpha = 0.85;
-                ctx.fillStyle = fb.active ? '#FF7043' : '#E53935';
-                ctx.beginPath();
-                ctx.arc(fb.x, fb.y, fb.radius, 0, Math.PI * 2);
-                ctx.fill();
-                ctx.fillStyle = WHITE;
-                const fireFontSize = Math.max(14, Math.round(fb.radius * 0.42));
-                ctx.font = `bold ${fireFontSize}px Arial`;
-                ctx.textAlign = 'center';
-                ctx.fillText('FIRE', fb.x, fb.y + Math.round(fireFontSize/3));
-                ctx.textAlign = 'left';
-                ctx.restore();
+                    // Joystick base
+                    ctx.save();
+                    ctx.globalAlpha = Math.max(0.15, baseAlpha * 0.6);
+                    ctx.fillStyle = '#222222';
+                    ctx.beginPath();
+                    ctx.arc(j.startX, j.startY, Math.round(j.radius * mult) + baseKnobExtra, 0, Math.PI * 2);
+                    ctx.fill();
+                    ctx.globalAlpha = Math.max(0.3, baseAlpha * 0.95);
+                    // Joystick knob (size relative to radius)
+                    const knobR = Math.max(12, Math.round(j.radius * 0.42 * mult));
+                    ctx.fillStyle = j.active ? '#4CAF50' : '#888888';
+                    ctx.beginPath();
+                    ctx.arc(j.x, j.y, knobR, 0, Math.PI * 2);
+                    ctx.fill();
+                    ctx.restore();
+
+                    // Fire button
+                    ctx.save();
+                    ctx.globalAlpha = Math.max(0.25, baseAlpha * 0.85);
+                    ctx.fillStyle = fb.active ? '#FF7043' : '#E53935';
+                    ctx.beginPath();
+                    ctx.arc(fb.x, fb.y, Math.round(fb.radius * mult), 0, Math.PI * 2);
+                    ctx.fill();
+                    ctx.fillStyle = WHITE;
+                    const fireFontSize = Math.max(12, Math.round(fb.radius * 0.42 * mult));
+                    ctx.font = `bold ${fireFontSize}px Arial`;
+                    ctx.textAlign = 'center';
+                    ctx.fillText('FIRE', fb.x, fb.y + Math.round(fireFontSize/3));
+                    ctx.textAlign = 'left';
+                    ctx.restore();
+                }
             }
         } catch (err) {
             // Don't crash draw on odd platforms
             console.warn('Touch control draw error', err);
+        }
+
+        // Draw crosshair/aim preview when firing
+        try {
+            const aim = this.mousePos || null;
+            const isFiring = this.player && (this.player.isMouseShooting || this.touchState.fireButton.active || this.autoFireEnabled && this.autoFireEnabled);
+            if (aim && isFiring) {
+                ctx.save();
+                ctx.strokeStyle = '#FFDD33';
+                ctx.lineWidth = 2;
+                ctx.beginPath();
+                const cx = Math.round(aim.x);
+                const cy = Math.round(aim.y);
+                const size = 12;
+                // horizontal
+                ctx.moveTo(cx - size, cy);
+                ctx.lineTo(cx + size, cy);
+                // vertical
+                ctx.moveTo(cx, cy - size);
+                ctx.lineTo(cx, cy + size);
+                ctx.stroke();
+                // small center dot
+                ctx.fillStyle = '#FF7043';
+                ctx.beginPath();
+                ctx.arc(cx, cy, 3, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.restore();
+            }
+        } catch (err) {
+            console.warn('Crosshair draw error', err);
         }
 
         // Restore the original transform
