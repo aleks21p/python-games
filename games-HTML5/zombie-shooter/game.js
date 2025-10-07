@@ -115,6 +115,10 @@ class Particle {
         ctx.fill();
         ctx.restore();
     }
+    reset(x, y, vx, vy, life, size, color) {
+        this.x = x; this.y = y; this.vx = vx; this.vy = vy;
+        this.life = life; this.maxLife = life; this.size = size; this.color = color;
+    }
 }
 
 // Floating damage number popup
@@ -134,10 +138,16 @@ class DamagePopup {
         ctx.save();
         ctx.globalAlpha = Math.pow(t, 1.2);
         ctx.fillStyle = this.color;
-        ctx.font = `bold ${Math.round(18 * this.scale)}px Arial`;
+        // allow override via this.font
+        const fontSpec = this.font || `${Math.round(18 * this.scale)}px Arial`;
+        ctx.font = `bold ${fontSpec}`;
         ctx.textAlign = 'center';
         ctx.fillText(this.text, this.x, this.y);
         ctx.restore();
+    }
+    reset(x, y, text, color) {
+        this.x = x; this.y = y; this.text = text; this.color = color || YELLOW;
+        this.life = 800; this.maxLife = 800; this.vy = -0.05 - Math.random() * 0.06; this.vx = (Math.random()-0.5)*0.04; this.scale = 1.0;
     }
 }
 
@@ -1176,6 +1186,7 @@ class Game {
             credits: { x: SCREEN_WIDTH/2 + 20, y: startY + optionButtonHeight + optionButtonSpacing, width: optionButtonWidth, height: optionButtonHeight },
             // Debug tab (third row, left)
             debug: { x: SCREEN_WIDTH/2 - optionButtonWidth - 20, y: startY + (optionButtonHeight + optionButtonSpacing) * 2, width: optionButtonWidth, height: optionButtonHeight }
+            ,visuals: { x: SCREEN_WIDTH/2 + 20, y: startY + (optionButtonHeight + optionButtonSpacing) * 2, width: optionButtonWidth, height: optionButtonHeight }
         };
 
         this.loadSkins(); // Load saved skins first
@@ -1318,6 +1329,17 @@ class Game {
         // Tutorial overlay for first mobile playthrough
         this.touchTutorialShown = (localStorage.getItem('zs_touch_tutorial_shown') === '1');
 
+        // Visual options (persisted)
+        this.lowPowerMode = (localStorage.getItem('zs_low_power') === '1') || false;
+        this.particleQuality = parseInt(localStorage.getItem('zs_particle_quality')) || 2; // 0=off,1=low,2=normal,3=high
+        this.particleScale = parseFloat(localStorage.getItem('zs_particle_scale')) || 1.0;
+        this.popupFont = localStorage.getItem('zs_popup_font') || '16px Arial';
+
+        // Screen shake state
+        this.shakeStrength = 0;
+        this.shakeTimer = 0;
+    this.shakeDuration = 0;
+
     // Fullscreen state
     this.isFullscreen = !!(document.fullscreenElement || document.webkitFullscreenElement || document.msFullscreenElement);
     document.addEventListener('fullscreenchange', () => { this.isFullscreen = !!document.fullscreenElement; });
@@ -1337,8 +1359,13 @@ class Game {
     // Visual effects
     this.particles = [];
     this.damagePopups = [];
+    // Pools
+    this._particlePool = [];
+    this._popupPool = [];
     // Smooth health display for animated HUD
     this.currentHealthDisplay = this.player ? (this.player.health || 10) : 10;
+    // frame timing
+    this._lastFrameTime = performance.now();
         
         // Pet system
         this.inPetsPage = false;
@@ -2049,6 +2076,46 @@ class Game {
                                             fb.y = Math.round(baseH - Math.max(110, baseH * 0.18));
                                             return;
                                         }
+                                        // Visuals tab handling (low power, particle quality/scale)
+                                        if (this.activeOptionTab === 'visuals') {
+                                            const contentBox = {
+                                                width: 500,
+                                                height: 300,
+                                                x: SCREEN_WIDTH/2 - 250,
+                                                y: SCREEN_HEIGHT/2 + 20
+                                            };
+                                            // Low Power button
+                                            const lpBtnX = contentBox.x + contentBox.width - 160;
+                                            const lpBtnY = contentBox.y + 40 - 18;
+                                            const lpBtnW = 140; const lpBtnH = 28;
+                                            if (clickX >= lpBtnX && clickX <= lpBtnX + lpBtnW && clickY >= lpBtnY && clickY <= lpBtnY + lpBtnH) {
+                                                this.lowPowerMode = !this.lowPowerMode;
+                                                localStorage.setItem('zs_low_power', this.lowPowerMode ? '1' : '0');
+                                                return;
+                                            }
+
+                                            // Particle quality slider area (we used pqX/pqY in draw)
+                                            const pqX = contentBox.x + 30;
+                                            const pqY = contentBox.y + 40 + 50;
+                                            const pqW = 320; const pqH = 10;
+                                            if (clickX >= pqX && clickX <= pqX + pqW && clickY >= pqY - 8 && clickY <= pqY + pqH + 8) {
+                                                const pct = Math.max(0, Math.min(1, (clickX - pqX) / pqW));
+                                                this.particleQuality = Math.round(pct * 3);
+                                                localStorage.setItem('zs_particle_quality', String(this.particleQuality));
+                                                return;
+                                            }
+
+                                            // Particle scale slider
+                                            const psX = contentBox.x + 30;
+                                            const psY = contentBox.y + 40 + 100;
+                                            const psW = 320; const psH = 10;
+                                            if (clickX >= psX && clickX <= psX + psW && clickY >= psY - 8 && clickY <= psY + psH + 8) {
+                                                const pct2 = Math.max(0, Math.min(1, (clickX - psX) / psW));
+                                                this.particleScale = 0.5 + pct2 * 2.5; // 0.5..3.0
+                                                localStorage.setItem('zs_particle_scale', String(this.particleScale));
+                                                return;
+                                            }
+                                        }
                                     }
                                 if (clickX >= editRect.x && clickX <= editRect.x + editRect.w && clickY >= editRect.y && clickY <= editRect.y + editRect.h) {
                                     const current = localStorage.getItem(keyName) || '';
@@ -2688,20 +2755,54 @@ class Game {
 
     // Spawn a small impact: particles + damage popup
     spawnImpact(x, y, damage, color) {
-        // Particles
-        const count = Math.min(12, 4 + Math.round(Math.sqrt(damage)));
+        if (this.lowPowerMode || this.particleQuality === 0) {
+            // In low power mode spawn only a small popup and maybe a single particle
+            const text = (damage >= 1 ? `-${Math.round(damage)}` : `-${damage}`);
+            this.damagePopups.push(new DamagePopup(x, y - 8, text, YELLOW));
+            if (this.particleQuality >= 1) {
+                const vx = (Math.random()-0.5) * 0.8;
+                const vy = (Math.random()-0.5) * 0.8;
+                this.particles.push(new Particle(x, y, vx, vy, 200, 1.5 * this.particleScale, color || ORANGE));
+            }
+            return;
+        }
+
+        // Particles scaled by quality
+        const baseCount = Math.min(18, 6 + Math.round(Math.sqrt(damage) * 1.5));
+        const qualityMultiplier = (this.particleQuality === 1 ? 0.5 : (this.particleQuality === 3 ? 1.6 : 1.0));
+        const count = Math.max(1, Math.round(baseCount * qualityMultiplier));
         for (let i = 0; i < count; i++) {
             const angle = Math.random() * Math.PI * 2;
-            const speed = Math.random() * 3 + 1;
+            const speed = (Math.random() * 3 + 1) * this.particleScale;
             const vx = Math.cos(angle) * speed;
             const vy = Math.sin(angle) * speed;
-            const size = Math.random() * 2 + 1;
-            const life = 300 + Math.random() * 300;
-            this.particles.push(new Particle(x, y, vx, vy, life, size, color || ORANGE));
+            const size = (Math.random() * 2 + 1) * this.particleScale;
+            const life = 250 + Math.random() * 350;
+            let p;
+            if (this._particlePool.length) p = this._particlePool.pop();
+            if (p) p.reset(x, y, vx, vy, life, size, color || ORANGE);
+            else p = new Particle(x, y, vx, vy, life, size, color || ORANGE);
+            this.particles.push(p);
         }
         // Damage popup
         const text = (damage >= 1 ? `-${Math.round(damage)}` : `-${damage}`);
-        this.damagePopups.push(new DamagePopup(x, y - 8, text, YELLOW));
+    let popup;
+    if (this._popupPool.length) popup = this._popupPool.pop();
+    if (popup) popup.reset(x, y - 8, text, YELLOW);
+    else popup = new DamagePopup(x, y - 8, text, YELLOW);
+    try { popup.font = this.popupFont; } catch (e) {}
+    this.damagePopups.push(popup);
+
+        // trigger small screen shake based on damage
+        this.triggerShake(Math.min(12, 1 + Math.round(Math.sqrt(damage))));
+    }
+
+    // Screen shake helpers
+    triggerShake(strength = 6, duration = 300) {
+        this.shakeStrength = Math.max(this.shakeStrength || 0, strength);
+        // store the duration so we can compute falloff
+        this.shakeDuration = Math.max(this.shakeDuration || 0, duration);
+        this.shakeTimer = Math.max(this.shakeTimer || 0, duration);
     }
 
     updateCheatCodes() {
@@ -2981,18 +3082,26 @@ class Game {
             }
         }
 
-        // Update particles
+        // Update particles (use actual dt passed to update)
+        const dt = this._dt || 16;
         for (let i = this.particles.length - 1; i >= 0; i--) {
             const p = this.particles[i];
-            p.update(16); // dt ~16ms for a frame
-            if (p.life <= 0) this.particles.splice(i, 1);
+            p.update(dt);
+            if (p.life <= 0) {
+                this.particles.splice(i, 1);
+                // return to pool
+                if (this._particlePool.length < 200) this._particlePool.push(p);
+            }
         }
 
         // Update damage popups
         for (let i = this.damagePopups.length - 1; i >= 0; i--) {
             const dp = this.damagePopups[i];
-            dp.update(16);
-            if (dp.life <= 0) this.damagePopups.splice(i, 1);
+            dp.update(dt);
+            if (dp.life <= 0) {
+                this.damagePopups.splice(i, 1);
+                if (this._popupPool.length < 50) this._popupPool.push(dp);
+            }
         }
 
         // Check level up
@@ -3012,6 +3121,20 @@ class Game {
 
         // Check collisions
         this.checkCollisions();
+
+        // Update screen shake timer (use ms dt)
+        if (this.shakeTimer > 0) {
+            const dec = dt;
+            this.shakeTimer = Math.max(0, this.shakeTimer - dec);
+            // reduce strength proportionally to remaining time
+            if (this.shakeDuration > 0) {
+                const pct = this.shakeTimer / this.shakeDuration;
+                this.shakeStrength = this.shakeStrength * pct;
+            }
+        } else {
+            this.shakeStrength = 0;
+            this.shakeDuration = 0;
+        }
     }
 
     drawOrbBar() {
@@ -3297,6 +3420,47 @@ class Game {
                         ctx.fillText(this.translations[this.selectedLanguage].difficultyNote, contentX, contentY + 140);
                         break;
 
+                    case 'visuals':
+                        ctx.fillStyle = WHITE;
+                        ctx.font = '18px Arial';
+                        ctx.textAlign = 'left';
+                        const visX = contentBox.x + 30;
+                        let visY = contentBox.y + 40;
+
+                        // Low Power toggle
+                        ctx.fillText('Low Power Mode: ' + (this.lowPowerMode ? 'ON' : 'OFF'), visX, visY);
+                        const lpBtnX = contentBox.x + contentBox.width - 160;
+                        const lpBtnY = visY - 18;
+                        ctx.fillStyle = this.lowPowerMode ? '#4CAF50' : '#333333';
+                        ctx.fillRect(lpBtnX, lpBtnY, 140, 28);
+                        ctx.strokeStyle = WHITE; ctx.strokeRect(lpBtnX, lpBtnY, 140, 28);
+                        ctx.fillStyle = WHITE; ctx.textAlign = 'center'; ctx.fillText(this.lowPowerMode ? 'Disable' : 'Enable', lpBtnX + 70, lpBtnY + 19);
+                        ctx.textAlign = 'left';
+                        visY += 50;
+
+                        // Particle quality
+                        ctx.fillText('Particle Quality: ' + (['Off','Low','Normal','High'][this.particleQuality] || 'Normal'), visX, visY);
+                        const pqX = visX; const pqY = visY + 20;
+                        const pqW = 320; const pqH = 10;
+                        ctx.fillStyle = '#444'; ctx.fillRect(pqX, pqY, pqW, pqH);
+                        const pqThumb = pqX + (this.particleQuality / 3) * pqW;
+                        ctx.fillStyle = '#FFD700'; ctx.fillRect(pqThumb - 6, pqY - 6, 12, pqH + 12);
+                        visY += 50;
+
+                        // Particle scale
+                        ctx.fillText('Particle Size: ' + Math.round(this.particleScale * 100) + '%', visX, visY);
+                        const psX = visX; const psY = visY + 20; const psW = 320; const psH = 10;
+                        ctx.fillStyle = '#444'; ctx.fillRect(psX, psY, psW, psH);
+                        const psThumb = psX + ((this.particleScale - 0.5) / 2.5) * psW;
+                        ctx.fillStyle = '#FFD700'; ctx.fillRect(psThumb - 6, psY - 6, 12, psH + 12);
+                        visY += 50;
+
+                        // Popup font preview
+                        ctx.fillText('Damage Popup Font:', visX, visY);
+                        ctx.fillStyle = WHITE; ctx.font = '14px Arial'; ctx.fillText(this.popupFont, visX + 160, visY);
+                        ctx.textAlign = 'left'; ctx.font = '20px Arial';
+                        break;
+
                     case 'credits':
                         ctx.fillStyle = WHITE;
                         ctx.fillText(this.translations[this.selectedLanguage].developer, contentX, contentY);
@@ -3465,6 +3629,12 @@ class Game {
     draw() {
         // Save the current transform
         ctx.save();
+        // Apply screen shake if active
+        if (this.shakeStrength && this.shakeStrength > 0) {
+            const sx = (Math.random() * 2 - 1) * this.shakeStrength;
+            const sy = (Math.random() * 2 - 1) * this.shakeStrength;
+            ctx.translate(Math.round(sx), Math.round(sy));
+        }
         
         // Apply upside-down effect if enabled
         if (this.isUpsideDown) {
@@ -3804,6 +3974,10 @@ class Game {
     }
 
     gameLoop() {
+        const now = performance.now();
+        const dt = Math.min(60, now - (this._lastFrameTime || now));
+        this._lastFrameTime = now;
+        this._dt = dt; // ms
         this.update();
         this.draw();
         this.animationId = requestAnimationFrame(() => this.gameLoop());
