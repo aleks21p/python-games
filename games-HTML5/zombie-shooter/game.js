@@ -1120,6 +1120,7 @@ class Game {
         // Menu state
         this.inMenu = true;
         this.inOptions = false;
+        this.inDeveloper = false;
         
         // Language translations
         this.translations = {
@@ -1127,6 +1128,7 @@ class Game {
                 gameTitle: 'Zombie Shooter',
                 start: 'Start',
                 options: 'Options',
+                developer: 'Developer',
                 controls: 'Controls',
                 cheats: 'Cheats',
                 difficulty: 'Difficulty',
@@ -1181,7 +1183,8 @@ class Game {
         this.menuButtons = {
             start: { x: SCREEN_WIDTH/2 - buttonWidth/2, y: SCREEN_HEIGHT/2 - 50, width: buttonWidth, height: buttonHeight },
             options: { x: SCREEN_WIDTH/2 - buttonWidth/2, y: SCREEN_HEIGHT/2 + 50, width: buttonWidth, height: buttonHeight },
-            shop: { x: SCREEN_WIDTH/2 - buttonWidth/2, y: SCREEN_HEIGHT/2 + 150, width: buttonWidth, height: buttonHeight }
+            shop: { x: SCREEN_WIDTH/2 - buttonWidth/2, y: SCREEN_HEIGHT/2 + 150, width: buttonWidth, height: buttonHeight },
+            developer: { x: SCREEN_WIDTH/2 - buttonWidth/2, y: SCREEN_HEIGHT/2 + 250, width: buttonWidth, height: buttonHeight }
         };
         
         // Shop state
@@ -1557,6 +1560,8 @@ class Game {
                 if (this.inOptions) {
                     this.inOptions = false;
                     this.activeOptionTab = '';
+                } else if (this.inDeveloper) {
+                    this.inDeveloper = false;
                 } else if (!this.inMenu && !this.countdownActive) {
                     this.inMenu = true;
                     this.paused = true;
@@ -1827,21 +1832,34 @@ class Game {
 
                 // Check options button
                 const optionsBtn = this.menuButtons.options;
-                if (!this.inShop && clickX >= optionsBtn.x && clickX <= optionsBtn.x + optionsBtn.width &&
+                if (!this.inShop && !this.inDeveloper && clickX >= optionsBtn.x && clickX <= optionsBtn.x + optionsBtn.width &&
                     clickY >= optionsBtn.y && clickY <= optionsBtn.y + optionsBtn.height) {
                     if (this.audio && typeof this.audio.playClick === 'function') this.audio.playClick();
                     this.inOptions = !this.inOptions;
                     this.inShop = false;  // Close shop when opening options
+                    this.inDeveloper = false;  // Close developer when opening options
                     this.activeOptionTab = '';  // Reset active tab when opening/closing options
                 }
 
                 // Check shop button
                 const shopBtn = this.menuButtons.shop;
-                if (!this.inOptions && clickX >= shopBtn.x && clickX <= shopBtn.x + shopBtn.width &&
+                if (!this.inOptions && !this.inDeveloper && clickX >= shopBtn.x && clickX <= shopBtn.x + shopBtn.width &&
                     clickY >= shopBtn.y && clickY <= shopBtn.y + shopBtn.height) {
                     if (this.audio && typeof this.audio.playClick === 'function') this.audio.playClick();
                     this.inShop = !this.inShop;
                     this.inOptions = false;  // Close options when opening shop
+                    this.inDeveloper = false;  // Close developer when opening shop
+                    this.activeOptionTab = '';
+                }
+
+                // Check developer button
+                const developerBtn = this.menuButtons.developer;
+                if (!this.inOptions && !this.inShop && clickX >= developerBtn.x && clickX <= developerBtn.x + developerBtn.width &&
+                    clickY >= developerBtn.y && clickY <= developerBtn.y + developerBtn.height) {
+                    if (this.audio && typeof this.audio.playClick === 'function') this.audio.playClick();
+                    this.inDeveloper = !this.inDeveloper;
+                    this.inOptions = false;  // Close options when opening developer
+                    this.inShop = false;  // Close shop when opening developer
                     this.activeOptionTab = '';
                 }
 
@@ -2361,6 +2379,95 @@ class Game {
                         }
                     }
                     return; // Prevent clicking through options box
+                }
+
+                // Check developer menu clicks  
+                if (this.inDeveloper) {
+                    // First check if click is within developer box bounds
+                    const devBoxX = 40;
+                    const devBoxY = 20;
+                    const devBoxWidth = SCREEN_WIDTH - 80;
+                    const devBoxHeight = SCREEN_HEIGHT - 40;
+                    
+                    if (clickX >= devBoxX && clickX <= devBoxX + devBoxWidth &&
+                        clickY >= devBoxY && clickY <= devBoxY + devBoxHeight) {
+                        // Click is within developer box - handle localStorage buttons
+
+                        const contentBox = {
+                            width: 500,
+                            height: 300,
+                            x: SCREEN_WIDTH/2 - 250,
+                            y: SCREEN_HEIGHT/2 - 50
+                        };
+                        const keys = Object.keys(window.localStorage).sort();
+                        const pageSize = this.debugPageSize || 6;
+                        const page = this.debugPage || 0;
+                        const start = page * pageSize;
+                        const end = Math.min(start + pageSize, keys.length);
+                        let y = contentBox.y + 40;
+                        const lineHeight = 28;
+
+                        for (let idx = start; idx < end; idx++) {
+                            const keyName = keys[idx];
+                            const btnX = contentBox.x + contentBox.width - 220;
+                            const btnW = 60;
+                            const btnH = 20;
+                            const viewRect = { x: btnX, y: y - 14, w: btnW, h: btnH };
+                            const editRect = { x: btnX + btnW + 10, y: y - 14, w: btnW, h: btnH };
+                            const delRect = { x: btnX + (btnW + 10) * 2, y: y - 14, w: btnW, h: btnH };
+
+                            if (clickX >= viewRect.x && clickX <= viewRect.x + viewRect.w && clickY >= viewRect.y && clickY <= viewRect.y + viewRect.h) {
+                                const val = localStorage.getItem(keyName);
+                                alert(`${keyName}: ${val}`);
+                                return;
+                            }
+                            if (clickX >= editRect.x && clickX <= editRect.x + editRect.w && clickY >= editRect.y && clickY <= editRect.y + editRect.h) {
+                                const currentVal = localStorage.getItem(keyName);
+                                const newVal = prompt(`Edit ${keyName}:`, currentVal);
+                                if (newVal !== null) {
+                                    localStorage.setItem(keyName, newVal);
+                                    // Refresh relevant game data
+                                    if (keyName === 'zombieShooterCoins') {
+                                        this.coins = parseInt(newVal) || 0;
+                                    }
+                                }
+                                return;
+                            }
+                            if (clickX >= delRect.x && clickX <= delRect.x + delRect.w && clickY >= delRect.y && clickY <= delRect.y + delRect.h) {
+                                if (confirm(`Delete localStorage key ${keyName}? This cannot be undone.`)) {
+                                    localStorage.removeItem(keyName);
+                                    if (keyName === 'zombieShooterCoins') {
+                                        this.coins = 0;
+                                    }
+                                }
+                                return;
+                            }
+
+                            y += lineHeight;
+                        }
+
+                        // Handle Prev/Next clicks
+                        const controlsY = contentBox.y + contentBox.height - 30;
+                        const ctrlW = 80;
+                        const ctrlH = 24;
+                        const ctrlX = contentBox.x + contentBox.width/2 - (ctrlW * 2 + 10)/2;
+                        const prevRect = { x: ctrlX, y: controlsY, w: ctrlW, h: ctrlH };
+                        const nextRect = { x: ctrlX + ctrlW + 140, y: controlsY, w: ctrlW, h: ctrlH };
+
+                        if (clickX >= prevRect.x && clickX <= prevRect.x + prevRect.w && clickY >= prevRect.y && clickY <= prevRect.y + prevRect.h) {
+                            if (page > 0) {
+                                this.debugPage = page - 1;
+                            }
+                            return;
+                        }
+                        if (clickX >= nextRect.x && clickX <= nextRect.x + nextRect.w && clickY >= nextRect.y && clickY <= nextRect.y + nextRect.h) {
+                            if (end < keys.length) {
+                                this.debugPage = page + 1;
+                            }
+                            return;
+                        }
+                    }
+                    return; // Prevent clicking through developer box
                 }
             }
         });
@@ -3519,6 +3626,20 @@ class Game {
         const shopTextWidth = ctx.measureText(shopText).width;
         ctx.fillText(shopText, shopBtn.x + (shopBtn.width - shopTextWidth) / 2, shopBtn.y + 40);
 
+        // Draw Developer button (cyan)
+        const developerBtn = this.menuButtons.developer;
+        ctx.fillStyle = '#00CCCC';
+        ctx.fillRect(developerBtn.x, developerBtn.y, developerBtn.width, developerBtn.height);
+        ctx.strokeStyle = WHITE;
+        ctx.strokeRect(developerBtn.x, developerBtn.y, developerBtn.width, developerBtn.height);
+        
+        // Developer text
+        ctx.fillStyle = WHITE;
+        ctx.font = '32px Arial';
+        const developerText = this.translations[this.selectedLanguage].developer;
+        const developerTextWidth = ctx.measureText(developerText).width;
+        ctx.fillText(developerText, developerBtn.x + (developerBtn.width - developerTextWidth) / 2, developerBtn.y + 40);
+
         // Draw Options menu if active
         if (this.inOptions) {
             // Semi-transparent black background
@@ -3881,6 +4002,124 @@ class Game {
             } else {
                 this.drawShopPage(ctx);
             }
+        }
+
+        // Draw Developer menu if active
+        if (this.inDeveloper) {
+            // Semi-transparent black background
+            ctx.fillStyle = 'rgba(0, 0, 0, 0.95)';
+            ctx.fillRect(40, 20, SCREEN_WIDTH - 80, SCREEN_HEIGHT - 40);
+            ctx.strokeStyle = WHITE;
+            ctx.strokeRect(40, 20, SCREEN_WIDTH - 80, SCREEN_HEIGHT - 40);
+
+            // Title
+            ctx.fillStyle = '#00CCCC';
+            ctx.font = '32px Arial';
+            ctx.textAlign = 'center';
+            ctx.fillText('Developer Tools', SCREEN_WIDTH/2, 90);
+
+            // Subtitle
+            ctx.fillStyle = WHITE;
+            ctx.font = '18px Arial';
+            ctx.fillText('View / Edit localStorage (developer only)', SCREEN_WIDTH/2, 120);
+
+            // Create content area similar to debug tab
+            const contentBox = {
+                width: 500,
+                height: 300,
+                x: SCREEN_WIDTH/2 - 250,
+                y: SCREEN_HEIGHT/2 - 50
+            };
+
+            // Draw content box
+            ctx.fillStyle = '#222222';
+            ctx.fillRect(contentBox.x, contentBox.y, contentBox.width, contentBox.height);
+            ctx.strokeStyle = '#444444';
+            ctx.strokeRect(contentBox.x, contentBox.y, contentBox.width, contentBox.height);
+
+            // List localStorage keys with pagination (reuse debug tab logic)
+            const keys = Object.keys(window.localStorage).sort();
+            if (keys.length === 0) {
+                ctx.fillStyle = '#808080';
+                ctx.font = '16px Arial';
+                ctx.textAlign = 'center';
+                ctx.fillText(this.translations[this.selectedLanguage].noLocalStorageKeys, SCREEN_WIDTH/2, contentBox.y + 80);
+            } else {
+                ctx.font = '14px Arial';
+                ctx.textAlign = 'left';
+                const pageSize = this.debugPageSize || 6;
+                const page = this.debugPage || 0;
+                const start = page * pageSize;
+                const end = Math.min(start + pageSize, keys.length);
+                let y = contentBox.y + 40;
+                const lineHeight = 28;
+
+                for (let i = start; i < end; i++) {
+                    const k = keys[i];
+                    ctx.fillStyle = '#FFFF00';
+                    ctx.fillText(k, contentBox.x + 20, y);
+
+                    const btnX = contentBox.x + contentBox.width - 220;
+                    const btnW = 60;
+                    const btnH = 20;
+
+                    // View
+                    ctx.fillStyle = '#4CAF50';
+                    ctx.fillRect(btnX, y - 14, btnW, btnH);
+                    ctx.fillStyle = WHITE;
+                    ctx.font = '12px Arial';
+                    ctx.fillText(this.translations[this.selectedLanguage].view, btnX + 8, y);
+
+                    // Edit
+                    ctx.fillStyle = '#2196F3';
+                    ctx.fillRect(btnX + btnW + 10, y - 14, btnW, btnH);
+                    ctx.fillStyle = WHITE;
+                    ctx.fillText(this.translations[this.selectedLanguage].edit, btnX + btnW + 18, y);
+
+                    // Delete
+                    ctx.fillStyle = '#F44336';
+                    ctx.fillRect(btnX + (btnW + 10) * 2, y - 14, btnW, btnH);
+                    ctx.fillStyle = WHITE;
+                    ctx.fillText(this.translations[this.selectedLanguage].delete, btnX + (btnW + 10) * 2 + 10, y);
+
+                    y += lineHeight;
+                }
+
+                // Pagination controls
+                const controlsY = contentBox.y + contentBox.height - 30;
+                const ctrlW = 80;
+                const ctrlH = 24;
+                const ctrlX = contentBox.x + contentBox.width/2 - (ctrlW * 2 + 10)/2;
+
+                // Prev
+                ctx.fillStyle = page > 0 ? '#666666' : '#333333';
+                ctx.fillRect(ctrlX, controlsY, ctrlW, ctrlH);
+                ctx.fillStyle = WHITE;
+                ctx.font = '12px Arial';
+                ctx.textAlign = 'center';
+                ctx.fillText('Prev', ctrlX + ctrlW/2, controlsY + 16);
+
+                // Page label
+                const pageLabel = `Page ${page + 1} / ${Math.max(1, Math.ceil(keys.length / pageSize))}`;
+                ctx.fillStyle = '#CCCCCC';
+                ctx.fillText(pageLabel, ctrlX + ctrlW + 10 + 60, controlsY + 16);
+
+                // Next
+                const nextX = ctrlX + ctrlW + 140;
+                ctx.fillStyle = end < keys.length ? '#666666' : '#333333';
+                ctx.fillRect(nextX, controlsY, ctrlW, ctrlH);
+                ctx.fillStyle = WHITE;
+                ctx.fillText('Next', nextX + ctrlW/2, controlsY + 16);
+            }
+
+            ctx.textAlign = 'left';
+
+            // Close instruction at bottom
+            ctx.fillStyle = '#808080';
+            ctx.font = '20px Arial';
+            ctx.textAlign = 'center';
+            ctx.fillText('Press ESC to close', SCREEN_WIDTH/2, SCREEN_HEIGHT - 60);
+            ctx.textAlign = 'left';
         }
         // Debug overlay (dt, particle counts)
         try { this._drawDebugOverlay(); } catch (e) {}
