@@ -1109,9 +1109,11 @@ class Orb {
 const canvas = document.getElementById('gameCanvas');
 const ctx = canvas.getContext('2d');
 
-// Set canvas size
-canvas.width = SCREEN_WIDTH;
-canvas.height = SCREEN_HEIGHT;
+// Set canvas size only if not already scaled by DPR script
+if (!window.__GAME_CANVAS_SCALED) {
+    canvas.width = SCREEN_WIDTH;
+    canvas.height = SCREEN_HEIGHT;
+}
 
 class Game {
     constructor() {
@@ -1596,9 +1598,10 @@ class Game {
         // Mouse events
         canvas.addEventListener('mousemove', (e) => {
             const rect = canvas.getBoundingClientRect();
+            // Transform from CSS pixels to logical game coordinates (800x600)
             this.mousePos = {
-                x: e.clientX - rect.left,
-                y: e.clientY - rect.top
+                x: (e.clientX - rect.left) * (SCREEN_WIDTH / rect.width),
+                y: (e.clientY - rect.top) * (SCREEN_HEIGHT / rect.height)
             };
         });
 
@@ -1606,8 +1609,9 @@ class Game {
         canvas.addEventListener('touchstart', (e) => {
             const rect = canvas.getBoundingClientRect();
             for (const t of Array.from(e.changedTouches)) {
-                const tx = t.clientX - rect.left;
-                const ty = t.clientY - rect.top;
+                // Transform from CSS pixels to logical game coordinates (800x600)
+                const tx = (t.clientX - rect.left) * (SCREEN_WIDTH / rect.width);
+                const ty = (t.clientY - rect.top) * (SCREEN_HEIGHT / rect.height);
 
                 // Dismiss tutorial overlay if visible (any touch)
                 if (!this.touchTutorialShown) {
@@ -1645,8 +1649,9 @@ class Game {
         canvas.addEventListener('touchmove', (e) => {
             const rect = canvas.getBoundingClientRect();
             for (const t of Array.from(e.changedTouches)) {
-                const tx = t.clientX - rect.left;
-                const ty = t.clientY - rect.top;
+                // Transform from CSS pixels to logical game coordinates (800x600)
+                const tx = (t.clientX - rect.left) * (SCREEN_WIDTH / rect.width);
+                const ty = (t.clientY - rect.top) * (SCREEN_HEIGHT / rect.height);
                 const j = this.touchState.joystick;
                 if (j.active && t.identifier === j.identifier) {
                     // clamp joystick displacement to radius
@@ -1696,8 +1701,9 @@ class Game {
                 if (this.gameOver) {
                     const rect = canvas.getBoundingClientRect();
                     for (const t of Array.from(e.changedTouches)) {
-                        const tx = t.clientX - rect.left;
-                        const ty = t.clientY - rect.top;
+                        // Transform from CSS pixels to logical game coordinates (800x600)
+                        const tx = (t.clientX - rect.left) * (SCREEN_WIDTH / rect.width);
+                        const ty = (t.clientY - rect.top) * (SCREEN_HEIGHT / rect.height);
 
                         // Restart button (if present)
                         if (this._gameOverRestartRect) {
@@ -1731,8 +1737,9 @@ class Game {
         // Mouse click for menu buttons
         canvas.addEventListener('click', (e) => {
             const rect = canvas.getBoundingClientRect();
-            const clickX = e.clientX - rect.left;
-            const clickY = e.clientY - rect.top;
+            // Transform from CSS pixels to logical game coordinates (800x600)
+            const clickX = (e.clientX - rect.left) * (SCREEN_WIDTH / rect.width);
+            const clickY = (e.clientY - rect.top) * (SCREEN_HEIGHT / rect.height);
 
             // If tutorial overlay is present, check for dismiss click
             if (!this.touchTutorialShown) {
