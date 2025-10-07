@@ -1337,6 +1337,14 @@ class Game {
         this.particleScale = parseFloat(localStorage.getItem('zs_particle_scale')) || 1.0;
         this.popupFont = localStorage.getItem('zs_popup_font') || '16px Arial';
 
+    // Shake settings (persisted)
+    this.shakeSettingStrength = parseFloat(localStorage.getItem('zs_shake_strength')) || 6;
+    this.shakeSettingDuration = parseInt(localStorage.getItem('zs_shake_duration')) || 300;
+    this.shakeEasing = localStorage.getItem('zs_shake_easing') || 'easeOutQuad'; // options: linear, easeOutQuad, easeOutCubic
+
+    // Debug overlay
+    this.debugOverlayEnabled = (localStorage.getItem('zs_debug_overlay') === '1') || false;
+
         // Screen shake state
         this.shakeStrength = 0;
         this.shakeTimer = 0;
@@ -2118,6 +2126,50 @@ class Game {
                                                 localStorage.setItem('zs_particle_scale', String(this.particleScale));
                                                 return;
                                             }
+
+                                                // New: Shake strength slider
+                                                const ssX = contentBox.x + 30;
+                                                const ssY = contentBox.y + 40 + 140;
+                                                const ssW = 260; const ssH = 10;
+                                                if (clickX >= ssX && clickX <= ssX + ssW && clickY >= ssY - 8 && clickY <= ssY + ssH + 8) {
+                                                    const pct = Math.max(0, Math.min(1, (clickX - ssX) / ssW));
+                                                    // map to 0..24 strength
+                                                    this.shakeSettingStrength = Math.round(pct * 24);
+                                                    localStorage.setItem('zs_shake_strength', String(this.shakeSettingStrength));
+                                                    return;
+                                                }
+
+                                                // Shake duration slider
+                                                const sdX = contentBox.x + 30;
+                                                const sdY = contentBox.y + 40 + 176;
+                                                const sdW = 260; const sdH = 10;
+                                                if (clickX >= sdX && clickX <= sdX + sdW && clickY >= sdY - 8 && clickY <= sdY + sdH + 8) {
+                                                    const pct = Math.max(0, Math.min(1, (clickX - sdX) / sdW));
+                                                    // map to 50..2000ms
+                                                    this.shakeSettingDuration = Math.round(50 + pct * 1950);
+                                                    localStorage.setItem('zs_shake_duration', String(this.shakeSettingDuration));
+                                                    return;
+                                                }
+
+                                                // Easing buttons
+                                                const easeX = contentBox.x + 150; const easeY = contentBox.y + 40 + 212;
+                                                const easingOptions = ['linear','easeOutQuad','easeOutCubic'];
+                                                for (let ei = 0; ei < easingOptions.length; ei++) {
+                                                    const ex = easeX + ei * 100;
+                                                    if (clickX >= ex && clickX <= ex + 88 && clickY >= easeY && clickY <= easeY + 28) {
+                                                        this.shakeEasing = easingOptions[ei];
+                                                        localStorage.setItem('zs_shake_easing', this.shakeEasing);
+                                                        return;
+                                                    }
+                                                }
+
+                                                // Debug overlay toggle
+                                                const dbgX = contentBox.x + 30; const dbgY = contentBox.y + 40 + 256; const dbgW = 160; const dbgH = 28;
+                                                if (clickX >= dbgX && clickX <= dbgX + dbgW && clickY >= dbgY && clickY <= dbgY + dbgH) {
+                                                    this.debugOverlayEnabled = !this.debugOverlayEnabled;
+                                                    localStorage.setItem('zs_debug_overlay', this.debugOverlayEnabled ? '1' : '0');
+                                                    return;
+                                                }
                                         }
                                     }
                                 if (clickX >= editRect.x && clickX <= editRect.x + editRect.w && clickY >= editRect.y && clickY <= editRect.y + editRect.h) {
@@ -2803,12 +2855,25 @@ class Game {
 
     // Screen shake helpers
     triggerShake(strength = 6, duration = 300) {
+        // If no args provided, use user-configured settings
+        if (strength === undefined || strength === null) strength = this.shakeSettingStrength || 6;
+        if (duration === undefined || duration === null) duration = this.shakeSettingDuration || 300;
         // store initial strength and duration so we can compute deterministic falloff
         this.shakeInitialStrength = Math.max(this.shakeInitialStrength || 0, strength);
         this.shakeDuration = Math.max(this.shakeDuration || 0, duration);
         this.shakeTimer = Math.max(this.shakeTimer || 0, duration);
         // set current strength to initial immediately
         this.shakeStrength = this.shakeInitialStrength;
+    }
+
+    // Easing helpers used for shake falloff (can be extended)
+    _applyEasing(pct) {
+        switch (this.shakeEasing) {
+            case 'linear': return pct;
+            case 'easeOutQuad': return 1 - (1 - pct) * (1 - pct);
+            case 'easeOutCubic': return 1 - Math.pow(1 - pct, 3);
+            default: return 1 - (1 - pct) * (1 - pct);
+        }
     }
 
     updateCheatCodes() {
@@ -3134,14 +3199,33 @@ class Game {
             this.shakeTimer = Math.max(0, this.shakeTimer - dec);
             if (this.shakeDuration > 0) {
                 const pct = this.shakeTimer / this.shakeDuration;
-                // deterministic strength based on initial value
-                this.shakeStrength = (this.shakeInitialStrength || this.shakeStrength) * pct;
+                const eased = this._applyEasing(pct);
+                // deterministic strength based on initial value and easing
+                this.shakeStrength = (this.shakeInitialStrength || this.shakeStrength) * eased;
             }
         } else {
             this.shakeStrength = 0;
             this.shakeDuration = 0;
             this.shakeInitialStrength = 0;
         }
+    }
+
+    // Draw debug overlay showing dt/particles/pools
+    _drawDebugOverlay() {
+        if (!this.debugOverlayEnabled) return;
+        ctx.save();
+        ctx.fillStyle = 'rgba(0,0,0,0.6)';
+        ctx.fillRect(8, 8, 260, 110);
+        ctx.fillStyle = '#FFFFFF'; ctx.font = '14px Arial';
+        ctx.textAlign = 'left';
+        const dt = Math.round(this._dt || 0);
+        ctx.fillText(`dt: ${dt} ms`, 16, 28);
+        ctx.fillText(`particles: ${this.particles.length}`, 16, 48);
+        ctx.fillText(`particle pool: ${this._particlePool.length}`, 16, 68);
+        ctx.fillText(`popups: ${this.damagePopups.length}`, 16, 88);
+        ctx.fillText(`popup pool: ${this._popupPool.length}`, 16, 108);
+        ctx.fillText(`shake: ${this.shakeStrength.toFixed(2)} (dur ${this.shakeDuration}ms)`, 16, 128);
+        ctx.restore();
     }
 
     drawOrbBar() {
@@ -3466,6 +3550,44 @@ class Game {
                         ctx.fillText('Damage Popup Font:', visX, visY);
                         ctx.fillStyle = WHITE; ctx.font = '14px Arial'; ctx.fillText(this.popupFont, visX + 160, visY);
                         ctx.textAlign = 'left'; ctx.font = '20px Arial';
+                        visY += 40;
+
+                        // Shake settings
+                        ctx.fillStyle = WHITE; ctx.font = '16px Arial';
+                        ctx.fillText('Shake Strength: ' + Math.round(this.shakeSettingStrength), visX, visY);
+                        const ssX = visX; const ssY = visY + 18; const ssW = 260; const ssH = 10;
+                        ctx.fillStyle = '#444'; ctx.fillRect(ssX, ssY, ssW, ssH);
+                        const ssThumb = ssX + Math.round((this.shakeSettingStrength / 24) * ssW);
+                        ctx.fillStyle = '#FFD700'; ctx.fillRect(ssThumb - 6, ssY - 6, 12, ssH + 12);
+                        visY += 36;
+
+                        ctx.fillStyle = WHITE; ctx.font = '16px Arial';
+                        ctx.fillText('Shake Duration: ' + Math.round(this.shakeSettingDuration) + 'ms', visX, visY);
+                        const sdX = visX; const sdY = visY + 18; const sdW = 260; const sdH = 10;
+                        ctx.fillStyle = '#444'; ctx.fillRect(sdX, sdY, sdW, sdH);
+                        const sdThumb = sdX + Math.round((Math.min(this.shakeSettingDuration,2000) / 2000) * sdW);
+                        ctx.fillStyle = '#FFD700'; ctx.fillRect(sdThumb - 6, sdY - 6, 12, sdH + 12);
+                        visY += 36;
+
+                        // Easing selector
+                        ctx.fillStyle = WHITE; ctx.font = '16px Arial';
+                        ctx.fillText('Shake Easing:', visX, visY);
+                        const easeX = visX + 120; const easeY = visY - 16;
+                        const easingOptions = ['linear','easeOutQuad','easeOutCubic'];
+                        for (let ei = 0; ei < easingOptions.length; ei++) {
+                            const ex = easeX + ei * 100;
+                            ctx.fillStyle = this.shakeEasing === easingOptions[ei] ? '#4CAF50' : '#333333';
+                            ctx.fillRect(ex, easeY, 88, 28);
+                            ctx.strokeStyle = WHITE; ctx.strokeRect(ex, easeY, 88, 28);
+                            ctx.fillStyle = WHITE; ctx.font = '14px Arial'; ctx.fillText(easingOptions[ei], ex + 8, easeY + 19);
+                        }
+                        visY += 44;
+
+                        // Debug overlay toggle
+                        ctx.fillStyle = this.debugOverlayEnabled ? '#4CAF50' : '#333333';
+                        ctx.fillRect(visX, visY, 160, 28);
+                        ctx.strokeStyle = WHITE; ctx.strokeRect(visX, visY, 160, 28);
+                        ctx.fillStyle = WHITE; ctx.font = '14px Arial'; ctx.fillText(this.debugOverlayEnabled ? 'Debug Overlay: ON' : 'Debug Overlay: OFF', visX + 8, visY + 19);
                         break;
 
                     case 'credits':
@@ -3594,6 +3716,8 @@ class Game {
                 this.drawShopPage(ctx);
             }
         }
+        // Debug overlay (dt, particle counts)
+        try { this._drawDebugOverlay(); } catch (e) {}
     }
 
     drawPauseMenu() {
