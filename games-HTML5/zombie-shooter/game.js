@@ -1,6 +1,8 @@
 // Game constants
 const SCREEN_WIDTH = 800;
 const SCREEN_HEIGHT = 600;
+// Configurable landing page path for the Home button / keyboard shortcut
+const LANDING_PAGE_PATH = '../../index.html';
 const BLACK = '#000000';
 const WHITE = '#FFFFFF';
 const RED = '#FF0000';
@@ -1570,6 +1572,10 @@ class Game {
                     this.reset();  // Reset game when returning to menu
                 }
             }
+            // Quick Home shortcut: H or h
+            if (e.key === 'h' || e.key === 'H') {
+                try { window.location.href = LANDING_PAGE_PATH; } catch (err) { try { window.location.href = 'index.html'; } catch (e2) {} }
+            }
         });
 
         document.addEventListener('keyup', (e) => {
@@ -1870,7 +1876,7 @@ class Game {
                 if (homeBtn && clickX >= homeBtn.x && clickX <= homeBtn.x + homeBtn.width &&
                     clickY >= homeBtn.y && clickY <= homeBtn.y + homeBtn.height) {
                     if (this.audio && typeof this.audio.playClick === 'function') this.audio.playClick();
-                    try { window.location.href = '../../index.html'; } catch (e) { window.location.href = 'index.html'; }
+                    try { window.location.href = LANDING_PAGE_PATH; } catch (e) { try { window.location.href = 'index.html'; } catch (e2) {} }
                     return;
                 }
 
@@ -3662,6 +3668,28 @@ class Game {
             ctx.font = '32px Arial';
             const homeText = this.translations[this.selectedLanguage].home || 'Home';
             const homeTextWidth = ctx.measureText(homeText).width;
+            // Draw a small house icon to the left of the label
+            const iconSize = 22;
+            const iconPadding = 14;
+            const iconX = homeBtn.x + (homeBtn.width - homeTextWidth) / 2 - iconSize - iconPadding;
+            const iconY = homeBtn.y + (homeBtn.height / 2) - (iconSize / 2);
+            // house base
+            ctx.fillStyle = WHITE;
+            ctx.beginPath();
+            ctx.moveTo(iconX + iconSize * 0.5, iconY);
+            ctx.lineTo(iconX + iconSize, iconY + iconSize * 0.45);
+            ctx.lineTo(iconX + iconSize, iconY + iconSize);
+            ctx.lineTo(iconX, iconY + iconSize);
+            ctx.lineTo(iconX, iconY + iconSize * 0.45);
+            ctx.closePath();
+            ctx.fill();
+            // door (cutout)
+            ctx.fillStyle = '#336699';
+            const doorW = iconSize * 0.28;
+            const doorH = iconSize * 0.45;
+            ctx.fillRect(iconX + (iconSize - doorW) / 2, iconY + iconSize - doorH, doorW, doorH);
+            // draw the home text
+            ctx.fillStyle = WHITE;
             ctx.fillText(homeText, homeBtn.x + (homeBtn.width - homeTextWidth) / 2, homeBtn.y + 40);
         }
 
