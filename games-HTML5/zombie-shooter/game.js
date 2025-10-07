@@ -91,6 +91,57 @@ class AudioManager {
     }
 }
 
+// Lightweight particle used for explosions and bullet impacts
+class Particle {
+    constructor(x, y, vx, vy, life, size, color) {
+        this.x = x; this.y = y; this.vx = vx; this.vy = vy;
+        this.life = life; this.maxLife = life; this.size = size; this.color = color;
+    }
+    update(dt) {
+        this.life -= dt;
+        this.x += this.vx * dt * 0.06; // scale down for sensible speed
+        this.y += this.vy * dt * 0.06;
+        // simple drag
+        this.vx *= 0.98; this.vy *= 0.98;
+    }
+    draw(ctx) {
+        const t = Math.max(0, this.life / this.maxLife);
+        ctx.save();
+        ctx.globalAlpha = Math.pow(t, 0.9);
+        ctx.fillStyle = this.color;
+        const s = this.size * (1 + (1 - t) * 0.6);
+        ctx.beginPath();
+        ctx.arc(this.x, this.y, s, 0, Math.PI*2);
+        ctx.fill();
+        ctx.restore();
+    }
+}
+
+// Floating damage number popup
+class DamagePopup {
+    constructor(x, y, text, color) {
+        this.x = x; this.y = y; this.text = text; this.color = color || YELLOW;
+        this.life = 800; this.maxLife = 800; this.vy = -0.05 - Math.random() * 0.06; this.vx = (Math.random()-0.5)*0.04; this.scale = 1.0;
+    }
+    update(dt) {
+        this.life -= dt;
+        this.x += this.vx * dt;
+        this.y += this.vy * dt;
+        this.scale = 1 + (1 - this.life/this.maxLife) * 0.3;
+    }
+    draw(ctx) {
+        const t = Math.max(0, this.life / this.maxLife);
+        ctx.save();
+        ctx.globalAlpha = Math.pow(t, 1.2);
+        ctx.fillStyle = this.color;
+        ctx.font = `bold ${Math.round(18 * this.scale)}px Arial`;
+        ctx.textAlign = 'center';
+        ctx.fillText(this.text, this.x, this.y);
+        ctx.restore();
+    }
+}
+
+
 // ...existing code...
 
 // Player class
@@ -1283,6 +1334,11 @@ class Game {
         
     // Autofire system (enabled by default)
     this.autoFireEnabled = true;
+    // Visual effects
+    this.particles = [];
+    this.damagePopups = [];
+    // Smooth health display for animated HUD
+    this.currentHealthDisplay = this.player ? (this.player.health || 10) : 10;
         
         // Pet system
         this.inPetsPage = false;
@@ -2600,6 +2656,8 @@ class Game {
                     const distance = Math.sqrt(dx * dx + dy * dy);
 
                     if (distance < bullet.size + zombie.size) {
+                        // Spawn hit particles and popup
+                        this.spawnImpact(bullet.x, bullet.y, bullet.damage, zombie.isBlue ? '#4FC3F7' : (zombie.isGreen ? '#66BB6A' : '#FF7043'));
                         if (zombie.takeDamage(bullet.damage)) {
                             if (zombie.isBlue) {
                                 this.spawnOrbs(zombie.x, zombie.y, 20);  // 20 orbs for blue enemies
@@ -2626,6 +2684,24 @@ class Game {
                 }
             }
         }
+    }
+
+    // Spawn a small impact: particles + damage popup
+    spawnImpact(x, y, damage, color) {
+        // Particles
+        const count = Math.min(12, 4 + Math.round(Math.sqrt(damage)));
+        for (let i = 0; i < count; i++) {
+            const angle = Math.random() * Math.PI * 2;
+            const speed = Math.random() * 3 + 1;
+            const vx = Math.cos(angle) * speed;
+            const vy = Math.sin(angle) * speed;
+            const size = Math.random() * 2 + 1;
+            const life = 300 + Math.random() * 300;
+            this.particles.push(new Particle(x, y, vx, vy, life, size, color || ORANGE));
+        }
+        // Damage popup
+        const text = (damage >= 1 ? `-${Math.round(damage)}` : `-${damage}`);
+        this.damagePopups.push(new DamagePopup(x, y - 8, text, YELLOW));
     }
 
     updateCheatCodes() {
@@ -2903,6 +2979,20 @@ class Game {
                 this.orbs.splice(i, 1);
                 this.orbsCollected++;
             }
+        }
+
+        // Update particles
+        for (let i = this.particles.length - 1; i >= 0; i--) {
+            const p = this.particles[i];
+            p.update(16); // dt ~16ms for a frame
+            if (p.life <= 0) this.particles.splice(i, 1);
+        }
+
+        // Update damage popups
+        for (let i = this.damagePopups.length - 1; i >= 0; i--) {
+            const dp = this.damagePopups[i];
+            dp.update(16);
+            if (dp.life <= 0) this.damagePopups.splice(i, 1);
         }
 
         // Check level up
@@ -3408,6 +3498,11 @@ class Game {
         // Draw player last so it's on top
         this.player.draw(ctx);
 
+    // Draw particles (above world, below UI)
+    for (const p of this.particles) p.draw(ctx);
+    // Draw damage popups
+    for (const dp of this.damagePopups) dp.draw(ctx);
+
         // Draw UI elements
         this.drawOrbBar();
         this.drawCheatProgress();
@@ -3420,6 +3515,32 @@ class Game {
         ctx.font = '28px Arial';
         ctx.fillStyle = GOLD;
         ctx.fillText(`${this.translations[this.selectedLanguage].coins}: ${this.coins}`, 10, 80);
+
+        // Animated health bar (top-left, above score)
+        try {
+            const healthX = 10;
+            const healthY = 100;
+            const healthW = 220;
+            const healthH = 18;
+            // Smooth current display towards actual player.health
+            const target = Math.max(0, Math.min(this.player.maxHealth || 10, this.player.health));
+            // lerp
+            this.currentHealthDisplay += (target - this.currentHealthDisplay) * 0.08;
+            const pct = (this.currentHealthDisplay / (this.player.maxHealth || 10));
+
+            // Background
+            ctx.fillStyle = '#222222';
+            ctx.fillRect(healthX, healthY, healthW, healthH);
+            // Foreground with gradient
+            const g = ctx.createLinearGradient(healthX, 0, healthX + healthW, 0);
+            g.addColorStop(0, '#FF5252');
+            g.addColorStop(1, '#FF9800');
+            ctx.fillStyle = g;
+            ctx.fillRect(healthX, healthY, Math.max(0, pct * healthW), healthH);
+            // Border and text
+            ctx.strokeStyle = WHITE; ctx.lineWidth = 2; ctx.strokeRect(healthX, healthY, healthW, healthH);
+            ctx.fillStyle = WHITE; ctx.font = '16px Arial'; ctx.fillText(`HP: ${Math.round(this.player.health)}/${Math.round(this.player.maxHealth)}`, healthX + healthW/2, healthY + 14);
+        } catch (e) {}
 
         // Draw autofire toggle button (top-right)
         const autoFireButtonX = SCREEN_WIDTH - 130;
