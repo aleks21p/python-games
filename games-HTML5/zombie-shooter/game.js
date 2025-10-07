@@ -1166,6 +1166,7 @@ class Game {
                 hard: 'Hard',
                 difficultyNote: '(Difficulty selection coming soon)',
                 developer: 'Developer Options',
+                home: 'Home',
                 soundDesign: 'Sound Design: Miles',
                 art: 'Art & Textures: Aleks P',
                 sponsors: 'Sponsors: Shaun & Flecher'
@@ -1184,7 +1185,8 @@ class Game {
             start: { x: SCREEN_WIDTH/2 - buttonWidth/2, y: SCREEN_HEIGHT/2 - 50, width: buttonWidth, height: buttonHeight },
             options: { x: SCREEN_WIDTH/2 - buttonWidth/2, y: SCREEN_HEIGHT/2 + 50, width: buttonWidth, height: buttonHeight },
             shop: { x: SCREEN_WIDTH/2 - buttonWidth/2, y: SCREEN_HEIGHT/2 + 150, width: buttonWidth, height: buttonHeight },
-            developer: { x: SCREEN_WIDTH/2 - buttonWidth/2, y: SCREEN_HEIGHT/2 + 250, width: buttonWidth, height: buttonHeight }
+            developer: { x: SCREEN_WIDTH/2 - buttonWidth/2, y: SCREEN_HEIGHT/2 + 250, width: buttonWidth, height: buttonHeight },
+            home: { x: SCREEN_WIDTH/2 - buttonWidth/2, y: SCREEN_HEIGHT/2 + 350, width: buttonWidth, height: buttonHeight }
         };
         
         // Shop state
@@ -1861,6 +1863,15 @@ class Game {
                     this.inOptions = false;  // Close options when opening developer
                     this.inShop = false;  // Close shop when opening developer
                     this.activeOptionTab = '';
+                }
+
+                // Check Home button - navigate back to main landing page
+                const homeBtn = this.menuButtons.home;
+                if (homeBtn && clickX >= homeBtn.x && clickX <= homeBtn.x + homeBtn.width &&
+                    clickY >= homeBtn.y && clickY <= homeBtn.y + homeBtn.height) {
+                    if (this.audio && typeof this.audio.playClick === 'function') this.audio.playClick();
+                    try { window.location.href = '../../index.html'; } catch (e) { window.location.href = 'index.html'; }
+                    return;
                 }
 
                 // Check shop item clicks
@@ -3639,6 +3650,20 @@ class Game {
         const developerText = this.translations[this.selectedLanguage].developer;
         const developerTextWidth = ctx.measureText(developerText).width;
         ctx.fillText(developerText, developerBtn.x + (developerBtn.width - developerTextWidth) / 2, developerBtn.y + 40);
+
+        // Draw Home button (blue-gray)
+        const homeBtn = this.menuButtons.home;
+        if (homeBtn) {
+            ctx.fillStyle = '#336699';
+            ctx.fillRect(homeBtn.x, homeBtn.y, homeBtn.width, homeBtn.height);
+            ctx.strokeStyle = WHITE;
+            ctx.strokeRect(homeBtn.x, homeBtn.y, homeBtn.width, homeBtn.height);
+            ctx.fillStyle = WHITE;
+            ctx.font = '32px Arial';
+            const homeText = this.translations[this.selectedLanguage].home || 'Home';
+            const homeTextWidth = ctx.measureText(homeText).width;
+            ctx.fillText(homeText, homeBtn.x + (homeBtn.width - homeTextWidth) / 2, homeBtn.y + 40);
+        }
 
         // Draw Options menu if active
         if (this.inOptions) {
