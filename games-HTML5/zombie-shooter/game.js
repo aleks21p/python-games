@@ -1474,6 +1474,9 @@ class Game {
                     this.hudScale = 1.15; // hint for HUD drawing code to enlarge fonts/elements
                 } else {
                     this.hudScale = 1.0;
+                // small pulse state for game-over buttons
+                this._gameOverPulse = 0;
+                this._gameOverPulseDir = 1;
                 }
             } catch (e) {
                 this.hudScale = 1.0;
@@ -1688,6 +1691,41 @@ class Game {
                     this.player.isMouseShooting = false;
                 }
             }
+            // Check for taps on Game Over mobile buttons (Restart / Return to Menu)
+            try {
+                if (this.gameOver) {
+                    const rect = canvas.getBoundingClientRect();
+                    for (const t of Array.from(e.changedTouches)) {
+                        const tx = t.clientX - rect.left;
+                        const ty = t.clientY - rect.top;
+
+                        // Restart button (if present)
+                        if (this._gameOverRestartRect) {
+                            const r = this._gameOverRestartRect;
+                            if (tx >= r.x && tx <= r.x + r.w && ty >= r.y && ty <= r.y + r.h) {
+                                // Restart: reset state then start a new run (countdown)
+                                try { this.reset(); } catch (err) {}
+                                this.inMenu = false;
+                                this.paused = false;
+                                this.inOptions = false;
+                                this.activeOptionTab = '';
+                                this.countdownActive = true;
+                                this.countdownStart = Date.now();
+                                break;
+                            }
+                        }
+
+                        // Return to menu button
+                        if (this._gameOverReturnRect) {
+                            const r = this._gameOverReturnRect;
+                            if (tx >= r.x && tx <= r.x + r.w && ty >= r.y && ty <= r.y + r.h) {
+                                this.gameOver = false; this.inMenu = true; this.paused = false; try { this.reset(); } catch (e) {}
+                                break;
+                            }
+                        }
+                    }
+                }
+            } catch (e) {}
         }, { passive: false });
 
         // Mouse click for menu buttons
@@ -1726,6 +1764,38 @@ class Game {
                     clickY >= autoFireButtonY && clickY <= autoFireButtonY + autoFireButtonHeight) {
                     this.autoFireEnabled = !this.autoFireEnabled;
                     return; // Don't process other clicks
+                }
+            }
+
+            // If game over and mobile buttons are present, check their rects first
+            if (this.gameOver) {
+                // Restart button
+                if (this._gameOverRestartRect) {
+                    const r = this._gameOverRestartRect;
+                    if (clickX >= r.x && clickX <= r.x + r.w && clickY >= r.y && clickY <= r.y + r.h) {
+                        // Restart: reset state then start a new run (countdown)
+                        try { this.reset(); } catch (err) {}
+                        this.inMenu = false;
+                        this.paused = false;
+                        this.inOptions = false;
+                        this.activeOptionTab = '';
+                        this.countdownActive = true;
+                        this.countdownStart = Date.now();
+                        return;
+                    }
+                }
+
+                // Return to menu button
+                if (this._gameOverReturnRect) {
+                    const r = this._gameOverReturnRect;
+                    if (clickX >= r.x && clickX <= r.x + r.w && clickY >= r.y && clickY <= r.y + r.h) {
+                        // Return to menu
+                        this.gameOver = false;
+                        this.inMenu = true;
+                        this.paused = false;
+                        try { this.reset(); } catch (e) {}
+                        return;
+                    }
                 }
             }
 
@@ -2298,6 +2368,13 @@ class Game {
         canvas.addEventListener('mouseup', (e) => {
             this.player.isMouseShooting = false;
         });
+    }
+
+    // Helper to get a CSS font string scaled by hudScale
+    _scaledFont(px, weight) {
+        const s = Math.max(1, (this.hudScale || 1));
+        const w = weight || '';
+        return `${w} ${Math.round(px * s)}px Arial`;
     }
 
     loadCoins() {
@@ -3897,13 +3974,13 @@ class Game {
         this.drawCheatProgress();
         this.drawBossBar();
 
-        // Draw score and coins
-        ctx.fillStyle = WHITE;
-        ctx.font = '36px Arial';
-        ctx.fillText(`${this.translations[this.selectedLanguage].score}: ${this.score}`, 10, 40);
-        ctx.font = '28px Arial';
-        ctx.fillStyle = GOLD;
-        ctx.fillText(`${this.translations[this.selectedLanguage].coins}: ${this.coins}`, 10, 80);
+    // Draw score and coins
+    ctx.fillStyle = WHITE;
+    ctx.font = this._scaledFont(36);
+    ctx.fillText(`${this.translations[this.selectedLanguage].score}: ${this.score}`, 10 * (this.hudScale || 1), 40 * (this.hudScale || 1));
+    ctx.font = this._scaledFont(28);
+    ctx.fillStyle = GOLD;
+    ctx.fillText(`${this.translations[this.selectedLanguage].coins}: ${this.coins}`, 10 * (this.hudScale || 1), 80 * (this.hudScale || 1));
 
         // Animated health bar (top-left, above score)
         try {
@@ -3928,7 +4005,7 @@ class Game {
             ctx.fillRect(healthX, healthY, Math.max(0, pct * healthW), healthH);
             // Border and text
             ctx.strokeStyle = WHITE; ctx.lineWidth = 2; ctx.strokeRect(healthX, healthY, healthW, healthH);
-            ctx.fillStyle = WHITE; ctx.font = '16px Arial'; ctx.fillText(`HP: ${Math.round(this.player.health)}/${Math.round(this.player.maxHealth)}`, healthX + healthW/2, healthY + 14);
+            ctx.fillStyle = WHITE; ctx.font = this._scaledFont(16); ctx.fillText(`HP: ${Math.round(this.player.health)}/${Math.round(this.player.maxHealth)}`, healthX + healthW/2, healthY + Math.round(14 * (this.hudScale || 1)));
         } catch (e) {}
 
         // Draw autofire toggle button (top-right)
@@ -3943,11 +4020,11 @@ class Game {
         ctx.lineWidth = 2;
         ctx.strokeRect(autoFireButtonX, autoFireButtonY, autoFireButtonWidth, autoFireButtonHeight);
         
-        ctx.fillStyle = WHITE;
-        ctx.font = '14px Arial';
-        ctx.textAlign = 'center';
-        const autoFireText = this.autoFireEnabled ? 'AutoFire: ON' : 'AutoFire: OFF';
-        ctx.fillText(autoFireText, autoFireButtonX + autoFireButtonWidth/2, autoFireButtonY + 23);
+    ctx.fillStyle = WHITE;
+    ctx.font = this._scaledFont(14);
+    ctx.textAlign = 'center';
+    const autoFireText = this.autoFireEnabled ? 'AutoFire: ON' : 'AutoFire: OFF';
+    ctx.fillText(autoFireText, autoFireButtonX + autoFireButtonWidth/2, autoFireButtonY + Math.round(23 * (this.hudScale || 1)));
         ctx.textAlign = 'left';
 
         // Draw countdown if active
@@ -3962,7 +4039,7 @@ class Game {
 
                 // Draw countdown number
                 ctx.fillStyle = WHITE;
-                ctx.font = 'bold 128px Arial';
+                ctx.font = this._scaledFont(128, 'bold');
                 const text = remainingTime.toString();
                 const textWidth = ctx.measureText(text).width;
                 const textHeight = 128; // Approximate height of the font
@@ -3978,10 +4055,10 @@ class Game {
                 ctx.shadowBlur = 0;
 
                 // Draw "Get Ready!" text
-                ctx.font = 'bold 48px Arial';
+                ctx.font = this._scaledFont(48, 'bold');
                 const readyText = this.translations[this.selectedLanguage].getReady;
                 const readyWidth = ctx.measureText(readyText).width;
-                ctx.fillText(readyText, SCREEN_WIDTH/2 - readyWidth/2, centerY - 100);
+                ctx.fillText(readyText, SCREEN_WIDTH/2 - readyWidth/2, centerY - Math.round(100 * (this.hudScale || 1)));
             } else {
                 this.countdownActive = false;
             }
@@ -4003,7 +4080,7 @@ class Game {
                 
                 // Draw countdown number with animation
                 ctx.fillStyle = WHITE;
-                ctx.font = 'bold 128px Arial';
+                ctx.font = this._scaledFont(128, 'bold');
 
                 // Scale animation
                 const animProgress = (elapsed % 1000) / 1000;  // 0 to 1 each second
@@ -4018,10 +4095,10 @@ class Game {
                 ctx.fillText(text, -textWidth/2, 50);  // Centered text
 
                 // Draw "Get Ready!" text
-                ctx.font = 'bold 48px Arial';
+                ctx.font = this._scaledFont(48, 'bold');
                 const readyText = "Get Ready!";
                 const readyWidth = ctx.measureText(readyText).width;
-                ctx.fillText(readyText, -readyWidth/2, -100);
+                ctx.fillText(readyText, -readyWidth/2, -Math.round(100 * (this.hudScale || 1)));
 
                 ctx.restore();
             }
@@ -4036,18 +4113,71 @@ class Game {
         // Draw game state messages
         if (this.gameOver) {
             ctx.fillStyle = WHITE;
-            ctx.font = '48px Arial';
-            ctx.fillText(this.translations[this.selectedLanguage].gameOver, SCREEN_WIDTH/2 - 120, SCREEN_HEIGHT/2);
-            ctx.font = '24px Arial';
-            ctx.fillText(`${this.translations[this.selectedLanguage].finalScore}: ${this.score}`, SCREEN_WIDTH/2 - 70, SCREEN_HEIGHT/2 + 40);
-            ctx.fillText(this.translations[this.selectedLanguage].pressToRestart, SCREEN_WIDTH/2 - 80, SCREEN_HEIGHT/2 + 80);
+            ctx.font = this._scaledFont(48);
+            ctx.fillText(this.translations[this.selectedLanguage].gameOver, SCREEN_WIDTH/2 - 120 * (this.hudScale || 1), SCREEN_HEIGHT/2);
+            ctx.font = this._scaledFont(24);
+            ctx.fillText(`${this.translations[this.selectedLanguage].finalScore}: ${this.score}`, SCREEN_WIDTH/2 - 70 * (this.hudScale || 1), SCREEN_HEIGHT/2 + 40 * (this.hudScale || 1));
+            ctx.fillText(this.translations[this.selectedLanguage].pressToRestart, SCREEN_WIDTH/2 - 80 * (this.hudScale || 1), SCREEN_HEIGHT/2 + 80 * (this.hudScale || 1));
+            // Mobile-friendly Restart + Return buttons
+            try {
+                const isMobileLayout = (typeof document !== 'undefined') && document.body && document.body.classList && document.body.classList.contains('mobile-layout');
+                const isTouch = ('ontouchstart' in window) || SCREEN_WIDTH <= 720;
+                if (isMobileLayout || isTouch) {
+                    const baseBtnW = Math.min(320, Math.round((SCREEN_WIDTH - 100) / 2));
+                    const btnH = Math.max(48, Math.round(50 * (this.hudScale || 1)));
+                    const gap = 12;
+                    let leftBtnX = Math.round((SCREEN_WIDTH - (baseBtnW * 2 + gap)) / 2);
+                    const rightBtnX = leftBtnX + baseBtnW + gap;
+                    const by = Math.round(SCREEN_HEIGHT/2 + 110 * (this.hudScale || 1));
+
+                    // If there's not enough horizontal space, stack the buttons
+                    if (leftBtnX < 40) {
+                        leftBtnX = Math.round((SCREEN_WIDTH - baseBtnW) / 2);
+                    }
+
+                    // Update pulse
+                    this._gameOverPulse += (this._dt || 16) * 0.001 * this._gameOverPulseDir;
+                    if (this._gameOverPulse > 0.12) { this._gameOverPulse = 0.12; this._gameOverPulseDir = -1; }
+                    if (this._gameOverPulse < 0) { this._gameOverPulse = 0; this._gameOverPulseDir = 1; }
+
+                    // Restart button (left) with subtle pulse
+                    ctx.save();
+                    const restartCenterX = leftBtnX + baseBtnW/2;
+                    const restartCenterY = by + btnH/2;
+                    const pulseScale = 1 + this._gameOverPulse * 0.08;
+                    ctx.translate(restartCenterX, restartCenterY);
+                    ctx.scale(pulseScale, pulseScale);
+                    ctx.translate(-restartCenterX, -restartCenterY);
+
+                    ctx.fillStyle = '#4CAF50';
+                    ctx.fillRect(leftBtnX, by, baseBtnW, btnH);
+                    ctx.strokeStyle = WHITE; ctx.lineWidth = 2; ctx.strokeRect(leftBtnX, by, baseBtnW, btnH);
+                    ctx.fillStyle = WHITE; ctx.font = this._scaledFont(18, 'bold'); ctx.textAlign = 'center';
+                    ctx.fillText(this.translations[this.selectedLanguage].restart || 'Restart', leftBtnX + baseBtnW/2, by + Math.round(btnH/2) + Math.round(6 * (this.hudScale || 1)));
+                    ctx.restore();
+                    ctx.textAlign = 'left';
+                    this._gameOverRestartRect = { x: leftBtnX, y: by, w: baseBtnW, h: btnH };
+
+                    // Return to Menu (right or stacked)
+                    const retX = (leftBtnX + baseBtnW + gap + baseBtnW <= SCREEN_WIDTH - 40) ? rightBtnX : leftBtnX;
+                    const retW = baseBtnW;
+                    const retY = (retX === rightBtnX) ? by : (by + btnH + gap);
+                    ctx.fillStyle = '#2196F3';
+                    ctx.fillRect(retX, retY, retW, btnH);
+                    ctx.strokeStyle = WHITE; ctx.lineWidth = 2; ctx.strokeRect(retX, retY, retW, btnH);
+                    ctx.fillStyle = WHITE; ctx.font = this._scaledFont(18, 'bold'); ctx.textAlign = 'center';
+                    ctx.fillText(this.translations[this.selectedLanguage].returnToMenu || 'Return to Menu', retX + retW/2, retY + Math.round(btnH/2) + Math.round(6 * (this.hudScale || 1)));
+                    ctx.textAlign = 'left';
+                    this._gameOverReturnRect = { x: retX, y: retY, w: retW, h: btnH };
+                }
+            } catch (e) {}
         } else if (this.paused && (this.countdownActive || this.inMenu)) {
             // Only draw the simple paused text when the full pause menu isn't displayed
             ctx.fillStyle = WHITE;
-            ctx.font = '48px Arial';
-            ctx.fillText(this.translations[this.selectedLanguage].paused, SCREEN_WIDTH/2 - 80, SCREEN_HEIGHT/2);
-            ctx.font = '24px Arial';
-            ctx.fillText(this.translations[this.selectedLanguage].pressToResume, SCREEN_WIDTH/2 - 80, SCREEN_HEIGHT/2 + 40);
+            ctx.font = this._scaledFont(48);
+            ctx.fillText(this.translations[this.selectedLanguage].paused, SCREEN_WIDTH/2 - Math.round(80 * (this.hudScale || 1)), SCREEN_HEIGHT/2);
+            ctx.font = this._scaledFont(24);
+            ctx.fillText(this.translations[this.selectedLanguage].pressToResume, SCREEN_WIDTH/2 - Math.round(80 * (this.hudScale || 1)), SCREEN_HEIGHT/2 + Math.round(40 * (this.hudScale || 1)));
         }
         
         // Draw on-screen touch controls for mobile (joystick + fire)
@@ -4152,15 +4282,15 @@ class Game {
                 ctx.strokeRect(cardX, cardY, cardW, cardH);
 
                 ctx.fillStyle = WHITE;
-                ctx.font = '20px Arial';
+                ctx.font = this._scaledFont(20);
                 ctx.textAlign = 'center';
-                ctx.fillText('Touch Controls Tutorial', SCREEN_WIDTH/2, cardY + 36);
+                ctx.fillText('Touch Controls Tutorial', SCREEN_WIDTH/2, cardY + Math.round(36 * (this.hudScale || 1)));
 
-                ctx.font = '16px Arial';
+                ctx.font = this._scaledFont(16);
                 ctx.textAlign = 'left';
-                const leftX = cardX + 24;
-                let ly = cardY + 70;
-                const lineH = 28;
+                const leftX = cardX + Math.round(24 * (this.hudScale || 1));
+                let ly = cardY + Math.round(70 * (this.hudScale || 1));
+                const lineH = Math.round(28 * (this.hudScale || 1));
                 ctx.fillText('- Drag the left joystick to move', leftX, ly); ly += lineH;
                 ctx.fillText('- Hold the right FIRE button to shoot', leftX, ly); ly += lineH;
                 ctx.fillText('- Drag while holding FIRE to aim', leftX, ly); ly += lineH;
@@ -4176,8 +4306,8 @@ class Game {
                 ctx.strokeRect(btnX, btnY, btnW, btnH);
                 ctx.fillStyle = WHITE;
                 ctx.textAlign = 'center';
-                ctx.font = '18px Arial';
-                ctx.fillText('Got it, thanks', btnX + btnW/2, btnY + btnH/2 + 6);
+                ctx.font = this._scaledFont(18);
+                ctx.fillText('Got it, thanks', btnX + btnW/2, btnY + Math.round(btnH/2 + 6 * (this.hudScale || 1)));
 
                 // store dismiss rect for click/touch handling
                 this._touchTutorialDismissRect = { x: btnX, y: btnY, w: btnW, h: btnH };
