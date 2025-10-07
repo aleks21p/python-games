@@ -952,6 +952,12 @@ class Game {
                 cheats: 'Cheats',
                 difficulty: 'Difficulty',
                 credits: 'Credits',
+                debug: 'Debug',
+                debugDescription: 'View / Edit localStorage (developer only)',
+                view: 'View',
+                edit: 'Edit',
+                delete: 'Delete',
+                noLocalStorageKeys: 'No localStorage keys found',
                 cheatLv15: 'Skip to Level 15',
                 cheatBoss: 'Skip to Final Boss',
                 cheatCoins: 'Get 100 QUINTILLION Coins',
@@ -1036,7 +1042,9 @@ class Game {
             controls: { x: SCREEN_WIDTH/2 - optionButtonWidth - 20, y: startY, width: optionButtonWidth, height: optionButtonHeight },
             cheats: { x: SCREEN_WIDTH/2 + 20, y: startY, width: optionButtonWidth, height: optionButtonHeight },
             difficulty: { x: SCREEN_WIDTH/2 - optionButtonWidth - 20, y: startY + optionButtonHeight + optionButtonSpacing, width: optionButtonWidth, height: optionButtonHeight },
-            credits: { x: SCREEN_WIDTH/2 + 20, y: startY + optionButtonHeight + optionButtonSpacing, width: optionButtonWidth, height: optionButtonHeight }
+            credits: { x: SCREEN_WIDTH/2 + 20, y: startY + optionButtonHeight + optionButtonSpacing, width: optionButtonWidth, height: optionButtonHeight },
+            // Debug tab (third row, left)
+            debug: { x: SCREEN_WIDTH/2 - optionButtonWidth - 20, y: startY + (optionButtonHeight + optionButtonSpacing) * 2, width: optionButtonWidth, height: optionButtonHeight }
         };
 
         this.loadSkins(); // Load saved skins first
@@ -1542,6 +1550,57 @@ class Game {
                                 clickY >= btn.y && clickY <= btn.y + btn.height) {
                                 this.activeOptionTab = this.activeOptionTab === tabName ? '' : tabName;
                                 break;
+                            }
+                        }
+
+                        // If debug tab is active, handle clicks on the debug UI buttons
+                        if (this.activeOptionTab === 'debug') {
+                            const contentBox = {
+                                width: 500,
+                                height: 300,
+                                x: SCREEN_WIDTH/2 - 250,
+                                y: SCREEN_HEIGHT/2 + 20
+                            };
+                            const keys = Object.keys(window.localStorage).sort();
+                            let y = contentBox.y + 80;
+                            const lineHeight = 28;
+                            const visibleCount = Math.min(keys.length, 6);
+                            for (let i = 0; i < visibleCount; i++) {
+                                const k = keys[i];
+                                const btnX = contentBox.x + contentBox.width - 220;
+                                const btnW = 60;
+                                const btnH = 20;
+                                const viewRect = { x: btnX, y: y - 14, w: btnW, h: btnH };
+                                const editRect = { x: btnX + btnW + 10, y: y - 14, w: btnW, h: btnH };
+                                const delRect = { x: btnX + (btnW + 10) * 2, y: y - 14, w: btnW, h: btnH };
+
+                                if (clickX >= viewRect.x && clickX <= viewRect.x + viewRect.w && clickY >= viewRect.y && clickY <= viewRect.y + viewRect.h) {
+                                    const val = localStorage.getItem(k);
+                                    alert(`${k}: ${val}`);
+                                    return;
+                                }
+                                if (clickX >= editRect.x && clickX <= editRect.x + editRect.w && clickY >= editRect.y && clickY <= editRect.y + editRect.h) {
+                                    const current = localStorage.getItem(k) || '';
+                                    const newVal = prompt(`Edit value for ${k}:`, current);
+                                    if (newVal !== null) {
+                                        localStorage.setItem(k, newVal);
+                                        if (k === 'zombieShooterCoins') {
+                                            this.coins = parseInt(newVal) || 0;
+                                        }
+                                    }
+                                    return;
+                                }
+                                if (clickX >= delRect.x && clickX <= delRect.x + delRect.w && clickY >= delRect.y && clickY <= delRect.y + delRect.h) {
+                                    if (confirm(`Delete localStorage key ${k}? This cannot be undone.`)) {
+                                        localStorage.removeItem(k);
+                                        if (k === 'zombieShooterCoins') {
+                                            this.coins = 0;
+                                        }
+                                    }
+                                    return;
+                                }
+
+                                y += lineHeight;
                             }
                         }
                     }
@@ -2550,6 +2609,55 @@ class Game {
                         ctx.fillText(this.translations[this.selectedLanguage].soundDesign, contentX, contentY + 40);
                         ctx.fillText(this.translations[this.selectedLanguage].art, contentX, contentY + 80);
                         ctx.fillText(this.translations[this.selectedLanguage].sponsors, contentX, contentY + 120);
+                        break;
+                    case 'debug':
+                        // Draw description
+                        ctx.fillStyle = WHITE;
+                        ctx.font = '18px Arial';
+                        ctx.fillText(this.translations[this.selectedLanguage].debugDescription, contentBox.x + 20, contentBox.y + 40);
+
+                        // List localStorage keys
+                        const keys = Object.keys(window.localStorage).sort();
+                        if (keys.length === 0) {
+                            ctx.fillStyle = '#808080';
+                            ctx.font = '16px Arial';
+                            ctx.fillText(this.translations[this.selectedLanguage].noLocalStorageKeys, contentBox.x + 20, contentBox.y + 80);
+                        } else {
+                            ctx.font = '14px Arial';
+                            ctx.textAlign = 'left';
+                            let y = contentBox.y + 80;
+                            const lineHeight = 28;
+                            // Draw up to ~6 keys in the box (scrolling not implemented)
+                            for (let i = 0; i < Math.min(keys.length, 6); i++) {
+                                const k = keys[i];
+                                ctx.fillStyle = '#FFFF00';
+                                ctx.fillText(k, contentBox.x + 20, y);
+                                // Draw small rectangles as buttons for View / Edit / Delete
+                                const btnX = contentBox.x + contentBox.width - 220;
+                                const btnW = 60;
+                                const btnH = 20;
+                                // View
+                                ctx.fillStyle = '#4CAF50';
+                                ctx.fillRect(btnX, y - 14, btnW, btnH);
+                                ctx.fillStyle = WHITE;
+                                ctx.font = '12px Arial';
+                                ctx.fillText(this.translations[this.selectedLanguage].view, btnX + 8, y);
+                                // Edit
+                                ctx.fillStyle = '#2196F3';
+                                ctx.fillRect(btnX + btnW + 10, y - 14, btnW, btnH);
+                                ctx.fillStyle = WHITE;
+                                ctx.fillText(this.translations[this.selectedLanguage].edit, btnX + btnW + 18, y);
+                                // Delete
+                                ctx.fillStyle = '#F44336';
+                                ctx.fillRect(btnX + (btnW + 10) * 2, y - 14, btnW, btnH);
+                                ctx.fillStyle = WHITE;
+                                ctx.fillText(this.translations[this.selectedLanguage].delete, btnX + (btnW + 10) * 2 + 10, y);
+
+                                y += lineHeight;
+                            }
+                            ctx.textAlign = 'center';
+                        }
+                        ctx.textAlign = 'left';
                         break;
                 }
                 ctx.textAlign = 'left';

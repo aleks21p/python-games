@@ -20,3 +20,27 @@ rad.json
 *.flf
 #Test results file
 TestResults.xml
+
+### Local game saves / exports (keep player data local)
+# Ignore named save files and common export formats
+games-HTML5/**/saves/
+games-HTML5/**/save*.json
+games-HTML5/**/save*.jsonl
+games-HTML5/**/export*.json
+*.save
+*.save.json
+*.localstorage
+*.gamebackup.json
+export-*.json
+
+# Misc developer-local files that may contain player data
+*.db
+*.sqlite
+*.sqlite3
+*.log
+
+# Common single-file save pattern used by many games
+# e.g. player-save.json, player-save-<profile>.json
+player-save.json
+**/player-save.json
+player-save-*.json
