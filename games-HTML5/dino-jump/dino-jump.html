@@ -1,0 +1,298 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dino Jump - JavaSnake.com</title>
+    <meta name="description" content="Classic endless runner! Jump over cacti and pterodactyls in this thrilling dinosaur game with increasing speed and difficulty.">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Arial', sans-serif;
+            background: linear-gradient(135deg, #87CEEB 0%, #98FB98 50%, #F0E68C 100%);
+            background-attachment: fixed;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            color: #333;
+            overflow: hidden;
+        }
+
+        .game-container {
+            background: rgba(255, 255, 255, 0.9);
+            border-radius: 20px;
+            padding: 2rem;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+            text-align: center;
+            max-width: 90vw;
+            margin: 1rem;
+        }
+
+        .game-title {
+            font-size: 2.5rem;
+            font-weight: bold;
+            color: #2E8B57;
+            margin-bottom: 1rem;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        #gameCanvas {
+            border: 3px solid #8B4513;
+            border-radius: 10px;
+            background: linear-gradient(to bottom, #87CEEB 0%, #F0E68C 70%, #D2B48C 100%);
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
+            max-width: 100%;
+            height: auto;
+        }
+
+        .game-info {
+            display: flex;
+            justify-content: space-around;
+            align-items: center;
+            margin: 1rem 0;
+            gap: 1rem;
+            flex-wrap: wrap;
+        }
+
+        .info-panel {
+            background: rgba(46, 139, 87, 0.1);
+            padding: 0.5rem 1rem;
+            border-radius: 10px;
+            border: 2px solid #2E8B57;
+            min-width: 100px;
+        }
+
+        .info-label {
+            font-size: 0.8rem;
+            color: #666;
+            font-weight: bold;
+            text-transform: uppercase;
+        }
+
+        .info-value {
+            font-size: 1.2rem;
+            font-weight: bold;
+            color: #2E8B57;
+        }
+
+        .controls {
+            margin: 1rem 0;
+            padding: 1rem;
+            background: rgba(255, 255, 255, 0.7);
+            border-radius: 10px;
+        }
+
+        .controls h3 {
+            color: #2E8B57;
+            margin-bottom: 0.5rem;
+        }
+
+        .controls p {
+            margin: 0.3rem 0;
+            color: #666;
+        }
+
+        .game-buttons {
+            display: flex;
+            gap: 1rem;
+            justify-content: center;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .btn {
+            padding: 0.8rem 1.5rem;
+            border: none;
+            border-radius: 25px;
+            font-size: 1rem;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .btn-primary {
+            background: linear-gradient(45deg, #2E8B57, #3CB371);
+            color: white;
+            box-shadow: 0 4px 15px rgba(46, 139, 87, 0.3);
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(46, 139, 87, 0.4);
+        }
+
+        .btn-secondary {
+            background: linear-gradient(45deg, #FF6B6B, #FF8E8E);
+            color: white;
+            box-shadow: 0 4px 15px rgba(255, 107, 107, 0.3);
+        }
+
+        .btn-secondary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(255, 107, 107, 0.4);
+        }
+
+        .btn-home {
+            background: linear-gradient(45deg, #4ECDC4, #45B7D1);
+            color: white;
+            box-shadow: 0 4px 15px rgba(78, 205, 196, 0.3);
+            text-decoration: none;
+            display: inline-block;
+        }
+
+        .btn-home:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(78, 205, 196, 0.4);
+            text-decoration: none;
+            color: white;
+        }
+
+        .game-over-screen {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+        }
+
+        .game-over-content {
+            background: white;
+            padding: 3rem;
+            border-radius: 20px;
+            text-align: center;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+            max-width: 90vw;
+        }
+
+        .game-over-title {
+            font-size: 3rem;
+            color: #FF6B6B;
+            margin-bottom: 1rem;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        .final-score {
+            font-size: 2rem;
+            color: #2E8B57;
+            margin: 1rem 0;
+            font-weight: bold;
+        }
+
+        /* Mobile responsiveness */
+        @media (max-width: 768px) {
+            .game-title {
+                font-size: 2rem;
+            }
+            
+            .game-container {
+                padding: 1rem;
+                margin: 0.5rem;
+            }
+            
+            .info-panel {
+                min-width: 80px;
+                padding: 0.3rem 0.8rem;
+            }
+            
+            .info-value {
+                font-size: 1rem;
+            }
+            
+            .controls {
+                padding: 0.8rem;
+            }
+            
+            .btn {
+                padding: 0.6rem 1.2rem;
+                font-size: 0.9rem;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .game-title {
+                font-size: 1.5rem;
+            }
+            
+            .game-info {
+                gap: 0.5rem;
+            }
+            
+            .info-panel {
+                min-width: 70px;
+                padding: 0.2rem 0.6rem;
+            }
+            
+            .info-value {
+                font-size: 0.9rem;
+            }
+            
+            .info-label {
+                font-size: 0.7rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="game-container">
+        <h1 class="game-title">🦕 Dino Jump</h1>
+        
+        <div class="game-info">
+            <div class="info-panel">
+                <div class="info-label">Score</div>
+                <div class="info-value" id="score">0</div>
+            </div>
+            <div class="info-panel">
+                <div class="info-label">High Score</div>
+                <div class="info-value" id="highScore">0</div>
+            </div>
+            <div class="info-panel">
+                <div class="info-label">Speed</div>
+                <div class="info-value" id="speed">1x</div>
+            </div>
+        </div>
+        
+        <canvas id="gameCanvas" width="800" height="200"></canvas>
+        
+        <div class="controls">
+            <h3>Controls</h3>
+            <p><strong>Space/Up Arrow:</strong> Jump</p>
+            <p><strong>Down Arrow:</strong> Duck (when implemented)</p>
+            <p><strong>Touch:</strong> Tap to jump</p>
+        </div>
+        
+        <div class="game-buttons">
+            <button id="startBtn" class="btn btn-primary">Start Game</button>
+            <button id="pauseBtn" class="btn btn-secondary" style="display: none;">Pause</button>
+            <a href="../index.html" class="btn btn-home">🏠 Home</a>
+        </div>
+    </div>
+
+    <!-- Game Over Screen -->
+    <div id="gameOverScreen" class="game-over-screen">
+        <div class="game-over-content">
+            <h2 class="game-over-title">Game Over!</h2>
+            <div class="final-score">Final Score: <span id="finalScore">0</span></div>
+            <div class="game-buttons">
+                <button id="restartBtn" class="btn btn-primary">Play Again</button>
+                <a href="../index.html" class="btn btn-home">🏠 Home</a>
+            </div>
+        </div>
+    </div>
+
+    <script src="dino-jump.js"></script>
+</body>
+</html>

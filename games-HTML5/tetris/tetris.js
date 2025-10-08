@@ -7,7 +7,7 @@ class TetrisGame {
         this.nextCtx = this.nextCanvas.getContext('2d');
         
         // Game constants
-    this.BOARD_WIDTH = 25;
+    this.BOARD_WIDTH = 10;
     this.BOARD_HEIGHT = 20;
     // Reduced block size so the board fits comfortably on most screens
     this.BLOCK_SIZE = 24;
