@@ -1,0 +1,333 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Soundboard - JavaSnake.com</title>
+    <meta name="description" content="Interactive soundboard with fun audio clips! Play various sounds with the click of a button in this entertaining collection.">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Arial', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background-attachment: fixed;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: flex-start;
+            color: #fff;
+            overflow-x: hidden;
+            padding: 1rem 0;
+        }
+
+        .soundboard-container {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 20px;
+            padding: 2rem;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+            text-align: center;
+            max-width: 95vw;
+            width: 100%;
+            max-width: 1000px;
+        }
+
+        .soundboard-title {
+            font-size: 2.5rem;
+            font-weight: bold;
+            color: #fff;
+            margin-bottom: 1rem;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+        }
+
+        .soundboard-subtitle {
+            font-size: 1.1rem;
+            color: rgba(255, 255, 255, 0.8);
+            margin-bottom: 2rem;
+            line-height: 1.6;
+        }
+
+        .controls-info {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 1rem;
+            border-radius: 10px;
+            margin-bottom: 2rem;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .controls-info h3 {
+            color: #fff;
+            margin-bottom: 0.5rem;
+            font-size: 1.2rem;
+        }
+
+        .controls-info p {
+            color: rgba(255, 255, 255, 0.9);
+            font-size: 0.9rem;
+            margin: 0.3rem 0;
+        }
+
+        .sound-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1.5rem;
+            margin: 2rem 0;
+        }
+
+        .sound-button {
+            background: linear-gradient(45deg, #ff6b6b, #ee5a52);
+            border: none;
+            border-radius: 15px;
+            padding: 1.5rem 1rem;
+            color: white;
+            font-size: 1rem;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-transform: capitalize;
+            box-shadow: 0 4px 15px rgba(255, 107, 107, 0.3);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .sound-button:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 6px 20px rgba(255, 107, 107, 0.4);
+            background: linear-gradient(45deg, #ee5a52, #ff6b6b);
+        }
+
+        .sound-button:active {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 15px rgba(255, 107, 107, 0.5);
+        }
+
+        .sound-button.playing {
+            background: linear-gradient(45deg, #4ecdc4, #44a08d);
+            animation: pulse 0.5s ease-in-out;
+        }
+
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+            100% { transform: scale(1); }
+        }
+
+        .sound-button::before {
+            content: '🔊';
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            font-size: 1.2rem;
+            opacity: 0.7;
+        }
+
+        .sound-button.playing::before {
+            content: '🎵';
+            animation: bounce 0.6s ease-in-out infinite alternate;
+        }
+
+        @keyframes bounce {
+            0% { transform: translateY(0); }
+            100% { transform: translateY(-5px); }
+        }
+
+        .volume-control {
+            margin: 2rem 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 1rem;
+            flex-wrap: wrap;
+        }
+
+        .volume-control label {
+            color: #fff;
+            font-weight: bold;
+            font-size: 1.1rem;
+        }
+
+        .volume-slider {
+            width: 200px;
+            height: 6px;
+            border-radius: 3px;
+            background: rgba(255, 255, 255, 0.3);
+            outline: none;
+            -webkit-appearance: none;
+            appearance: none;
+        }
+
+        .volume-slider::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background: #ff6b6b;
+            cursor: pointer;
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
+        }
+
+        .volume-slider::-moz-range-thumb {
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background: #ff6b6b;
+            cursor: pointer;
+            border: none;
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
+        }
+
+        .stop-all-btn {
+            background: linear-gradient(45deg, #e74c3c, #c0392b);
+            border: none;
+            border-radius: 25px;
+            padding: 1rem 2rem;
+            color: white;
+            font-size: 1.1rem;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            box-shadow: 0 4px 15px rgba(231, 76, 60, 0.3);
+            margin: 1rem;
+        }
+
+        .stop-all-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(231, 76, 60, 0.4);
+            background: linear-gradient(45deg, #c0392b, #e74c3c);
+        }
+
+        .home-buttons {
+            display: flex;
+            gap: 1rem;
+            justify-content: center;
+            flex-wrap: wrap;
+            margin-top: 2rem;
+        }
+
+        .btn-home {
+            background: linear-gradient(45deg, #4ecdc4, #45b7d1);
+            color: white;
+            padding: 1rem 2rem;
+            text-decoration: none;
+            border-radius: 25px;
+            font-weight: bold;
+            font-size: 1rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(78, 205, 196, 0.3);
+        }
+
+        .btn-home:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(78, 205, 196, 0.4);
+            text-decoration: none;
+            color: white;
+        }
+
+        .sound-status {
+            text-align: center;
+            margin: 1rem 0;
+            font-size: 1.1rem;
+            color: rgba(255, 255, 255, 0.9);
+            min-height: 25px;
+        }
+
+        /* Mobile responsiveness */
+        @media (max-width: 768px) {
+            .soundboard-title {
+                font-size: 2rem;
+            }
+            
+            .soundboard-container {
+                padding: 1.5rem;
+                margin: 0.5rem;
+            }
+            
+            .sound-grid {
+                grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+                gap: 1rem;
+            }
+            
+            .sound-button {
+                padding: 1.2rem 0.8rem;
+                font-size: 0.9rem;
+            }
+            
+            .volume-slider {
+                width: 150px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .soundboard-title {
+                font-size: 1.5rem;
+            }
+            
+            .sound-grid {
+                grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+                gap: 0.8rem;
+            }
+            
+            .sound-button {
+                padding: 1rem 0.6rem;
+                font-size: 0.8rem;
+            }
+            
+            .volume-control {
+                flex-direction: column;
+                gap: 0.5rem;
+            }
+            
+            .volume-slider {
+                width: 200px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="soundboard-container">
+        <h1 class="soundboard-title">🎵 Soundboard</h1>
+        <p class="soundboard-subtitle">
+            Click any button to play fun sound effects! Control the volume and stop all sounds with the controls below.
+        </p>
+        
+        <div class="controls-info">
+            <h3>How to Use</h3>
+            <p><strong>Click any button</strong> to play that sound</p>
+            <p><strong>Adjust volume</strong> with the slider below</p>
+            <p><strong>Stop All Sounds</strong> to silence everything at once</p>
+        </div>
+
+        <div class="volume-control">
+            <label for="volumeSlider">🔊 Volume:</label>
+            <input type="range" id="volumeSlider" class="volume-slider" min="0" max="100" value="50">
+            <span id="volumeValue">50%</span>
+        </div>
+
+        <div class="sound-status" id="soundStatus">Ready to play sounds!</div>
+
+        <div class="sound-grid" id="soundGrid">
+            <!-- Sound buttons will be generated by JavaScript -->
+        </div>
+
+        <button id="stopAllBtn" class="stop-all-btn">🛑 Stop All Sounds</button>
+
+        <div class="home-buttons">
+            <a href="../index.html" class="btn-home">🏠 Home</a>
+        </div>
+    </div>
+
+    <script src="soundboard.js"></script>
+</body>
+</html>

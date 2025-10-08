@@ -3,8 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Dino Jump - JavaSnake.com</title>
-    <meta name="description" content="Classic endless runner! Jump over cacti and pterodactyls in this thrilling dinosaur game with increasing speed and difficulty.">
+    <title>T-Rex Runner - JavaSnake.com</title>
+    <meta name="description" content="Classic Chrome dinosaur endless runner game! Jump over cacti and dodge pterodactyls in this authentic T-Rex runner experience.">
     <style>
         * {
             margin: 0;
@@ -13,7 +13,7 @@
         }
 
         body {
-            font-family: 'Arial', sans-serif;
+            font-family: Arial, sans-serif;
             background: #f7f7f7;
             min-height: 100vh;
             display: flex;
@@ -256,29 +256,29 @@
 </head>
 <body>
     <div class="game-container">
-        <h1 class="game-title">🦕 Dino Jump</h1>
+        <h1 class="game-title">🦕 T-Rex Runner</h1>
         
         <div class="game-info">
             <div class="info-panel">
                 <div class="info-label">Score</div>
-                <div class="info-value" id="score">0</div>
+                <div class="info-value" id="score">00000</div>
             </div>
             <div class="info-panel">
                 <div class="info-label">High Score</div>
-                <div class="info-value" id="highScore">0</div>
+                <div class="info-value" id="highScore">00000</div>
             </div>
             <div class="info-panel">
                 <div class="info-label">Speed</div>
-                <div class="info-value" id="speed">1x</div>
+                <div class="info-value" id="speed">1.0x</div>
             </div>
         </div>
         
-        <canvas id="gameCanvas" width="800" height="200"></canvas>
+        <canvas id="gameCanvas" width="800" height="150"></canvas>
         
         <div class="controls">
             <h3>Controls</h3>
             <p><strong>Space/Up Arrow:</strong> Jump</p>
-            <p><strong>Down Arrow:</strong> Duck (when implemented)</p>
+            <p><strong>Down Arrow:</strong> Duck</p>
             <p><strong>Touch:</strong> Tap to jump</p>
         </div>
         
@@ -293,7 +293,7 @@
     <div id="gameOverScreen" class="game-over-screen">
         <div class="game-over-content">
             <h2 class="game-over-title">Game Over!</h2>
-            <div class="final-score">Final Score: <span id="finalScore">0</span></div>
+            <div class="final-score">Your Score: <span id="finalScore">00000</span></div>
             <div class="game-buttons">
                 <button id="restartBtn" class="btn btn-primary">Play Again</button>
                 <a href="../index.html" class="btn btn-home">🏠 Home</a>
@@ -301,6 +301,6 @@
         </div>
     </div>
 
-    <script src="dino-jump.js"></script>
+    <script src="trex-runner.js"></script>
 </body>
 </html>
