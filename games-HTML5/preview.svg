@@ -17,7 +17,7 @@
     <circle cx="140" cy="480" r="180" fill="rgba(78,205,196,0.06)"/>
   </g>
   <g transform="translate(80,120)">
-    <text x="0" y="0" font-family="Orbitron, Arial, sans-serif" font-weight="700" font-size="72" fill="#fff">JavaSnake.com</text>
+  <text x="0" y="0" font-family="Orbitron, Arial, sans-serif" font-weight="700" font-size="54" fill="#fff">JavaSnake.com</text>
     <text x="6" y="80" font-family="Exo 2, Arial, sans-serif" font-weight="300" font-size="32" fill="rgba(255,255,255,0.85)">Epic HTML5 browser games</text>
 
     <g transform="translate(0,160)">

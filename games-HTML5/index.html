@@ -108,7 +108,8 @@
 
         .logo {
             font-family: 'Orbitron', monospace;
-            font-size: clamp(3rem, 8vw, 7rem);
+            /* scaled down 15% for a slightly smaller neon sign */
+            font-size: clamp(2.55rem, 6.8vw, 5.95rem);
             font-weight: 900;
             text-transform: uppercase;
             letter-spacing: 0.2em;
@@ -368,7 +369,8 @@
         }
 
         @media (max-width: 420px) {
-            .logo { font-size: clamp(1.8rem, 12vw, 4.2rem); padding: 0 6px; }
+            /* mobile logo reduced by 15% */
+            .logo { font-size: clamp(1.53rem, 10.2vw, 3.57rem); padding: 0 6px; }
             .play-button { display: block; width: 100%; box-sizing: border-box; }
             .game-icon { font-size: 3rem; }
         }
@@ -452,6 +454,18 @@
                 </p>
                 <a href="space-shooter/shaungame.html" class="play-button">Play Now</a>
             </div>
+
+            <!-- Tetris Game -->
+            <div class="game-card">
+                <div class="game-icon">🧩</div>
+                <h2 class="game-title">Tetris</h2>
+                <p class="game-description">
+                    Classic falling block puzzle game! Clear lines by filling rows completely, 
+                    with increasing speed and difficulty. Features smooth controls, 
+                    line clearing effects, and endless addictive gameplay!
+                </p>
+                <a href="tetris/tetris.html" class="play-button">Play Now</a>
+            </div>
         </div>
 
         <footer class="footer">
@@ -470,7 +484,7 @@
                 "@type": "ItemList",
                 "name": "JavaSnake.com Games",
                 "url": "https://javasnake.com/",
-                "description": "Collection of free HTML5 browser games including Zombie Shooter and Space Shooter.",
+                "description": "Collection of free HTML5 browser games including Zombie Shooter, Space Shooter, and Tetris.",
                 "itemListElement": [
                     {
                         "@type": "ListItem",
@@ -490,6 +504,16 @@
                             "name": "Space Shooter",
                             "description": "Arcade space shooter with asteroids and alien waves.",
                             "url": "https://javasnake.com/space-shooter/shaungame.html"
+                        }
+                    },
+                    {
+                        "@type": "ListItem",
+                        "position": 3,
+                        "item": {
+                            "@type": "Game",
+                            "name": "Tetris",
+                            "description": "Classic falling block puzzle game with smooth controls and progressive difficulty.",
+                            "url": "https://javasnake.com/tetris/tetris.html"
                         }
                     }
                 ]
