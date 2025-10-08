@@ -40,10 +40,6 @@ class DinoJumpGame {
         this.obstacleInterval = 120; // frames
         this.minObstacleInterval = 60;
         
-        // Cloud spawning
-        this.cloudTimer = 0;
-        this.cloudInterval = 180;
-        
         // DOM elements
         this.scoreElement = document.getElementById('score');
         this.highScoreElement = document.getElementById('highScore');
@@ -145,9 +141,7 @@ class DinoJumpGame {
         this.gameSpeed = 6;
         this.speedMultiplier = 1;
         this.obstacleTimer = 0;
-        this.cloudTimer = 0;
         this.obstacles = [];
-        this.clouds = [];
         
         // Reset dino
         this.dino.y = this.groundY;
@@ -176,11 +170,9 @@ class DinoJumpGame {
         
         this.updateDino();
         this.updateObstacles();
-        this.updateClouds();
         this.updateScore();
         this.updateGameSpeed();
         this.spawnObstacles();
-        this.spawnClouds();
         this.checkCollisions();
     }
     
@@ -220,18 +212,6 @@ class DinoJumpGame {
         }
     }
     
-    updateClouds() {
-        for (let i = this.clouds.length - 1; i >= 0; i--) {
-            const cloud = this.clouds[i];
-            cloud.x -= this.gameSpeed * this.speedMultiplier * 0.3; // Clouds move slower
-            
-            // Remove clouds that are off-screen
-            if (cloud.x + cloud.width < 0) {
-                this.clouds.splice(i, 1);
-            }
-        }
-    }
-    
     updateScore() {
         this.score += 1;
         
@@ -260,8 +240,8 @@ class DinoJumpGame {
         if (this.obstacleTimer >= this.obstacleInterval) {
             this.obstacleTimer = 0;
             
-            // Random obstacle type
-            const obstacleTypes = ['cactus', 'bird'];
+            // Make birds much rarer (20% chance) and cacti more common (80% chance)
+            const obstacleTypes = ['cactus', 'cactus', 'cactus', 'cactus', 'bird'];
             const type = obstacleTypes[Math.floor(Math.random() * obstacleTypes.length)];
             
             let obstacle = {
@@ -274,29 +254,12 @@ class DinoJumpGame {
                 obstacle.width = 20;
                 obstacle.height = 40;
             } else if (type === 'bird') {
-                obstacle.y = this.groundY - Math.random() * 60 - 20; // Random height for birds
+                obstacle.y = this.groundY - Math.random() * 40 - 30; // Higher flying birds
                 obstacle.width = 30;
                 obstacle.height = 20;
             }
             
             this.obstacles.push(obstacle);
-        }
-    }
-    
-    spawnClouds() {
-        this.cloudTimer++;
-        
-        if (this.cloudTimer >= this.cloudInterval) {
-            this.cloudTimer = 0;
-            
-            const cloud = {
-                x: this.canvas.width,
-                y: Math.random() * 80 + 20, // Random height in upper area
-                width: 40 + Math.random() * 20,
-                height: 20 + Math.random() * 10
-            };
-            
-            this.clouds.push(cloud);
         }
     }
     
@@ -331,16 +294,9 @@ class DinoJumpGame {
         // Clear canvas
         this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
         
-        // Draw background gradient
-        const gradient = this.ctx.createLinearGradient(0, 0, 0, this.canvas.height);
-        gradient.addColorStop(0, '#87CEEB');
-        gradient.addColorStop(0.7, '#F0E68C');
-        gradient.addColorStop(1, '#D2B48C');
-        this.ctx.fillStyle = gradient;
+        // Draw simple white background (Chrome dino style)
+        this.ctx.fillStyle = '#f7f7f7';
         this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
-        
-        // Draw clouds
-        this.drawClouds();
         
         // Draw ground
         this.drawGround();
@@ -356,85 +312,58 @@ class DinoJumpGame {
     }
     
     drawDino() {
-        this.ctx.fillStyle = '#8B4513';
+        this.ctx.fillStyle = '#535353';
         
         if (this.dino.isDucking) {
-            // Draw ducking dino (oval shape)
-            this.ctx.beginPath();
-            this.ctx.ellipse(
-                this.dino.x + this.dino.width / 2,
-                this.dino.y + this.dino.height / 2,
-                this.dino.width / 2,
-                this.dino.height / 2,
-                0, 0, 2 * Math.PI
-            );
-            this.ctx.fill();
+            // Draw ducking dino (more rectangular, Chrome-style)
+            this.ctx.fillRect(this.dino.x, this.dino.y, this.dino.width, this.dino.height);
+            
+            // Draw eye
+            this.ctx.fillStyle = '#FFFFFF';
+            this.ctx.fillRect(this.dino.x + 8, this.dino.y + 5, 4, 4);
+            this.ctx.fillStyle = '#000000';
+            this.ctx.fillRect(this.dino.x + 10, this.dino.y + 6, 2, 2);
         } else {
-            // Draw standing dino (rectangle with rounded corners)
-            this.ctx.beginPath();
-            this.ctx.roundRect(this.dino.x, this.dino.y, this.dino.width, this.dino.height, 5);
-            this.ctx.fill();
+            // Draw standing dino (Chrome-style pixelated look)
+            // Main body
+            this.ctx.fillRect(this.dino.x + 10, this.dino.y, 20, 30);
+            // Head
+            this.ctx.fillRect(this.dino.x, this.dino.y + 5, 15, 20);
+            // Tail
+            this.ctx.fillRect(this.dino.x + 30, this.dino.y + 10, 8, 15);
+            // Legs
+            this.ctx.fillRect(this.dino.x + 12, this.dino.y + 30, 6, 10);
+            this.ctx.fillRect(this.dino.x + 22, this.dino.y + 30, 6, 10);
+            
+            // Draw eye
+            this.ctx.fillStyle = '#FFFFFF';
+            this.ctx.fillRect(this.dino.x + 3, this.dino.y + 8, 4, 4);
+            this.ctx.fillStyle = '#000000';
+            this.ctx.fillRect(this.dino.x + 5, this.dino.y + 9, 2, 2);
         }
-        
-        // Draw dino details (eyes)
-        this.ctx.fillStyle = '#FFFFFF';
-        this.ctx.beginPath();
-        this.ctx.arc(this.dino.x + 10, this.dino.y + 10, 3, 0, 2 * Math.PI);
-        this.ctx.fill();
-        this.ctx.beginPath();
-        this.ctx.arc(this.dino.x + 25, this.dino.y + 10, 3, 0, 2 * Math.PI);
-        this.ctx.fill();
-        
-        // Draw pupils
-        this.ctx.fillStyle = '#000000';
-        this.ctx.beginPath();
-        this.ctx.arc(this.dino.x + 10, this.dino.y + 10, 1, 0, 2 * Math.PI);
-        this.ctx.fill();
-        this.ctx.beginPath();
-        this.ctx.arc(this.dino.x + 25, this.dino.y + 10, 1, 0, 2 * Math.PI);
-        this.ctx.fill();
     }
     
     drawObstacles() {
         for (const obstacle of this.obstacles) {
+            this.ctx.fillStyle = '#535353';
+            
             if (obstacle.type === 'cactus') {
-                // Draw cactus
-                this.ctx.fillStyle = '#228B22';
-                this.ctx.fillRect(obstacle.x, obstacle.y, obstacle.width, obstacle.height);
-                
-                // Add cactus spikes
-                this.ctx.fillStyle = '#32CD32';
-                for (let i = 0; i < 3; i++) {
-                    this.ctx.fillRect(
-                        obstacle.x - 3,
-                        obstacle.y + i * 15 + 5,
-                        6, 3
-                    );
-                    this.ctx.fillRect(
-                        obstacle.x + obstacle.width - 3,
-                        obstacle.y + i * 15 + 8,
-                        6, 3
-                    );
-                }
+                // Draw simple pixelated cactus (Chrome style)
+                this.ctx.fillRect(obstacle.x + 6, obstacle.y, 8, obstacle.height);
+                // Left arm
+                this.ctx.fillRect(obstacle.x, obstacle.y + 10, 10, 6);
+                // Right arm  
+                this.ctx.fillRect(obstacle.x + 10, obstacle.y + 15, 10, 6);
             } else if (obstacle.type === 'bird') {
-                // Draw bird (simple triangle)
-                this.ctx.fillStyle = '#8B4513';
-                this.ctx.beginPath();
-                this.ctx.moveTo(obstacle.x, obstacle.y + obstacle.height / 2);
-                this.ctx.lineTo(obstacle.x + obstacle.width, obstacle.y);
-                this.ctx.lineTo(obstacle.x + obstacle.width, obstacle.y + obstacle.height);
-                this.ctx.closePath();
-                this.ctx.fill();
-                
-                // Add wing detail
-                this.ctx.fillStyle = '#654321';
-                this.ctx.beginPath();
-                this.ctx.ellipse(
-                    obstacle.x + obstacle.width * 0.7,
-                    obstacle.y + obstacle.height / 2,
-                    8, 4, 0, 0, 2 * Math.PI
-                );
-                this.ctx.fill();
+                // Draw simple pixelated bird (Chrome style)
+                // Body
+                this.ctx.fillRect(obstacle.x + 8, obstacle.y + 6, 14, 8);
+                // Wings (animated based on game time for flapping effect)
+                const flapOffset = Math.floor(Date.now() / 200) % 2 === 0 ? 0 : 2;
+                this.ctx.fillRect(obstacle.x + 4, obstacle.y + 4 + flapOffset, 8, 4);
+                this.ctx.fillRect(obstacle.x + 18, obstacle.y + 4 + flapOffset, 8, 4);
+                // Beak
+                this.ctx.fillRect(obstacle.x + 22, obstacle.y + 8, 4, 2);
             }
         }
     }
@@ -451,26 +380,19 @@ class DinoJumpGame {
     }
     
     drawGround() {
-        // Draw ground line
-        this.ctx.strokeStyle = '#8B4513';
-        this.ctx.lineWidth = 3;
+        // Draw simple ground line (Chrome dino style)
+        this.ctx.strokeStyle = '#535353';
+        this.ctx.lineWidth = 2;
         this.ctx.beginPath();
         this.ctx.moveTo(0, this.ground.y);
         this.ctx.lineTo(this.canvas.width, this.ground.y);
         this.ctx.stroke();
         
-        // Draw ground texture
-        this.ctx.fillStyle = '#D2B48C';
-        this.ctx.fillRect(0, this.ground.y, this.canvas.width, this.ground.height);
-        
-        // Add some ground details (small rocks/pebbles)
-        this.ctx.fillStyle = '#8B4513';
-        for (let i = 0; i < this.canvas.width; i += 50) {
-            if (Math.random() > 0.7) {
-                this.ctx.beginPath();
-                this.ctx.arc(i + Math.random() * 30, this.ground.y + 5, 2, 0, 2 * Math.PI);
-                this.ctx.fill();
-            }
+        // Add simple dotted pattern for ground texture
+        this.ctx.fillStyle = '#535353';
+        for (let i = 0; i < this.canvas.width; i += 40) {
+            this.ctx.fillRect(i, this.ground.y + 5, 2, 2);
+            this.ctx.fillRect(i + 20, this.ground.y + 8, 2, 2);
         }
     }
     
@@ -479,18 +401,18 @@ class DinoJumpGame {
             this.ctx.fillStyle = 'rgba(0, 0, 0, 0.7)';
             this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
             
-            this.ctx.fillStyle = 'white';
-            this.ctx.font = 'bold 24px Arial';
+            this.ctx.fillStyle = '#535353';
+            this.ctx.font = 'bold 20px Arial';
             this.ctx.textAlign = 'center';
             this.ctx.fillText('Press SPACE or TAP to start!', this.canvas.width / 2, this.canvas.height / 2);
-            this.ctx.font = '16px Arial';
-            this.ctx.fillText('Use SPACE/UP to jump, DOWN to duck', this.canvas.width / 2, this.canvas.height / 2 + 40);
+            this.ctx.font = '14px Arial';
+            this.ctx.fillText('Use SPACE/UP to jump, DOWN to duck', this.canvas.width / 2, this.canvas.height / 2 + 30);
         } else if (this.gameState === 'paused') {
             this.ctx.fillStyle = 'rgba(0, 0, 0, 0.7)';
             this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
             
-            this.ctx.fillStyle = 'white';
-            this.ctx.font = 'bold 32px Arial';
+            this.ctx.fillStyle = '#535353';
+            this.ctx.font = 'bold 24px Arial';
             this.ctx.textAlign = 'center';
             this.ctx.fillText('PAUSED', this.canvas.width / 2, this.canvas.height / 2);
         }
