@@ -1130,7 +1130,6 @@ class Game {
                 gameTitle: 'Zombie Shooter',
                 start: 'Start',
                 options: 'Options',
-                soundboard: 'Soundboard',
                 developer: 'Developer',
                 controls: 'Controls',
                 cheats: 'Cheats',
@@ -1188,14 +1187,12 @@ class Game {
             start: { x: SCREEN_WIDTH/2 - buttonWidth/2, y: SCREEN_HEIGHT/2 - 50, width: buttonWidth, height: buttonHeight },
             options: { x: SCREEN_WIDTH/2 - buttonWidth/2, y: SCREEN_HEIGHT/2 + 50, width: buttonWidth, height: buttonHeight },
             shop: { x: SCREEN_WIDTH/2 - buttonWidth/2, y: SCREEN_HEIGHT/2 + 150, width: buttonWidth, height: buttonHeight },
-            soundboard: { x: SCREEN_WIDTH/2 - buttonWidth/2, y: SCREEN_HEIGHT/2 + 250, width: buttonWidth, height: buttonHeight },
-            developer: { x: SCREEN_WIDTH/2 - buttonWidth/2, y: SCREEN_HEIGHT/2 + 350, width: buttonWidth, height: buttonHeight },
-            home: { x: SCREEN_WIDTH/2 - buttonWidth/2, y: SCREEN_HEIGHT/2 + 450, width: buttonWidth, height: buttonHeight }
+            developer: { x: SCREEN_WIDTH/2 - buttonWidth/2, y: SCREEN_HEIGHT/2 + 250, width: buttonWidth, height: buttonHeight },
+            home: { x: SCREEN_WIDTH/2 - buttonWidth/2, y: SCREEN_HEIGHT/2 + 350, width: buttonWidth, height: buttonHeight }
         };
         
         // Shop state
         this.inShop = false;
-        this.inSoundboard = false;
         this.shopItems = {
             purple: { name: 'Purple Skin', cost: 5, owned: false, color: '#800080' },
             small: { name: 'Small & Green', cost: 10, owned: false, color: '#00FF00', scale: 0.5 },
@@ -1843,49 +1840,34 @@ class Game {
 
                 // Check options button
                 const optionsBtn = this.menuButtons.options;
-                if (!this.inShop && !this.inDeveloper && !this.inSoundboard && clickX >= optionsBtn.x && clickX <= optionsBtn.x + optionsBtn.width &&
+                if (!this.inShop && !this.inDeveloper && clickX >= optionsBtn.x && clickX <= optionsBtn.x + optionsBtn.width &&
                     clickY >= optionsBtn.y && clickY <= optionsBtn.y + optionsBtn.height) {
                     if (this.audio && typeof this.audio.playClick === 'function') this.audio.playClick();
                     this.inOptions = !this.inOptions;
                     this.inShop = false;  // Close shop when opening options
                     this.inDeveloper = false;  // Close developer when opening options
-                    this.inSoundboard = false;  // Close soundboard when opening options
                     this.activeOptionTab = '';  // Reset active tab when opening/closing options
                 }
 
                 // Check shop button
                 const shopBtn = this.menuButtons.shop;
-                if (!this.inOptions && !this.inDeveloper && !this.inSoundboard && clickX >= shopBtn.x && clickX <= shopBtn.x + shopBtn.width &&
+                if (!this.inOptions && !this.inDeveloper && clickX >= shopBtn.x && clickX <= shopBtn.x + shopBtn.width &&
                     clickY >= shopBtn.y && clickY <= shopBtn.y + shopBtn.height) {
                     if (this.audio && typeof this.audio.playClick === 'function') this.audio.playClick();
                     this.inShop = !this.inShop;
                     this.inOptions = false;  // Close options when opening shop
                     this.inDeveloper = false;  // Close developer when opening shop
-                    this.inSoundboard = false;  // Close soundboard when opening shop
-                    this.activeOptionTab = '';
-                }
-
-                // Check soundboard button
-                const soundboardBtn = this.menuButtons.soundboard;
-                if (!this.inOptions && !this.inShop && !this.inDeveloper && clickX >= soundboardBtn.x && clickX <= soundboardBtn.x + soundboardBtn.width &&
-                    clickY >= soundboardBtn.y && clickY <= soundboardBtn.y + soundboardBtn.height) {
-                    if (this.audio && typeof this.audio.playClick === 'function') this.audio.playClick();
-                    this.inSoundboard = !this.inSoundboard;
-                    this.inOptions = false;  // Close other menus
-                    this.inShop = false;
-                    this.inDeveloper = false;
                     this.activeOptionTab = '';
                 }
 
                 // Check developer button
                 const developerBtn = this.menuButtons.developer;
-                if (!this.inOptions && !this.inShop && !this.inSoundboard && clickX >= developerBtn.x && clickX <= developerBtn.x + developerBtn.width &&
+                if (!this.inOptions && !this.inShop && clickX >= developerBtn.x && clickX <= developerBtn.x + developerBtn.width &&
                     clickY >= developerBtn.y && clickY <= developerBtn.y + developerBtn.height) {
                     if (this.audio && typeof this.audio.playClick === 'function') this.audio.playClick();
                     this.inDeveloper = !this.inDeveloper;
                     this.inOptions = false;  // Close options when opening developer
                     this.inShop = false;  // Close shop when opening developer
-                    this.inSoundboard = false;  // Close soundboard when opening developer
                     this.activeOptionTab = '';
                 }
 
@@ -3667,20 +3649,6 @@ class Game {
         const shopTextWidth = ctx.measureText(shopText).width;
         ctx.fillText(shopText, shopBtn.x + (shopBtn.width - shopTextWidth) / 2, shopBtn.y + 40);
 
-        // Draw Soundboard button (purple)
-        const soundboardBtn = this.menuButtons.soundboard;
-        ctx.fillStyle = '#8A2BE2';  // Blue violet
-        ctx.fillRect(soundboardBtn.x, soundboardBtn.y, soundboardBtn.width, soundboardBtn.height);
-        ctx.strokeStyle = WHITE;
-        ctx.strokeRect(soundboardBtn.x, soundboardBtn.y, soundboardBtn.width, soundboardBtn.height);
-        
-        // Soundboard text
-        ctx.fillStyle = WHITE;
-        ctx.font = '32px Arial';
-        const soundboardText = this.translations[this.selectedLanguage].soundboard;
-        const soundboardTextWidth = ctx.measureText(soundboardText).width;
-        ctx.fillText(soundboardText, soundboardBtn.x + (soundboardBtn.width - soundboardTextWidth) / 2, soundboardBtn.y + 40);
-
         // Draw Developer button (cyan)
         const developerBtn = this.menuButtons.developer;
         ctx.fillStyle = '#00CCCC';
@@ -4259,6 +4227,7 @@ class Game {
             ctx.fillText('Press ESC to close', SCREEN_WIDTH/2, SCREEN_HEIGHT - 60);
             ctx.textAlign = 'left';
         }
+
         // Debug overlay (dt, particle counts)
         try { this._drawDebugOverlay(); } catch (e) {}
     }

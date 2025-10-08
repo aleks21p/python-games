@@ -1,18 +1,39 @@
 class SoundboardApp {
     constructor() {
-        // List of sound files (based on the files found in sounds-soundboard directory)
+        // List of sound files (all sounds from sounds-soundboard directory)
         this.sounds = [
+            { name: '5x30', file: '5x30.mp3', displayName: '5x30' },
             { name: '67', file: '67.mp3', displayName: 'Sixty Seven' },
+            { name: 'allah-hu-akbar', file: 'allah-hu-akbar_4xWvL6y.mp3', displayName: 'Allah Hu Akbar' },
+            { name: 'american-anthem', file: 'american-anthem-gun-and-eagle.mp3', displayName: 'American Anthem' },
+            { name: 'among-us-role', file: 'among-us-role-reveal-sound.mp3', displayName: 'Among Us Role' },
+            { name: 'angels-bonus', file: 'angels-bonus-technique.mp3', displayName: 'Angels Bonus' },
+            { name: 'biden-skill', file: 'biden-skill-issue.mp3', displayName: 'Biden Skill Issue' },
+            { name: 'brr-patapim', file: 'brr-brr-patapim.mp3', displayName: 'Brr Brr Patapim' },
             { name: 'christmas', file: 'christmas.mp3', displayName: 'Christmas' },
             { name: 'clashsetup', file: 'clashsetup.mp3', displayName: 'Clash Setup' },
+            { name: 'fairy-dust', file: 'fairy-dust-sound-effect.mp3', displayName: 'Fairy Dust' },
+            { name: 'german-spongebob', file: 'german-spongebob.mp3', displayName: 'German SpongeBob' },
             { name: 'hogrider', file: 'hogrider.mp3', displayName: 'Hog Rider' },
+            { name: 'fart-poopy', file: 'i-farted-and-a-poopy-almost-slipped-out.mp3', displayName: 'Fart Poopy' },
             { name: 'ian-3', file: 'ian-3.mp3', displayName: 'Ian 3' },
             { name: 'iphone', file: 'iphone.mp3', displayName: 'iPhone' },
-            { name: 'italian-brainrot-ringtone', file: 'italian-brainrot-ringtone.mp3', displayName: 'Italian Brainrot' },
+            { name: 'italian-brainrot', file: 'italian-brainrot-ringtone.mp3', displayName: 'Italian Brainrot' },
+            { name: 'kids-yay', file: 'kids-saying-yay-sound-effect_3.mp3', displayName: 'Kids Yay' },
+            { name: 'meow', file: 'm-e-o-w.mp3', displayName: 'Meow' },
+            { name: 'mlb', file: 'mlb.swf.mp3', displayName: 'MLB' },
             { name: 'music', file: 'music.mp3', displayName: 'Music' },
             { name: 'omniman', file: 'omniman.mp3', displayName: 'Omni Man' },
+            { name: 'pokeball', file: 'pokeball_sound_effects_mp3cut_1.mp3', displayName: 'Pokeball' },
             { name: 'polish', file: 'polish.mp3', displayName: 'Polish' },
-            { name: 'uwu', file: 'uwu.mp3', displayName: 'UwU' }
+            { name: 'potrzebujemy', file: 'potrzebujemyciewnaszymskadzie_bybakster.mp3', displayName: 'Potrzebujemy' },
+            { name: 'rizz', file: 'rizz-sound-effect.mp3', displayName: 'Rizz' },
+            { name: 'spongebob-fail', file: 'spongebob-fail.mp3', displayName: 'SpongeBob Fail' },
+            { name: 'tuco-get-out', file: 'tuco-get-out.mp3', displayName: 'Tuco Get Out' },
+            { name: 'uwu', file: 'uwu.mp3', displayName: 'UwU' },
+            { name: 'voice-sans', file: 'voice_sans.mp3', displayName: 'Voice Sans' },
+            { name: 'whopper-ad', file: 'whopper-ad.mp3', displayName: 'Whopper Ad' },
+            { name: 'smallest-violin', file: 'worlds-smallest-violin.mp3', displayName: 'Smallest Violin' }
         ];
         
         // Audio objects storage
