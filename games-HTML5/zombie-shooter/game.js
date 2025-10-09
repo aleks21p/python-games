@@ -3481,6 +3481,54 @@ class Game {
         const coinTextWidth = ctx.measureText(coinText).width;
         ctx.fillText(coinText, SCREEN_WIDTH - coinTextWidth - 20, 40);
 
+        // Display build/version info on the left (aligned vertically with coins)
+        try {
+            ctx.fillStyle = 'rgba(255,255,255,0.95)';
+            // Version on first small line, time on the second (UTC + elapsed)
+            ctx.font = 'bold 12px Arial';
+            ctx.textAlign = 'left';
+            ctx.fillText(`v${BUILD_VERSION}`, 20, 34);
+
+            // Format build time as UTC + show elapsed time
+            ctx.font = '12px Arial';
+            let timeLine = '';
+            if (BUILD_COMMIT_TIME) {
+                const bd = new Date(BUILD_COMMIT_TIME);
+                if (!isNaN(bd.getTime())) {
+                    const pad = n => String(n).padStart(2, '0');
+                    const y = bd.getUTCFullYear();
+                    const mo = pad(bd.getUTCMonth() + 1);
+                    const d = pad(bd.getUTCDate());
+                    const hh = pad(bd.getUTCHours());
+                    const mm = pad(bd.getUTCMinutes());
+                    const ss = pad(bd.getUTCSeconds());
+                    const utcStr = `${y}-${mo}-${d} ${hh}:${mm}:${ss} UTC`;
+
+                    // elapsed time
+                    const now = new Date();
+                    const diffMs = now.getTime() - bd.getTime();
+                    let elapsedStr = '';
+                    if (diffMs < 0) {
+                        elapsedStr = 'in the future';
+                    } else if (diffMs < 60000) {
+                        elapsedStr = `${Math.round(diffMs/1000)}s ago`;
+                    } else if (diffMs < 3600000) {
+                        elapsedStr = `${Math.round(diffMs/60000)}m ago`;
+                    } else {
+                        const hours = diffMs / 3600000;
+                        elapsedStr = `${hours.toFixed(1)}h ago`;
+                    }
+
+                    timeLine = `${utcStr} · ${elapsedStr}`;
+                } else {
+                    timeLine = BUILD_COMMIT_TIME;
+                }
+            }
+
+            ctx.fillText(timeLine, 20, 54);
+            ctx.textAlign = 'start';
+        } catch (e) {}
+
         // Draw title
         ctx.fillStyle = WHITE;
         ctx.font = '64px Arial';
@@ -4211,13 +4259,7 @@ class Game {
     ctx.fillStyle = GOLD;
     ctx.fillText(`${this.translations[this.selectedLanguage].coins}: ${this.coins}`, 10 * (this.hudScale || 1), 80 * (this.hudScale || 1));
 
-    // Display build/version info (small, top-left) so deployed version is visible
-    try {
-        ctx.fillStyle = 'rgba(255,255,255,0.85)';
-        ctx.font = this._scaledFont(12);
-        const vText = `v${BUILD_VERSION} @ ${BUILD_COMMIT_TIME}`;
-        ctx.fillText(vText, 10 * (this.hudScale || 1), 100 * (this.hudScale || 1));
-    } catch (e) {}
+    // Build info moved to the menu screen (rendered there instead of in-play HUD)
 
         // Animated health bar (top-left, above score)
         try {
