@@ -726,11 +726,41 @@
             updateIcon();
             applyMute();
 
+            // BroadcastChannel to notify other tabs/pages about mute changes
+            const bc = (typeof BroadcastChannel !== 'undefined') ? new BroadcastChannel('javasnake-global') : null;
+
             muteBtn.addEventListener('click', () => {
                 muted = !muted;
                 localStorage.setItem('site_mute', muted ? '1' : '0');
                 updateIcon();
                 applyMute();
+                // notify other tabs
+                if (bc) bc.postMessage({type: 'MUTE_CHANGED', muted: muted});
+            });
+
+            // Listen for mute changes from other tabs
+            if (bc) {
+                bc.addEventListener('message', (ev) => {
+                    try {
+                        const d = ev.data;
+                        if (d && d.type === 'MUTE_CHANGED') {
+                            muted = !!d.muted;
+                            localStorage.setItem('site_mute', muted ? '1' : '0');
+                            updateIcon();
+                            applyMute();
+                        }
+                    } catch (e) { console.warn(e); }
+                });
+            }
+
+            // Also react to storage events (fallback for older browsers)
+            window.addEventListener('storage', (e) => {
+                if (e.key === 'site_mute') {
+                    const val = e.newValue === '1';
+                    muted = val;
+                    updateIcon();
+                    applyMute();
+                }
             });
         })();
 

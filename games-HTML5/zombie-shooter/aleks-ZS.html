@@ -151,6 +151,42 @@
         })();
     </script>
     
+    <!-- Global mute listener: react to site-wide mute changes -->
+    <script>
+        (function(){
+            const bc = (typeof BroadcastChannel !== 'undefined') ? new BroadcastChannel('javasnake-global') : null;
+            function applyMuteState(muted) {
+                try {
+                    // If the game exposes an audio manager, try to mute it
+                    if (window.game && window.game.audio && typeof window.game.audio.setMasterMute === 'function') {
+                        window.game.audio.setMasterMute(muted);
+                    } else if (window.game && window.game.audio && window.game.audio.masterGain) {
+                        // best-effort: reduce master gain
+                        try { window.game.audio.masterGain.gain.value = muted ? 0 : (window.game.audio._previousMasterGain || 0.35); } catch(e){}
+                    } else {
+                        // fallback: mute any <audio> elements on the page
+                        document.querySelectorAll('audio').forEach(a => { a.muted = !!muted; });
+                    }
+                } catch (e) { console.warn('applyMuteState error', e); }
+            }
+
+            if (bc) {
+                bc.addEventListener('message', (ev) => {
+                    if (ev.data && ev.data.type === 'MUTE_CHANGED') {
+                        applyMuteState(!!ev.data.muted);
+                    }
+                });
+            }
+
+            window.addEventListener('storage', (e) => {
+                if (e.key === 'site_mute') applyMuteState(e.newValue === '1');
+            });
+
+            // Initialize
+            applyMuteState(localStorage.getItem('site_mute') === '1');
+        })();
+    </script>
+
     <!-- Auto-update functionality for zombie shooter -->
     <script>
         (function() {

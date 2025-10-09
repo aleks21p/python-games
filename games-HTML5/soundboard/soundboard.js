@@ -285,6 +285,39 @@ class SoundboardApp {
 document.addEventListener('DOMContentLoaded', () => {
     window.soundboard = new SoundboardApp();
     
+    // Listen for global mute changes (BroadcastChannel and storage fallback)
+    const bc = (typeof BroadcastChannel !== 'undefined') ? new BroadcastChannel('javasnake-global') : null;
+    const applyGlobalMute = (muted) => {
+        try {
+            if (muted) {
+                // store previous volume
+                if (!window.soundboard._previousMasterVolume) window.soundboard._previousMasterVolume = window.soundboard.masterVolume;
+                window.soundboard.masterVolume = 0;
+            } else {
+                window.soundboard.masterVolume = window.soundboard._previousMasterVolume || 0.5;
+            }
+            window.soundboard.updateAllVolumes();
+            window.soundboard.updateVolumeDisplay();
+        } catch (e) { console.warn('applyGlobalMute error', e); }
+    };
+
+    if (bc) {
+        bc.addEventListener('message', (ev) => {
+            if (ev.data && ev.data.type === 'MUTE_CHANGED') {
+                applyGlobalMute(!!ev.data.muted);
+            }
+        });
+    }
+
+    window.addEventListener('storage', (e) => {
+        if (e.key === 'site_mute') {
+            applyGlobalMute(e.newValue === '1');
+        }
+    });
+
+    // Initialize from localStorage state
+    applyGlobalMute(localStorage.getItem('site_mute') === '1');
+    
     // Add some fun keyboard shortcuts for specific sounds
     document.addEventListener('keydown', (e) => {
         if (e.altKey) {
