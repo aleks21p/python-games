@@ -332,5 +332,44 @@
     </div>
 
     <script src="soundboard.js"></script>
+    
+    <script>
+        // Register Service Worker for aggressive audio caching
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('./sw.js')
+                    .then((registration) => {
+                        console.log('SW registered: ', registration);
+                        
+                        // Check if there's a waiting service worker
+                        if (registration.waiting) {
+                            // Tell the waiting SW to skip waiting and become active
+                            registration.waiting.postMessage({type: 'SKIP_WAITING'});
+                        }
+                        
+                        // Listen for updates to the service worker
+                        registration.addEventListener('updatefound', () => {
+                            const newWorker = registration.installing;
+                            newWorker.addEventListener('statechange', () => {
+                                if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
+                                    // New service worker installed, cache updated
+                                    console.log('New audio cache available');
+                                }
+                            });
+                        });
+                    })
+                    .catch((registrationError) => {
+                        console.log('SW registration failed: ', registrationError);
+                    });
+                
+                // Listen for messages from the service worker
+                navigator.serviceWorker.addEventListener('message', (event) => {
+                    if (event.data && event.data.type === 'CACHE_SIZE') {
+                        console.log(`Audio files cached: ${event.data.size}`);
+                    }
+                });
+            });
+        }
+    </script>
 </body>
 </html>

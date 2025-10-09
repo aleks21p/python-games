@@ -99,12 +99,23 @@ class SoundboardApp {
     }
     
     preloadSounds() {
-        // Preload all audio files
+        // Preload all audio files with aggressive browser caching
         this.sounds.forEach(sound => {
             const audio = new Audio();
-            audio.src = `../sounds-soundboard/${sound.file}`;
-            audio.preload = 'metadata';
+            
+            // Add cache-busting prevention and force browser caching
+            const audioUrl = `../sounds-soundboard/${sound.file}`;
+            audio.src = audioUrl;
+            
+            // Set preload to 'auto' to fully load the audio file into browser cache
+            audio.preload = 'auto';
             audio.volume = this.masterVolume;
+            
+            // Force loading by setting crossOrigin (helps with caching)
+            audio.crossOrigin = 'anonymous';
+            
+            // Add cache headers hint via loading attribute
+            audio.loading = 'eager';
             
             // Handle audio events
             audio.addEventListener('ended', () => {
@@ -119,6 +130,14 @@ class SoundboardApp {
             audio.addEventListener('loadstart', () => {
                 console.log(`Loading: ${sound.file}`);
             });
+            
+            // Cache the audio data by triggering a load
+            audio.addEventListener('canplaythrough', () => {
+                console.log(`Cached: ${sound.file}`);
+            });
+            
+            // Force the browser to start loading immediately
+            audio.load();
             
             this.audioObjects[sound.name] = audio;
         });

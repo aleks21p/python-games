@@ -1,0 +1,37 @@
+# Audio caching configuration for soundboard
+# This file should be placed in the sounds-soundboard directory
+
+# Cache audio files for 1 year (31536000 seconds)
+<FilesMatch "\.(mp3|wav|ogg|m4a|aac)$">
+    # Set cache headers
+    Header set Cache-Control "public, max-age=31536000, immutable"
+    Header set Expires "Thu, 31 Dec 2037 23:55:55 GMT"
+    
+    # Enable compression if not already compressed
+    SetOutputFilter DEFLATE
+    
+    # Add ETag for cache validation
+    Header set ETag "%{REQUEST_FILENAME}%{REQUEST_URI}"
+    
+    # Allow cross-origin requests (for web audio)
+    Header set Access-Control-Allow-Origin "*"
+    Header set Access-Control-Allow-Methods "GET, HEAD, OPTIONS"
+    Header set Access-Control-Allow-Headers "Content-Type"
+</FilesMatch>
+
+# Enable compression for other soundboard files
+<FilesMatch "\.(js|css|html)$">
+    SetOutputFilter DEFLATE
+    Header set Cache-Control "public, max-age=86400"
+</FilesMatch>
+
+# Security headers
+Header always set X-Content-Type-Options nosniff
+Header always set X-Frame-Options DENY
+Header always set X-XSS-Protection "1; mode=block"
+
+# Optional: Enable browser caching validation
+<IfModule mod_headers.c>
+    # Allow conditional requests
+    Header set Vary "Accept-Encoding"
+</IfModule>
