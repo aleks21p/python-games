@@ -13,11 +13,11 @@ const GRAY = '#808080';
 const ORANGE = '#FFA500';
 const GOLD = '#FFD700';
 
-// Build metadata (injected at edit-time from git)
-// Update these when deploying to reflect the latest commit/version.
-const BUILD_VERSION = 'fd459f8';
-const BUILD_COMMIT = 'fd459f8cc6f7b87bc4c29d7610a4508d3fecf920';
-const BUILD_COMMIT_TIME = '2025-10-09T15:47:42+01:00';
+// Build metadata (prefer injected window globals so CI can update a small file)
+// Fallback to the last-known values if the injection file isn't present.
+const BUILD_VERSION = (typeof window !== 'undefined' && window.BUILD_VERSION) ? window.BUILD_VERSION : 'fd459f8';
+const BUILD_COMMIT = (typeof window !== 'undefined' && window.BUILD_COMMIT) ? window.BUILD_COMMIT : 'fd459f8cc6f7b87bc4c29d7610a4508d3fecf920';
+const BUILD_COMMIT_TIME = (typeof window !== 'undefined' && window.BUILD_COMMIT_TIME) ? window.BUILD_COMMIT_TIME : '2025-10-09T15:47:42+01:00';
 
 // --- Simple WebAudio-based sound helper (synthesized) ---
 class AudioManager {
