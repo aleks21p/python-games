@@ -13,6 +13,12 @@ const GRAY = '#808080';
 const ORANGE = '#FFA500';
 const GOLD = '#FFD700';
 
+// Build metadata (injected at edit-time from git)
+// Update these when deploying to reflect the latest commit/version.
+const BUILD_VERSION = 'fd459f8';
+const BUILD_COMMIT = 'fd459f8cc6f7b87bc4c29d7610a4508d3fecf920';
+const BUILD_COMMIT_TIME = '2025-10-09T15:47:42+01:00';
+
 // --- Simple WebAudio-based sound helper (synthesized) ---
 class AudioManager {
     constructor() {
@@ -4204,6 +4210,14 @@ class Game {
     ctx.font = this._scaledFont(28);
     ctx.fillStyle = GOLD;
     ctx.fillText(`${this.translations[this.selectedLanguage].coins}: ${this.coins}`, 10 * (this.hudScale || 1), 80 * (this.hudScale || 1));
+
+    // Display build/version info (small, top-left) so deployed version is visible
+    try {
+        ctx.fillStyle = 'rgba(255,255,255,0.85)';
+        ctx.font = this._scaledFont(12);
+        const vText = `v${BUILD_VERSION} @ ${BUILD_COMMIT_TIME}`;
+        ctx.fillText(vText, 10 * (this.hudScale || 1), 100 * (this.hudScale || 1));
+    } catch (e) {}
 
         // Animated health bar (top-left, above score)
         try {
