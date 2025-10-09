@@ -1770,9 +1770,10 @@ class Game {
                 // Check build-info click area (copy commit hash)
                 try {
                     const r = this._buildInfoRect;
-                    if (r && clickX >= r.x && clickX <= r.x + r.w && clickY >= r.y && clickY <= r.y + r.h) {
-                        const commit = BUILD_COMMIT || BUILD_VERSION || '';
-                        if (commit) {
+                        if (r && clickX >= r.x && clickX <= r.x + r.w && clickY >= r.y && clickY <= r.y + r.h) {
+                            const full = BUILD_COMMIT || BUILD_VERSION || '';
+                            const commit = (full || '').slice(0,7);
+                            if (commit) {
                             // try clipboard API
                             const doCopy = async (text) => {
                                 try {
@@ -1788,7 +1789,7 @@ class Game {
                                         document.body.removeChild(ta);
                                     }
                                     // set confirmation message on game instance
-                                    this._buildCopiedMessage = { t: Date.now(), text: 'Commit copied' };
+                                    this._buildCopiedMessage = { t: Date.now(), text: `Copied ${commit}` };
                                 } catch (err) {
                                     this._buildCopiedMessage = { t: Date.now(), text: 'Copy failed' };
                                 }
@@ -3600,7 +3601,7 @@ class Game {
                 ctx.fillText(this._buildCopiedMessage.text || 'Copied', 20, 74);
             } else if (this._isHoveringBuildInfo) {
                 // tooltip background
-                const tipText = 'Click to copy commit SHA';
+                const tipText = 'Click to copy short SHA';
                 ctx.font = '12px Arial';
                 const tw = ctx.measureText(tipText).width + 16;
                 const th = 22;
