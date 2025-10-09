@@ -3519,7 +3519,9 @@ class Game {
                         elapsedStr = `${hours.toFixed(1)}h ago`;
                     }
 
-                    timeLine = `${utcStr} · ${elapsedStr}`;
+                    // include short commit hash if available
+                    const shortCommit = (BUILD_COMMIT || '').slice(0, 7);
+                    timeLine = `${utcStr} · ${elapsedStr}` + (shortCommit ? ` · commit ${shortCommit}` : '');
                 } else {
                     timeLine = BUILD_COMMIT_TIME;
                 }
