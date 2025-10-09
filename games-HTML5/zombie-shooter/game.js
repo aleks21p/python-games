@@ -1748,6 +1748,38 @@ class Game {
                     this.activeOptionTab = '';
                 }
 
+                // Check build-info click area (copy commit hash)
+                try {
+                    const r = this._buildInfoRect;
+                    if (r && clickX >= r.x && clickX <= r.x + r.w && clickY >= r.y && clickY <= r.y + r.h) {
+                        const commit = BUILD_COMMIT || BUILD_VERSION || '';
+                        if (commit) {
+                            // try clipboard API
+                            const doCopy = async (text) => {
+                                try {
+                                    if (navigator.clipboard && navigator.clipboard.writeText) {
+                                        await navigator.clipboard.writeText(text);
+                                    } else {
+                                        // fallback
+                                        const ta = document.createElement('textarea');
+                                        ta.value = text;
+                                        document.body.appendChild(ta);
+                                        ta.select();
+                                        document.execCommand('copy');
+                                        document.body.removeChild(ta);
+                                    }
+                                    // set confirmation message on game instance
+                                    this._buildCopiedMessage = { t: Date.now(), text: 'Commit copied' };
+                                } catch (err) {
+                                    this._buildCopiedMessage = { t: Date.now(), text: 'Copy failed' };
+                                }
+                            };
+                            doCopy(commit);
+                        }
+                        return; // don't process other menu clicks when copying
+                    }
+                } catch (e) {}
+
                 // Check Home button - navigate back to main landing page
                 const homeBtn = this.menuButtons.home;
                 if (homeBtn && clickX >= homeBtn.x && clickX <= homeBtn.x + homeBtn.width &&
@@ -3487,7 +3519,8 @@ class Game {
             // Version on first small line, time on the second (UTC + elapsed)
             ctx.font = 'bold 12px Arial';
             ctx.textAlign = 'left';
-            ctx.fillText(`v${BUILD_VERSION}`, 20, 34);
+            const vText = `v${BUILD_VERSION}`;
+            ctx.fillText(vText, 20, 34);
 
             // Format build time as UTC + show elapsed time
             ctx.font = '12px Arial';
@@ -3528,6 +3561,25 @@ class Game {
             }
 
             ctx.fillText(timeLine, 20, 54);
+
+            // compute bounding rect for clickable copy area and store on game instance
+            try {
+                const vW = ctx.measureText(vText).width;
+                const tW = ctx.measureText(timeLine).width;
+                const w = Math.max(vW, tW) + 16; // padding
+                const h = 44; // enough for two lines
+                this._buildInfoRect = { x: 12, y: 20, w: Math.min(w, 380), h };
+            } catch (e) {
+                this._buildInfoRect = { x: 12, y: 20, w: 240, h: 44 };
+            }
+
+            // show temporary copied message if recently copied
+            if (this._buildCopiedMessage && Date.now() - (this._buildCopiedMessage.t || 0) < 2500) {
+                ctx.fillStyle = 'rgba(255,255,255,0.95)';
+                ctx.font = '12px Arial';
+                ctx.fillText(this._buildCopiedMessage.text || 'Copied', 20, 74);
+            }
+
             ctx.textAlign = 'start';
         } catch (e) {}
 
