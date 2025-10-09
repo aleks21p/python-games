@@ -1618,134 +1618,7 @@ class Game {
             };
         });
 
-        // Touch events for mobile controls
-        canvas.addEventListener('touchstart', (e) => {
-            const rect = canvas.getBoundingClientRect();
-            for (const t of Array.from(e.changedTouches)) {
-                // Transform from CSS pixels to logical game coordinates (800x600)
-                const tx = (t.clientX - rect.left) * (SCREEN_WIDTH / rect.width);
-                const ty = (t.clientY - rect.top) * (SCREEN_HEIGHT / rect.height);
-
-                // Dismiss tutorial overlay if visible (any touch)
-                if (!this.touchTutorialShown) {
-                    this.touchTutorialShown = true;
-                    localStorage.setItem('zs_touch_tutorial_shown', '1');
-                    this._touchTutorialDismissRect = null;
-                    // allow touch to still act as joystick/fire; continue processing
-                }
-
-                // Check if touch is on left side (joystick)
-                const j = this.touchState.joystick;
-                const distToJoy = Math.hypot(tx - j.startX, ty - j.startY);
-                if (!j.active && (tx < SCREEN_WIDTH / 2) && distToJoy <= j.radius * 1.6) {
-                    j.active = true; j.identifier = t.identifier; j.x = tx; j.y = ty; j.dx = tx - j.startX; j.dy = ty - j.startY;
-                    updateKeysFromJoystick();
-                    e.preventDefault();
-                    continue;
-                }
-
-                // Check fire button area (right-bottom)
-                const fb = this.touchState.fireButton;
-                const distToFire = Math.hypot(tx - fb.x, ty - fb.y);
-                if (!fb.active && (tx > SCREEN_WIDTH / 2) && distToFire <= fb.radius) {
-                    fb.active = true; fb.identifier = t.identifier;
-                    // simulate mouse position to point bullets toward touch
-                    this.mousePos = { x: tx, y: ty };
-                    // enable shooting while pressed
-                    this.player.isMouseShooting = true;
-                    e.preventDefault();
-                    continue;
-                }
-            }
-        }, { passive: false });
-
-        canvas.addEventListener('touchmove', (e) => {
-            const rect = canvas.getBoundingClientRect();
-            for (const t of Array.from(e.changedTouches)) {
-                // Transform from CSS pixels to logical game coordinates (800x600)
-                const tx = (t.clientX - rect.left) * (SCREEN_WIDTH / rect.width);
-                const ty = (t.clientY - rect.top) * (SCREEN_HEIGHT / rect.height);
-                const j = this.touchState.joystick;
-                if (j.active && t.identifier === j.identifier) {
-                    // clamp joystick displacement to radius
-                    const maxR = j.radius;
-                    const dx = tx - j.startX;
-                    const dy = ty - j.startY;
-                    const mag = Math.hypot(dx, dy);
-                    if (mag > maxR) {
-                        j.dx = dx / mag * maxR;
-                        j.dy = dy / mag * maxR;
-                        j.x = j.startX + j.dx;
-                        j.y = j.startY + j.dy;
-                    } else {
-                        j.dx = dx; j.dy = dy; j.x = tx; j.y = ty;
-                    }
-                    updateKeysFromJoystick();
-                    e.preventDefault();
-                    continue;
-                }
-
-                const fb = this.touchState.fireButton;
-                if (fb.active && t.identifier === fb.identifier) {
-                    // update mousePos so bullets aim at touch
-                    this.mousePos = { x: tx, y: ty };
-                    e.preventDefault();
-                    continue;
-                }
-            }
-        }, { passive: false });
-
-        canvas.addEventListener('touchend', (e) => {
-            for (const t of Array.from(e.changedTouches)) {
-                const j = this.touchState.joystick;
-                if (j.active && t.identifier === j.identifier) {
-                    j.active = false; j.identifier = null; j.dx = 0; j.dy = 0; j.x = j.startX; j.y = j.startY;
-                    // clear movement keys
-                    this.keys['w'] = false; this.keys['a'] = false; this.keys['s'] = false; this.keys['d'] = false;
-                }
-                const fb = this.touchState.fireButton;
-                if (fb.active && t.identifier === fb.identifier) {
-                    fb.active = false; fb.identifier = null;
-                    this.player.isMouseShooting = false;
-                }
-            }
-            // Check for taps on Game Over mobile buttons (Restart / Return to Menu)
-            try {
-                if (this.gameOver) {
-                    const rect = canvas.getBoundingClientRect();
-                    for (const t of Array.from(e.changedTouches)) {
-                        // Transform from CSS pixels to logical game coordinates (800x600)
-                        const tx = (t.clientX - rect.left) * (SCREEN_WIDTH / rect.width);
-                        const ty = (t.clientY - rect.top) * (SCREEN_HEIGHT / rect.height);
-
-                        // Restart button (if present)
-                        if (this._gameOverRestartRect) {
-                            const r = this._gameOverRestartRect;
-                            if (tx >= r.x && tx <= r.x + r.w && ty >= r.y && ty <= r.y + r.h) {
-                                // Restart: reset state then start a new run (countdown)
-                                try { this.reset(); } catch (err) {}
-                                this.inMenu = false;
-                                this.paused = false;
-                                this.inOptions = false;
-                                this.activeOptionTab = '';
-                                this.countdownActive = true;
-                                this.countdownStart = Date.now();
-                                break;
-                            }
-                        }
-
-                        // Return to menu button
-                        if (this._gameOverReturnRect) {
-                            const r = this._gameOverReturnRect;
-                            if (tx >= r.x && tx <= r.x + r.w && ty >= r.y && ty <= r.y + r.h) {
-                                this.gameOver = false; this.inMenu = true; this.paused = false; try { this.reset(); } catch (e) {}
-                                break;
-                            }
-                        }
-                    }
-                }
-            } catch (e) {}
-        }, { passive: false });
+        // Touch events removed - no mobile mode
 
         // Mouse click for menu buttons
         canvas.addEventListener('click', (e) => {
@@ -4527,62 +4400,12 @@ class Game {
             ctx.fillText(this.translations[this.selectedLanguage].pressToResume, SCREEN_WIDTH/2 - Math.round(80 * (this.hudScale || 1)), SCREEN_HEIGHT/2 + Math.round(40 * (this.hudScale || 1)));
         }
         
-        // Draw on-screen touch controls for mobile (joystick + fire)
-        try {
-            if (!this.touchControlsVisible) {
-                // Nothing to draw
-            } else {
-                const j = this.touchState.joystick;
-                const fb = this.touchState.fireButton;
-                // Show controls if touch input was used or on small screens
-                const showControls = ('ontouchstart' in window) || (SCREEN_WIDTH <= 900);
-                if (showControls) {
-                    // Compute scaled sizes based on user multiplier
-                    const mult = this.touchControlsSize || 1.0;
-                    const baseKnobExtra = 8;
-                    const baseAlpha = this.touchControlsOpacity || 0.9;
-
-                    // Joystick base
-                    ctx.save();
-                    ctx.globalAlpha = Math.max(0.15, baseAlpha * 0.6);
-                    ctx.fillStyle = '#222222';
-                    ctx.beginPath();
-                    ctx.arc(j.startX, j.startY, Math.round(j.radius * mult) + baseKnobExtra, 0, Math.PI * 2);
-                    ctx.fill();
-                    ctx.globalAlpha = Math.max(0.3, baseAlpha * 0.95);
-                    // Joystick knob (size relative to radius)
-                    const knobR = Math.max(12, Math.round(j.radius * 0.42 * mult));
-                    ctx.fillStyle = j.active ? '#4CAF50' : '#888888';
-                    ctx.beginPath();
-                    ctx.arc(j.x, j.y, knobR, 0, Math.PI * 2);
-                    ctx.fill();
-                    ctx.restore();
-
-                    // Fire button
-                    ctx.save();
-                    ctx.globalAlpha = Math.max(0.25, baseAlpha * 0.85);
-                    ctx.fillStyle = fb.active ? '#FF7043' : '#E53935';
-                    ctx.beginPath();
-                    ctx.arc(fb.x, fb.y, Math.round(fb.radius * mult), 0, Math.PI * 2);
-                    ctx.fill();
-                    ctx.fillStyle = WHITE;
-                    const fireFontSize = Math.max(12, Math.round(fb.radius * 0.42 * mult));
-                    ctx.font = `bold ${fireFontSize}px Arial`;
-                    ctx.textAlign = 'center';
-                    ctx.fillText('FIRE', fb.x, fb.y + Math.round(fireFontSize/3));
-                    ctx.textAlign = 'left';
-                    ctx.restore();
-                }
-            }
-        } catch (err) {
-            // Don't crash draw on odd platforms
-            console.warn('Touch control draw error', err);
-        }
+        // Touch controls drawing removed - no mobile mode
 
         // Draw crosshair/aim preview when firing
         try {
             const aim = this.mousePos || null;
-            const isFiring = this.player && (this.player.isMouseShooting || this.touchState.fireButton.active || this.autoFireEnabled && this.autoFireEnabled);
+            const isFiring = this.player && (this.player.isMouseShooting || this.autoFireEnabled && this.autoFireEnabled);
             if (aim && isFiring) {
                 ctx.save();
                 ctx.strokeStyle = '#FFDD33';
