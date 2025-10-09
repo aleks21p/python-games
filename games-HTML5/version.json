@@ -1,9 +1,9 @@
 {
-  "version": "1.0.0",
-  "timestamp": "2025-10-09T00:00:00Z",
+  "version": "9624a5e",
+  "timestamp": "2025-10-09T22:26:52+01:00",
   "games": {
-    "soundboard": "1.0.0",
-    "zombie-shooter": "1.0.0"
+    "soundboard": "9624a5e",
+    "zombie-shooter": "9624a5e"
   },
-  "lastUpdated": "2025-10-09T00:00:00Z"
+  "lastUpdated": "2025-10-09T22:26:52+01:00"
 }
