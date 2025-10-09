@@ -1,7 +1,9 @@
-// Service Worker for Soundboard Audio Caching
-// This caches all audio files aggressively to prevent re-downloading
+// Service Worker for Soundboard Audio Caching with Auto-Update
+// This caches all audio files aggressively and checks for version updates
 
-const CACHE_NAME = 'soundboard-audio-cache-v1';
+const CACHE_NAME = 'soundboard-audio-cache-v1.0.0';
+const VERSION_URL = '../version.json';
+const UPDATE_CHECK_INTERVAL = 30000; // Check for updates every 30 seconds
 
 // Install event - cache all audio files
 self.addEventListener('install', (event) => {
@@ -111,27 +113,6 @@ self.addEventListener('install', (event) => {
     self.skipWaiting();
 });
 
-// Activate event - clean up old caches
-self.addEventListener('activate', (event) => {
-    console.log('Service Worker activating...');
-    
-    event.waitUntil(
-        caches.keys().then((cacheNames) => {
-            return Promise.all(
-                cacheNames.map((cacheName) => {
-                    if (cacheName !== CACHE_NAME) {
-                        console.log('Deleting old cache:', cacheName);
-                        return caches.delete(cacheName);
-                    }
-                })
-            );
-        })
-    );
-    
-    // Take control of all clients immediately
-    return self.clients.claim();
-});
-
 // Fetch event - serve from cache first, then network
 self.addEventListener('fetch', (event) => {
     // Only cache audio files and soundboard resources
@@ -175,7 +156,7 @@ self.addEventListener('fetch', (event) => {
     }
 });
 
-// Message event - handle cache updates
+// Message event - handle cache updates and version checking
 self.addEventListener('message', (event) => {
     if (event.data && event.data.type === 'SKIP_WAITING') {
         self.skipWaiting();
@@ -191,4 +172,102 @@ self.addEventListener('message', (event) => {
             });
         });
     }
+    
+    if (event.data && event.data.type === 'CHECK_VERSION') {
+        checkForUpdates().then((hasUpdate) => {
+            event.ports[0].postMessage({
+                type: 'VERSION_CHECK_RESULT',
+                hasUpdate: hasUpdate
+            });
+        });
+    }
+});
+
+// Check for version updates
+async function checkForUpdates() {
+    try {
+        const response = await fetch(VERSION_URL, {
+            cache: 'no-cache',
+            headers: {
+                'Cache-Control': 'no-cache',
+                'Pragma': 'no-cache'
+            }
+        });
+        
+        if (!response.ok) {
+            console.log('Version check failed:', response.status);
+            return false;
+        }
+        
+        const versionData = await response.json();
+        const serverVersion = versionData.games.soundboard || versionData.version;
+        const currentVersion = CACHE_NAME.split('-v')[1] || '1.0.0';
+        
+        console.log('Current version:', currentVersion);
+        console.log('Server version:', serverVersion);
+        
+        if (serverVersion !== currentVersion) {
+            console.log('New version available:', serverVersion);
+            return true;
+        }
+        
+        return false;
+    } catch (error) {
+        console.error('Version check error:', error);
+        return false;
+    }
+}
+
+// Automatic version checking
+function startVersionChecking() {
+    setInterval(async () => {
+        const hasUpdate = await checkForUpdates();
+        if (hasUpdate) {
+            console.log('New version detected, notifying clients...');
+            
+            // Notify all clients about the update
+            const clients = await self.clients.matchAll();
+            clients.forEach(client => {
+                client.postMessage({
+                    type: 'NEW_VERSION_AVAILABLE',
+                    message: 'A new version is available. The page will refresh automatically.'
+                });
+            });
+            
+            // Clear old caches
+            const cacheNames = await caches.keys();
+            await Promise.all(
+                cacheNames.map(cacheName => {
+                    if (cacheName.startsWith('soundboard-audio-cache-v') && cacheName !== CACHE_NAME) {
+                        console.log('Deleting old cache:', cacheName);
+                        return caches.delete(cacheName);
+                    }
+                })
+            );
+        }
+    }, UPDATE_CHECK_INTERVAL);
+}
+
+// Start version checking after activation
+self.addEventListener('activate', (event) => {
+    console.log('Service Worker activating...');
+    
+    event.waitUntil(
+        caches.keys().then((cacheNames) => {
+            return Promise.all(
+                cacheNames.map((cacheName) => {
+                    if (cacheName !== CACHE_NAME && cacheName.startsWith('soundboard-audio-cache-v')) {
+                        console.log('Deleting old cache:', cacheName);
+                        return caches.delete(cacheName);
+                    }
+                })
+            );
+        }).then(() => {
+            // Start version checking
+            startVersionChecking();
+        })
+    );
+    
+    // Take control of all clients immediately
+    return self.clients.claim();
 });

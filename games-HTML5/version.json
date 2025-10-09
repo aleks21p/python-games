@@ -1,0 +1,9 @@
+{
+  "version": "1.0.0",
+  "timestamp": "2025-10-09T00:00:00Z",
+  "games": {
+    "soundboard": "1.0.0",
+    "zombie-shooter": "1.0.0"
+  },
+  "lastUpdated": "2025-10-09T00:00:00Z"
+}

@@ -749,5 +749,118 @@
             }
         });
     </script>
+    
+    <!-- Auto-update functionality for main site -->
+    <script>
+        (function() {
+            let refreshTimeout;
+            
+            // Check for version updates
+            async function checkForUpdates() {
+                try {
+                    const response = await fetch('./version.json', {
+                        cache: 'no-cache',
+                        headers: {
+                            'Cache-Control': 'no-cache',
+                            'Pragma': 'no-cache'
+                        }
+                    });
+                    
+                    if (response.ok) {
+                        const versionData = await response.json();
+                        const serverVersion = versionData.version;
+                        const currentVersion = localStorage.getItem('javasnake-version') || '1.0.0';
+                        
+                        if (serverVersion !== currentVersion) {
+                            console.log('JavaSnake site version mismatch:', currentVersion, '->', serverVersion);
+                            localStorage.setItem('javasnake-version', serverVersion);
+                            
+                            showUpdateNotification('Site updated! Refreshing to get the latest version...');
+                            
+                            // Auto-refresh after 2 seconds
+                            refreshTimeout = setTimeout(() => {
+                                window.location.reload(true);
+                            }, 2000);
+                        }
+                    }
+                } catch (error) {
+                    console.error('Site version check failed:', error);
+                }
+            }
+            
+            // Show update notification
+            function showUpdateNotification(message) {
+                if (refreshTimeout) {
+                    clearTimeout(refreshTimeout);
+                }
+                
+                let notification = document.getElementById('site-update-notification');
+                if (!notification) {
+                    notification = document.createElement('div');
+                    notification.id = 'site-update-notification';
+                    notification.style.cssText = `
+                        position: fixed;
+                        top: 20px;
+                        left: 50%;
+                        transform: translateX(-50%);
+                        background: linear-gradient(135deg, #ff6b6b 0%, #ee5a52 100%);
+                        color: white;
+                        padding: 15px 25px;
+                        border-radius: 25px;
+                        font-weight: bold;
+                        font-size: 1rem;
+                        box-shadow: 0 10px 30px rgba(255, 107, 107, 0.4);
+                        z-index: 10000;
+                        text-align: center;
+                        max-width: 90vw;
+                        animation: slideDown 0.5s ease-out;
+                        font-family: 'Orbitron', monospace;
+                        border: 2px solid rgba(255, 255, 255, 0.2);
+                    `;
+                    
+                    // Add animation if not already present
+                    if (!document.querySelector('#site-update-style')) {
+                        const style = document.createElement('style');
+                        style.id = 'site-update-style';
+                        style.textContent = `
+                            @keyframes slideDown {
+                                from { transform: translateX(-50%) translateY(-100%); opacity: 0; }
+                                to { transform: translateX(-50%) translateY(0); opacity: 1; }
+                            }
+                        `;
+                        document.head.appendChild(style);
+                    }
+                    
+                    document.body.appendChild(notification);
+                }
+                
+                notification.textContent = message;
+                notification.style.display = 'block';
+                
+                // Click to refresh immediately
+                notification.onclick = () => {
+                    window.location.reload(true);
+                };
+                notification.style.cursor = 'pointer';
+                notification.title = 'Click to refresh now';
+            }
+            
+            // Start version checking
+            function startVersionChecking() {
+                // Check immediately after 3 seconds
+                setTimeout(checkForUpdates, 3000);
+                
+                // Then check every 2 minutes
+                setInterval(checkForUpdates, 120000);
+            }
+            
+            // Initialize when page loads
+            if (document.readyState === 'loading') {
+                document.addEventListener('DOMContentLoaded', startVersionChecking);
+            } else {
+                startVersionChecking();
+            }
+        })();
+    </script>
 </body>
 </html>

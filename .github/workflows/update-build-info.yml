@@ -6,6 +6,7 @@ on:
     # ignore changes to the generated build-info file to avoid loops
     paths-ignore:
       - 'games-HTML5/zombie-shooter/build-info.js'
+      - 'games-HTML5/version.json'
 
 # Allow this workflow to push changes back to the repository
 permissions:
@@ -38,7 +39,7 @@ jobs:
             echo "VERSION=$(git rev-parse --short HEAD)" >> $GITHUB_OUTPUT
           fi
 
-      - name: Create build-info.js
+      - name: Create build-info.js and update version.json
         run: |
           mkdir -p games-HTML5/zombie-shooter
           cat > games-HTML5/zombie-shooter/build-info.js <<'JS'
@@ -48,11 +49,24 @@ jobs:
           window.BUILD_COMMIT = '${{ steps.gitmeta.outputs.FULL }}';
           window.BUILD_COMMIT_TIME = '${{ steps.gitmeta.outputs.TIME }}';
           JS
+          
+          # Update version.json for auto-refresh functionality
+          cat > games-HTML5/version.json <<'VERSION'
+          {
+            "version": "${{ steps.gitmeta.outputs.VERSION }}",
+            "timestamp": "${{ steps.gitmeta.outputs.TIME }}",
+            "games": {
+              "soundboard": "${{ steps.gitmeta.outputs.VERSION }}",
+              "zombie-shooter": "${{ steps.gitmeta.outputs.VERSION }}"
+            },
+            "lastUpdated": "${{ steps.gitmeta.outputs.TIME }}"
+          }
+          VERSION
 
       - name: Commit and push build-info
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add games-HTML5/zombie-shooter/build-info.js
-          git commit -m "chore: update build-info.js [skip ci]" || echo "no changes to commit"
+          git add games-HTML5/zombie-shooter/build-info.js games-HTML5/version.json
+          git commit -m "chore: update build-info.js and version.json [skip ci]" || echo "no changes to commit"
           git push origin HEAD:main
