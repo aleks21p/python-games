@@ -1641,10 +1641,98 @@ class Game {
             } catch (err) {}
         });
 
+        // Touch handlers for mobile: tap = copy short SHA, long-press = copy full SHA
+        canvas.addEventListener('touchstart', (e) => {
+            try {
+                if (!this.inMenu) return;
+                const rect = canvas.getBoundingClientRect();
+                const t = e.touches[0];
+                const tx = (t.clientX - rect.left) * (SCREEN_WIDTH / rect.width);
+                const ty = (t.clientY - rect.top) * (SCREEN_HEIGHT / rect.height);
+                const r = this._buildInfoRect;
+                if (r && tx >= r.x && tx <= r.x + r.w && ty >= r.y && ty <= r.y + r.h) {
+                    // show tooltip immediately
+                    this._isHoveringBuildInfo = true;
+                    // start long-press timer
+                    this._touchBuildStart = Date.now();
+                    this._touchBuildStartPos = { x: tx, y: ty };
+                    if (this._touchBuildTimer) clearTimeout(this._touchBuildTimer);
+                    this._touchBuildTimer = setTimeout(() => {
+                        // long-press: copy full SHA
+                        const full = BUILD_COMMIT || BUILD_VERSION || '';
+                        const commitFull = (full || '');
+                        if (commitFull) {
+                            (async () => {
+                                try {
+                                    if (navigator.clipboard && navigator.clipboard.writeText) await navigator.clipboard.writeText(commitFull);
+                                    else {
+                                        const ta = document.createElement('textarea'); ta.value = commitFull; document.body.appendChild(ta); ta.select(); document.execCommand('copy'); document.body.removeChild(ta);
+                                    }
+                                    this._buildCopiedMessage = { t: Date.now(), text: `Copied ${commitFull.slice(0,7)} (full copied)` };
+                                } catch (err) { this._buildCopiedMessage = { t: Date.now(), text: 'Copy failed' }; }
+                            })();
+                        }
+                        this._touchBuildTimer = null;
+                        // suppress the synthetic click
+                        this._suppressNextClickTime = Date.now();
+                    }, 700);
+                    // prevent default to avoid generating synthetic mouse events in some browsers
+                    e.preventDefault();
+                }
+            } catch (err) {}
+        }, { passive: false });
+
+        canvas.addEventListener('touchmove', (e) => {
+            try {
+                if (!this.inMenu) return;
+                const rect = canvas.getBoundingClientRect();
+                const t = e.touches[0];
+                const tx = (t.clientX - rect.left) * (SCREEN_WIDTH / rect.width);
+                const ty = (t.clientY - rect.top) * (SCREEN_HEIGHT / rect.height);
+                const start = this._touchBuildStartPos;
+                if (start && (Math.abs(tx - start.x) > 10 || Math.abs(ty - start.y) > 10)) {
+                    if (this._touchBuildTimer) { clearTimeout(this._touchBuildTimer); this._touchBuildTimer = null; }
+                    this._isHoveringBuildInfo = false;
+                }
+            } catch (err) {}
+        }, { passive: true });
+
+        canvas.addEventListener('touchend', (e) => {
+            try {
+                if (!this.inMenu) return;
+                if (this._touchBuildTimer) {
+                    // short tap (released before long-press) -> copy short SHA
+                    clearTimeout(this._touchBuildTimer); this._touchBuildTimer = null;
+                    const full = BUILD_COMMIT || BUILD_VERSION || '';
+                    const commit = (full || '').slice(0,7);
+                    if (commit) {
+                        (async () => {
+                            try {
+                                if (navigator.clipboard && navigator.clipboard.writeText) await navigator.clipboard.writeText(commit);
+                                else { const ta = document.createElement('textarea'); ta.value = commit; document.body.appendChild(ta); ta.select(); document.execCommand('copy'); document.body.removeChild(ta); }
+                                this._buildCopiedMessage = { t: Date.now(), text: `Copied ${commit}` };
+                            } catch (err) { this._buildCopiedMessage = { t: Date.now(), text: 'Copy failed' }; }
+                        })();
+                    }
+                    // suppress the synthetic click
+                    this._suppressNextClickTime = Date.now();
+                    this._isHoveringBuildInfo = false;
+                    e.preventDefault();
+                } else {
+                    // clear hover state
+                    this._isHoveringBuildInfo = false;
+                }
+                this._touchBuildStart = null;
+                this._touchBuildStartPos = null;
+            } catch (err) {}
+        }, { passive: false });
+
         // Touch events removed - no mobile mode
 
         // Mouse click for menu buttons
         canvas.addEventListener('click', (e) => {
+            // ignore synthetic clicks generated after touch interactions
+            if (this._suppressNextClickTime && Date.now() - this._suppressNextClickTime < 1200) return;
             const rect = canvas.getBoundingClientRect();
             // Transform from CSS pixels to logical game coordinates (800x600)
             const clickX = (e.clientX - rect.left) * (SCREEN_WIDTH / rect.width);
