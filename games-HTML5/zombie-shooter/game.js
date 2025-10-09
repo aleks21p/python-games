@@ -1347,9 +1347,7 @@ class Game {
         }
 
     // Touch control settings (persisted)
-    this.touchControlsVisible = (localStorage.getItem('zs_touch_controls_visible') !== '0'); // default true
-    this.touchControlsOpacity = parseFloat(localStorage.getItem('zs_touch_opacity')) || 0.9;
-    this.touchControlsSize = parseFloat(localStorage.getItem('zs_touch_size')) || 1.0; // multiplier
+    // Touch control settings removed - no mobile mode
 
         // Ensure touchState radii reflect user size multiplier
         try {
@@ -1862,6 +1860,11 @@ class Game {
                         if (this.healthUpgradeLevel < this.maxHealthUpgradeLevel && this.coins >= this.healthUpgradeCost) {
                             this.coins -= this.healthUpgradeCost;
                             this.healthUpgradeLevel++;
+                            // Give immediate +1 HP when upgrading
+                            if (this.player) {
+                                this.player.maxHealth += 1;
+                                this.player.health = Math.min(this.player.health + 1, this.player.maxHealth);
+                            }
                             this.saveCoins();
                             this.saveHealthUpgrade();
                         }
@@ -3213,7 +3216,7 @@ class Game {
         
         // Apply health upgrades to base health (only if not using fixed health)
         if (this.activePlayerSkin === 'default' || !this.shopItems[this.activePlayerSkin]?.fixedHealth) {
-            this.player.baseHealth = (this.player.baseHealth || 10) + (this.healthUpgradeLevel * 2);
+            this.player.baseHealth = (this.player.baseHealth || 10) + (this.healthUpgradeLevel * 1);
         }
         this.player.updatePetBonuses();
         
@@ -4145,10 +4148,10 @@ class Game {
     draw() {
         // Save the current transform
         ctx.save();
-        // Apply screen shake if active
+        // Apply screen shake if active (reduced by 70%)
         if (this.shakeStrength && this.shakeStrength > 0) {
-            const sx = (Math.random() * 2 - 1) * this.shakeStrength;
-            const sy = (Math.random() * 2 - 1) * this.shakeStrength;
+            const sx = (Math.random() * 2 - 1) * this.shakeStrength * 0.3;
+            const sy = (Math.random() * 2 - 1) * this.shakeStrength * 0.3;
             ctx.translate(Math.round(sx), Math.round(sy));
         }
         
