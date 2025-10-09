@@ -3529,69 +3529,142 @@ class Game {
             ctx.textAlign = 'start';
         } catch (e) {}
 
-        // Draw title
-        ctx.fillStyle = WHITE;
-        ctx.font = '64px Arial';
-        const title = this.translations[this.selectedLanguage].gameTitle;
-        const titleWidth = ctx.measureText(title).width;
-        ctx.fillText(title, (SCREEN_WIDTH - titleWidth) / 2, SCREEN_HEIGHT / 4);
+    // Draw neon-styled title using Orbitron-like look
+    ctx.save();
+    ctx.fillStyle = '#ffffff';
+    ctx.font = 'bold 64px "Orbitron", Arial, sans-serif';
+    ctx.textAlign = 'center';
+    const title = this.translations[this.selectedLanguage].gameTitle;
+    const titleWidth = ctx.measureText(title).width;
+    // neon shadow layers
+    ctx.shadowColor = '#4ecdc4';
+    ctx.shadowBlur = 30;
+    ctx.fillStyle = 'white';
+    ctx.fillText(title, SCREEN_WIDTH/2, SCREEN_HEIGHT / 4);
+    ctx.shadowBlur = 0;
+    ctx.restore();
 
-        // Draw Start button (green)
+        // Draw Start button - rounded gradient
         const startBtn = this.menuButtons.start;
-        ctx.fillStyle = '#00AA00';  // Green
-        ctx.fillRect(startBtn.x, startBtn.y, startBtn.width, startBtn.height);
-        ctx.strokeStyle = WHITE;
-        ctx.lineWidth = 2;
-        ctx.strokeRect(startBtn.x, startBtn.y, startBtn.width, startBtn.height);
-        
-        // Start text
-        ctx.fillStyle = WHITE;
-        ctx.font = '32px Arial';  // Back to original size
-        const startText = this.translations[this.selectedLanguage].start;
-        const startTextWidth = ctx.measureText(startText).width;
-        ctx.fillText(startText, startBtn.x + (startBtn.width - startTextWidth) / 2, startBtn.y + 40);  // Back to original position
+        (function drawRoundedButton(btn, colors, text) {
+            const r = 14;
+            const grad = ctx.createLinearGradient(btn.x, btn.y, btn.x + btn.width, btn.y + btn.height);
+            grad.addColorStop(0, colors[0]);
+            grad.addColorStop(1, colors[1]);
+            ctx.fillStyle = grad;
+            // rounded rect
+            ctx.beginPath();
+            ctx.moveTo(btn.x + r, btn.y);
+            ctx.lineTo(btn.x + btn.width - r, btn.y);
+            ctx.quadraticCurveTo(btn.x + btn.width, btn.y, btn.x + btn.width, btn.y + r);
+            ctx.lineTo(btn.x + btn.width, btn.y + btn.height - r);
+            ctx.quadraticCurveTo(btn.x + btn.width, btn.y + btn.height, btn.x + btn.width - r, btn.y + btn.height);
+            ctx.lineTo(btn.x + r, btn.y + btn.height);
+            ctx.quadraticCurveTo(btn.x, btn.y + btn.height, btn.x, btn.y + btn.height - r);
+            ctx.lineTo(btn.x, btn.y + r);
+            ctx.quadraticCurveTo(btn.x, btn.y, btn.x + r, btn.y);
+            ctx.closePath();
+            ctx.fill();
+            ctx.lineWidth = 2;
+            ctx.strokeStyle = 'rgba(255,255,255,0.2)';
+            ctx.stroke();
+            // text
+            ctx.fillStyle = 'white';
+            ctx.font = '28px "Orbitron", Arial';
+            ctx.textAlign = 'center';
+            ctx.fillText(text, btn.x + btn.width/2, btn.y + 36);
+            ctx.textAlign = 'left';
+        })(startBtn, ['#ff6b6b', '#4ecdc4'], this.translations[this.selectedLanguage].start);
 
-        // Draw Options button (red)
+        // Draw Options button - rounded gradient
         const optionsBtn = this.menuButtons.options;
-        ctx.fillStyle = '#AA0000';  // Red
-        ctx.fillRect(optionsBtn.x, optionsBtn.y, optionsBtn.width, optionsBtn.height);
-        ctx.strokeStyle = WHITE;
-        ctx.strokeRect(optionsBtn.x, optionsBtn.y, optionsBtn.width, optionsBtn.height);
-        
-        // Options text
-        ctx.fillStyle = WHITE;
-        ctx.font = '32px Arial';  // Back to original size
-        const optionsText = this.translations[this.selectedLanguage].options;
-        const optionsTextWidth = ctx.measureText(optionsText).width;
-        ctx.fillText(optionsText, optionsBtn.x + (optionsBtn.width - optionsTextWidth) / 2, optionsBtn.y + 40);  // Back to original position
+        (function drawRoundedButtonLocal(btn, colors, text) {
+            const r = 14;
+            const grad = ctx.createLinearGradient(btn.x, btn.y, btn.x + btn.width, btn.y + btn.height);
+            grad.addColorStop(0, colors[0]);
+            grad.addColorStop(1, colors[1]);
+            ctx.fillStyle = grad;
+            ctx.beginPath();
+            ctx.moveTo(btn.x + r, btn.y);
+            ctx.lineTo(btn.x + btn.width - r, btn.y);
+            ctx.quadraticCurveTo(btn.x + btn.width, btn.y, btn.x + btn.width, btn.y + r);
+            ctx.lineTo(btn.x + btn.width, btn.y + btn.height - r);
+            ctx.quadraticCurveTo(btn.x + btn.width, btn.y + btn.height, btn.x + btn.width - r, btn.y + btn.height);
+            ctx.lineTo(btn.x + r, btn.y + btn.height);
+            ctx.quadraticCurveTo(btn.x, btn.y + btn.height, btn.x, btn.y + btn.height - r);
+            ctx.lineTo(btn.x, btn.y + r);
+            ctx.quadraticCurveTo(btn.x, btn.y, btn.x + r, btn.y);
+            ctx.closePath();
+            ctx.fill();
+            ctx.lineWidth = 2;
+            ctx.strokeStyle = 'rgba(255,255,255,0.15)';
+            ctx.stroke();
+            ctx.fillStyle = 'white';
+            ctx.font = '28px "Orbitron", Arial';
+            ctx.textAlign = 'center';
+            ctx.fillText(text, btn.x + btn.width/2, btn.y + 36);
+            ctx.textAlign = 'left';
+        })(optionsBtn, ['#ff7a7a', '#d94a4a'], this.translations[this.selectedLanguage].options);
 
-        // Draw Shop button (gold)
+        // Draw Shop button (gold gradient)
         const shopBtn = this.menuButtons.shop;
-        ctx.fillStyle = GOLD;
-        ctx.fillRect(shopBtn.x, shopBtn.y, shopBtn.width, shopBtn.height);
-        ctx.strokeStyle = WHITE;
-        ctx.strokeRect(shopBtn.x, shopBtn.y, shopBtn.width, shopBtn.height);
-        
-        // Shop text
-        ctx.fillStyle = WHITE;
-        ctx.font = '32px Arial';
-        const shopText = 'Shop';
-        const shopTextWidth = ctx.measureText(shopText).width;
-        ctx.fillText(shopText, shopBtn.x + (shopBtn.width - shopTextWidth) / 2, shopBtn.y + 40);
+        (function(btn){
+            const r = 14;
+            const grad = ctx.createLinearGradient(btn.x, btn.y, btn.x + btn.width, btn.y + btn.height);
+            grad.addColorStop(0, '#ffd54a');
+            grad.addColorStop(1, '#ffb74d');
+            ctx.fillStyle = grad;
+            ctx.beginPath();
+            ctx.moveTo(btn.x + r, btn.y);
+            ctx.lineTo(btn.x + btn.width - r, btn.y);
+            ctx.quadraticCurveTo(btn.x + btn.width, btn.y, btn.x + btn.width, btn.y + r);
+            ctx.lineTo(btn.x + btn.width, btn.y + btn.height - r);
+            ctx.quadraticCurveTo(btn.x + btn.width, btn.y + btn.height, btn.x + btn.width - r, btn.y + btn.height);
+            ctx.lineTo(btn.x + r, btn.y + btn.height);
+            ctx.quadraticCurveTo(btn.x, btn.y + btn.height, btn.x, btn.y + btn.height - r);
+            ctx.lineTo(btn.x, btn.y + r);
+            ctx.quadraticCurveTo(btn.x, btn.y, btn.x + r, btn.y);
+            ctx.closePath();
+            ctx.fill();
+            ctx.lineWidth = 2;
+            ctx.strokeStyle = 'rgba(255,255,255,0.12)';
+            ctx.stroke();
+            ctx.fillStyle = 'white';
+            ctx.font = '28px "Orbitron", Arial';
+            ctx.textAlign = 'center';
+            ctx.fillText('Shop', btn.x + btn.width/2, btn.y + 36);
+            ctx.textAlign = 'left';
+        })(shopBtn);
 
-        // Draw Developer button (cyan)
+        // Draw Developer button (cyan gradient)
         const developerBtn = this.menuButtons.developer;
-        ctx.fillStyle = '#00CCCC';
-        ctx.fillRect(developerBtn.x, developerBtn.y, developerBtn.width, developerBtn.height);
-        ctx.strokeStyle = WHITE;
-        ctx.strokeRect(developerBtn.x, developerBtn.y, developerBtn.width, developerBtn.height);
-        
-        // Developer text
-        ctx.fillStyle = WHITE;
-        ctx.font = '32px Arial';
-        const developerText = this.translations[this.selectedLanguage].developer;
-        const developerTextWidth = ctx.measureText(developerText).width;
-        ctx.fillText(developerText, developerBtn.x + (developerBtn.width - developerTextWidth) / 2, developerBtn.y + 40);
+        (function(btn){
+            const r = 14;
+            const grad = ctx.createLinearGradient(btn.x, btn.y, btn.x + btn.width, btn.y + btn.height);
+            grad.addColorStop(0, '#4ecdc4');
+            grad.addColorStop(1, '#45b7d1');
+            ctx.fillStyle = grad;
+            ctx.beginPath();
+            ctx.moveTo(btn.x + r, btn.y);
+            ctx.lineTo(btn.x + btn.width - r, btn.y);
+            ctx.quadraticCurveTo(btn.x + btn.width, btn.y, btn.x + btn.width, btn.y + r);
+            ctx.lineTo(btn.x + btn.width, btn.y + btn.height - r);
+            ctx.quadraticCurveTo(btn.x + btn.width, btn.y + btn.height, btn.x + btn.width - r, btn.y + btn.height);
+            ctx.lineTo(btn.x + r, btn.y + btn.height);
+            ctx.quadraticCurveTo(btn.x, btn.y + btn.height, btn.x, btn.y + btn.height - r);
+            ctx.lineTo(btn.x, btn.y + r);
+            ctx.quadraticCurveTo(btn.x, btn.y, btn.x + r, btn.y);
+            ctx.closePath();
+            ctx.fill();
+            ctx.lineWidth = 2;
+            ctx.strokeStyle = 'rgba(255,255,255,0.12)';
+            ctx.stroke();
+            ctx.fillStyle = 'white';
+            ctx.font = '28px "Orbitron", Arial';
+            ctx.textAlign = 'center';
+            ctx.fillText(this.translations ? (this.translations[this.selectedLanguage].developer || 'Dev') : 'Dev', btn.x + btn.width/2, btn.y + 36);
+            ctx.textAlign = 'left';
+        }).call(this, developerBtn);
 
         // Draw Home button (blue-gray)
         const homeBtn = this.menuButtons.home;
