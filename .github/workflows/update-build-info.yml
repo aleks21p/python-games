@@ -7,6 +7,10 @@ on:
     paths-ignore:
       - 'games-HTML5/zombie-shooter/build-info.js'
 
+# Allow this workflow to push changes back to the repository
+permissions:
+  contents: write
+
 jobs:
   write-build-info:
     runs-on: ubuntu-latest
@@ -14,7 +18,9 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
         with:
-          fetch-depth: 1
+          # ensure the runner has the commit refs and allow pushing
+          fetch-depth: 0
+          token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Get git metadata
         id: gitmeta
