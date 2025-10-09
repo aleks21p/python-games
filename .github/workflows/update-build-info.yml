@@ -35,7 +35,7 @@ jobs:
           if [ -n "$TAG" ]; then
             echo "VERSION=$TAG" >> $GITHUB_OUTPUT
           else
-            echo "VERSION=$((git rev-parse --short HEAD))" >> $GITHUB_OUTPUT
+            echo "VERSION=$(git rev-parse --short HEAD)" >> $GITHUB_OUTPUT
           fi
 
       - name: Create build-info.js
