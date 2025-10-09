@@ -1620,6 +1620,25 @@ class Game {
                 x: (e.clientX - rect.left) * (SCREEN_WIDTH / rect.width),
                 y: (e.clientY - rect.top) * (SCREEN_HEIGHT / rect.height)
             };
+            // Hover detection for build-info copy area (only when in menu)
+            try {
+                if (this.inMenu && this._buildInfoRect) {
+                    const mx = this.mousePos.x;
+                    const my = this.mousePos.y;
+                    const r = this._buildInfoRect;
+                    const hovering = mx >= r.x && mx <= r.x + r.w && my >= r.y && my <= r.y + r.h;
+                    if (hovering && !this._isHoveringBuildInfo) {
+                        this._isHoveringBuildInfo = true;
+                        canvas.style.cursor = 'pointer';
+                    } else if (!hovering && this._isHoveringBuildInfo) {
+                        this._isHoveringBuildInfo = false;
+                        canvas.style.cursor = 'default';
+                    }
+                } else if (this._isHoveringBuildInfo) {
+                    this._isHoveringBuildInfo = false;
+                    canvas.style.cursor = 'default';
+                }
+            } catch (err) {}
         });
 
         // Touch events removed - no mobile mode
