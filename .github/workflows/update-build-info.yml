@@ -13,9 +13,9 @@ permissions:
 
 jobs:
   write-build-info:
-    # Use a self-hosted runner so jobs run immediately on your machine (free runner)
-    # Make sure you have a self-hosted runner registered for this repository with the label 'self-hosted'
-    runs-on: self-hosted
+    # Use GitHub-hosted runner (ubuntu-latest). Hosted runners are provided by GitHub
+    # and will run your job in the cloud. Note: minutes/usage depend on repo plan.
+    runs-on: ubuntu-latest
     steps:
       - name: Checkout
         uses: actions/checkout@v4
