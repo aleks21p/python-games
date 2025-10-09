@@ -3592,11 +3592,40 @@ class Game {
                 this._buildInfoRect = { x: 12, y: 20, w: 240, h: 44 };
             }
 
-            // show temporary copied message if recently copied
-            if (this._buildCopiedMessage && Date.now() - (this._buildCopiedMessage.t || 0) < 2500) {
+            // show temporary copied message if recently copied, otherwise show hover tooltip
+            const copied = this._buildCopiedMessage && Date.now() - (this._buildCopiedMessage.t || 0) < 2500;
+            if (copied) {
                 ctx.fillStyle = 'rgba(255,255,255,0.95)';
                 ctx.font = '12px Arial';
                 ctx.fillText(this._buildCopiedMessage.text || 'Copied', 20, 74);
+            } else if (this._isHoveringBuildInfo) {
+                // tooltip background
+                const tipText = 'Click to copy commit SHA';
+                ctx.font = '12px Arial';
+                const tw = ctx.measureText(tipText).width + 16;
+                const th = 22;
+                const tx = 20;
+                const ty = 64;
+                ctx.save();
+                ctx.globalAlpha = 0.95;
+                ctx.fillStyle = 'rgba(20,20,20,0.9)';
+                // rounded rect
+                const r = 6;
+                ctx.beginPath();
+                ctx.moveTo(tx + r, ty);
+                ctx.lineTo(tx + tw - r, ty);
+                ctx.quadraticCurveTo(tx + tw, ty, tx + tw, ty + r);
+                ctx.lineTo(tx + tw, ty + th - r);
+                ctx.quadraticCurveTo(tx + tw, ty + th, tx + tw - r, ty + th);
+                ctx.lineTo(tx + r, ty + th);
+                ctx.quadraticCurveTo(tx, ty + th, tx, ty + th - r);
+                ctx.lineTo(tx, ty + r);
+                ctx.quadraticCurveTo(tx, ty, tx + r, ty);
+                ctx.closePath();
+                ctx.fill();
+                ctx.fillStyle = 'white';
+                ctx.fillText(tipText, tx + 8, ty + 15);
+                ctx.restore();
             }
 
             ctx.textAlign = 'start';
