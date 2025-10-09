@@ -508,7 +508,13 @@
         <footer class="footer">
             <p>&#169; 2025 JavaSnake.com - Premium HTML5 Gaming Platform</p>
             <p>Built with modern web technologies for the ultimate gaming experience</p>
-            <p style="font-size:0.75rem; opacity:0.8; margin-top:6px;"><a href="/stats.html" style="color:inherit; text-decoration:underline; opacity:0.85;">Site stats</a></p>
+            <p style="font-size:0.75rem; opacity:0.85; margin-top:6px; display:flex; gap:12px; justify-content:center; align-items:center;">
+                <a href="/daily-stats.html" style="color:inherit; text-decoration:underline; opacity:0.85;">Daily stats</a>
+                <span style="opacity:0.6;">•</span>
+                <a href="/weekly-stats.html" style="color:inherit; text-decoration:underline; opacity:0.85;">Weekly stats</a>
+                <span style="opacity:0.6;">•</span>
+                <a href="/all-time-stats.html" style="color:inherit; text-decoration:underline; opacity:0.85;">All-time stats</a>
+            </p>
         </footer>
     </div>
 
@@ -765,6 +771,38 @@
             </div>
         </div>
     </footer>
+    <script>
+        // Ensure fixed footer doesn't cover clickable content at the bottom
+        (function(){
+            function updateFooterPadding(){
+                try {
+                    var f = document.querySelector('footer');
+                    if (!f) return;
+                    var h = f.offsetHeight || 100;
+                    document.body.style.paddingBottom = h + 'px';
+                } catch (e) {
+                    console.warn('updateFooterPadding error', e);
+                }
+            }
+
+            // Run on load and resize
+            if (document.readyState === 'loading') {
+                document.addEventListener('DOMContentLoaded', updateFooterPadding);
+            } else {
+                updateFooterPadding();
+            }
+            window.addEventListener('resize', updateFooterPadding);
+
+            // Use ResizeObserver when available for dynamic footer height changes
+            try {
+                if (window.ResizeObserver) {
+                    var ro = new ResizeObserver(updateFooterPadding);
+                    var fEl = document.querySelector('footer');
+                    if (fEl) ro.observe(fEl);
+                }
+            } catch (e) {}
+        })();
+    </script>
     
     <!-- Auto-update functionality for main site -->
     <script>
