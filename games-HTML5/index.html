@@ -422,9 +422,9 @@
         <span id="lowPowerBadge" class="low-power-badge" style="display:none">Low</span>
     </div>
 
-    <!-- Site-wide mute toggle -->
-    <div class="low-power-toggle" style="right:7.5rem;" role="region" aria-label="Mute site audio">
-        <button id="siteMuteBtn" class="toggle-switch" aria-pressed="false" title="Mute / Unmute site audio" style="display:flex;align-items:center;justify-content:center;padding:6px 10px;">
+    <!-- Site-wide mute toggle (moved to top-left) -->
+    <div class="low-power-toggle" style="left:10px; top:10px; right:auto; position:fixed; z-index:10001;" role="region" aria-label="Mute site audio">
+        <button id="siteMuteBtn" class="toggle-switch" aria-pressed="false" title="Mute / Unmute site audio" style="display:flex;align-items:center;justify-content:center;padding:6px 10px; min-width:44px;">
             <span id="siteMuteIcon">🔊</span>
         </button>
     </div>
