@@ -3,7 +3,7 @@
 
 class WordleGame {
     constructor() {
-        // 500 different 5-letter words for unlimited play
+        // 1000 different 5-letter words for unlimited play
         this.wordList = [
             'about', 'above', 'abuse', 'actor', 'acute', 'admit', 'adopt', 'adult', 'after', 'again',
             'agent', 'agree', 'ahead', 'alarm', 'album', 'alert', 'alien', 'align', 'alike', 'alive',
@@ -57,7 +57,129 @@ class WordleGame {
             'under', 'undue', 'union', 'unity', 'until', 'upper', 'upset', 'urban', 'usage', 'usual',
             'valid', 'value', 'video', 'virus', 'visit', 'vital', 'vocal', 'waste', 'watch', 'water',
             'wheel', 'where', 'which', 'while', 'white', 'whole', 'whose', 'woman', 'women', 'world',
-            'worry', 'worse', 'worst', 'worth', 'would', 'write', 'wrong', 'wrote', 'young', 'youth'
+            'worry', 'worse', 'worst', 'worth', 'would', 'write', 'wrong', 'wrote', 'young', 'youth',
+            // Additional 500 words to reach 1000 total
+            'ankle', 'bacon', 'badge', 'badly', 'bagel', 'bench', 'berry', 'bikes', 'birds', 'birth',
+            'blade', 'blame', 'blast', 'blaze', 'bleed', 'bless', 'blink', 'bliss', 'blood', 'bloom',
+            'blown', 'blues', 'blunt', 'blurb', 'blush', 'boast', 'bobby', 'bonds', 'bonus', 'books',
+            'boost', 'booth', 'boots', 'bound', 'bowls', 'boxes', 'brain', 'brake', 'brand', 'brass',
+            'brave', 'bread', 'break', 'breed', 'brick', 'bride', 'brief', 'bring', 'brink', 'broad',
+            'broke', 'brook', 'brown', 'brush', 'build', 'built', 'bunch', 'burns', 'burst', 'buses',
+            'cable', 'cache', 'camps', 'candy', 'cards', 'cargo', 'carry', 'carve', 'catch', 'cause',
+            'cells', 'chain', 'chair', 'chalk', 'champ', 'chaos', 'charm', 'chart', 'chase', 'cheap',
+            'cheat', 'check', 'cheek', 'chess', 'chest', 'chick', 'chief', 'child', 'china', 'chips',
+            'chose', 'chunk', 'civic', 'civil', 'claim', 'clamp', 'clash', 'class', 'clean', 'clear',
+            'clerk', 'click', 'cliff', 'climb', 'cling', 'cloak', 'clock', 'close', 'cloth', 'cloud',
+            'clown', 'clubs', 'clues', 'coach', 'coast', 'coats', 'codes', 'coins', 'color', 'comet',
+            'comic', 'coral', 'cores', 'corps', 'costs', 'couch', 'cough', 'could', 'count', 'court',
+            'cover', 'crack', 'craft', 'crane', 'crash', 'crazy', 'cream', 'creek', 'cribs', 'crime',
+            'crisp', 'crops', 'cross', 'crowd', 'crown', 'crude', 'crush', 'crust', 'cubes', 'cuffs',
+            'curry', 'curve', 'cycle', 'daily', 'dairy', 'daisy', 'dance', 'dandy', 'dared', 'dates',
+            'deals', 'debut', 'decks', 'decor', 'deeds', 'delay', 'demon', 'dense', 'depot', 'depth',
+            'desks', 'detox', 'diary', 'diced', 'diner', 'dirty', 'disco', 'disks', 'ditch', 'diver',
+            'dizzy', 'docks', 'dodge', 'doing', 'dolls', 'donor', 'doors', 'doubt', 'dough', 'dozen',
+            'draft', 'drain', 'drama', 'drank', 'drawn', 'dream', 'dress', 'dried', 'drill', 'drink',
+            'drive', 'drone', 'drops', 'drove', 'drugs', 'drums', 'drunk', 'ducks', 'dunes', 'dusty',
+            'duvet', 'dying', 'eager', 'eagle', 'early', 'earth', 'easel', 'eaten', 'eater', 'ebony',
+            'edges', 'eight', 'elder', 'elite', 'email', 'ember', 'empty', 'ended', 'enemy', 'enjoy',
+            'enter', 'entry', 'equal', 'error', 'ethos', 'event', 'every', 'exact', 'exams', 'excel',
+            'exile', 'exist', 'exits', 'extra', 'faced', 'facts', 'faded', 'fails', 'fairy', 'faith',
+            'falls', 'false', 'fancy', 'farms', 'fatal', 'fault', 'favor', 'feast', 'feeds', 'feels',
+            'fence', 'ferry', 'fetch', 'fever', 'fiber', 'field', 'fiery', 'fifth', 'fifty', 'fight',
+            'files', 'fills', 'films', 'final', 'finds', 'fines', 'fired', 'firms', 'first', 'fists',
+            'fixed', 'flags', 'flame', 'flaps', 'flash', 'flask', 'flats', 'flaws', 'fleet', 'flesh',
+            'flies', 'fling', 'flips', 'float', 'flock', 'flood', 'floor', 'flour', 'flows', 'fluid',
+            'fluke', 'flush', 'flute', 'foams', 'focus', 'folks', 'fonts', 'foods', 'fools', 'force',
+            'forge', 'forms', 'forth', 'forty', 'forum', 'found', 'frame', 'frank', 'fraud', 'freak',
+            'freed', 'fresh', 'fried', 'fries', 'front', 'frost', 'fruit', 'fuels', 'fully', 'funds',
+            'funny', 'furry', 'fused', 'games', 'gangs', 'gates', 'gears', 'genes', 'genre', 'ghost',
+            'giant', 'gifts', 'girls', 'given', 'gives', 'glade', 'glass', 'gleam', 'globe', 'glory',
+            'gloss', 'glove', 'glued', 'gnome', 'goals', 'goats', 'going', 'goods', 'grace', 'grade',
+            'grain', 'grand', 'grant', 'grape', 'graph', 'grasp', 'grass', 'grave', 'gravy', 'great',
+            'greed', 'green', 'greet', 'grief', 'grill', 'grind', 'grips', 'gross', 'group', 'grove',
+            'grown', 'grows', 'gruel', 'guard', 'guess', 'guest', 'guide', 'guild', 'guilt', 'gulps',
+            'habit', 'hacke', 'halls', 'hands', 'hangs', 'happy', 'harsh', 'haste', 'hatch', 'hated',
+            'haven', 'hawks', 'heads', 'heals', 'heard', 'heart', 'heath', 'heavy', 'hedge', 'heels',
+            'helps', 'hence', 'herbs', 'hides', 'highs', 'hills', 'hints', 'hired', 'hives', 'hobby',
+            'holds', 'holes', 'holly', 'homes', 'honey', 'honor', 'hooks', 'hoped', 'hopes', 'horns',
+            'horse', 'hosts', 'hotel', 'hours', 'house', 'hover', 'howls', 'hubby', 'huffy', 'hulks',
+            'human', 'humid', 'humor', 'hurry', 'hurts', 'husky', 'hyena', 'icebox', 'ideal', 'ideas',
+            'idiom', 'igloo', 'image', 'imply', 'inbox', 'incur', 'index', 'indie', 'inert', 'infer',
+            'inked', 'inlet', 'inner', 'input', 'insect', 'intro', 'ionic', 'irons', 'issue', 'items',
+            'ivory', 'jaded', 'jails', 'jeans', 'jelly', 'jerky', 'jewel', 'jiffy', 'joint', 'jokes',
+            'jolly', 'jolts', 'joust', 'judge', 'juice', 'jumbo', 'jumps', 'junky', 'kayak', 'keeps',
+            'kicks', 'kills', 'kinds', 'kings', 'kites', 'kitty', 'knees', 'knife', 'knits', 'knock',
+            'knots', 'known', 'knows', 'koala', 'label', 'labor', 'laced', 'lacks', 'lakes', 'lamps',
+            'lands', 'lanes', 'large', 'laser', 'lasts', 'later', 'laugh', 'lawn', 'layer', 'leads',
+            'leafs', 'leaks', 'learn', 'lease', 'least', 'leave', 'ledge', 'lefts', 'legal', 'lemon',
+            'level', 'lever', 'licks', 'lied', 'lifts', 'light', 'liked', 'likes', 'limit', 'lined',
+            'lines', 'links', 'lions', 'lists', 'lived', 'liver', 'lives', 'loads', 'loans', 'lobby',
+            'local', 'locks', 'lodge', 'logic', 'logos', 'looks', 'loops', 'loose', 'lords', 'loses',
+            'loved', 'lover', 'loves', 'lower', 'loyal', 'lucky', 'lumps', 'lunch', 'lungs', 'lured',
+            'lurks', 'lying', 'lyric', 'macro', 'magic', 'magma', 'mails', 'major', 'maker', 'makes',
+            'males', 'mango', 'maple', 'march', 'marks', 'marry', 'marsh', 'masks', 'match', 'mates',
+            'maths', 'mayor', 'meals', 'means', 'meant', 'meats', 'medal', 'media', 'meets', 'melon',
+            'melts', 'memos', 'menus', 'mercy', 'merge', 'merit', 'merry', 'messy', 'metal', 'meter',
+            'metro', 'might', 'miles', 'milks', 'minds', 'mined', 'mines', 'minor', 'minus', 'mixed',
+            'mixes', 'moats', 'modal', 'model', 'modes', 'molds', 'money', 'monks', 'month', 'moods',
+            'moons', 'moral', 'moths', 'motor', 'motto', 'mound', 'mount', 'mouse', 'mouth', 'moved',
+            'mover', 'moves', 'movie', 'mowed', 'mower', 'muddy', 'muted', 'myths', 'nails', 'named',
+            'names', 'nasty', 'naval', 'necks', 'needs', 'nests', 'never', 'newly', 'night', 'noise',
+            'north', 'nose', 'noted', 'notes', 'novel', 'nurse', 'nutty', 'oaths', 'oasis', 'occur',
+            'ocean', 'offer', 'often', 'older', 'olive', 'onion', 'opera', 'orbit', 'order', 'organ',
+            'other', 'ought', 'ounce', 'outer', 'owned', 'owner', 'oxide', 'paced', 'paces', 'packs',
+            'pages', 'pains', 'paint', 'pairs', 'panel', 'pangs', 'panic', 'pants', 'paper', 'parks',
+            'parts', 'party', 'pasta', 'paste', 'patch', 'paths', 'pause', 'paved', 'paves', 'peace',
+            'peaks', 'pearl', 'pedal', 'peers', 'penny', 'perks', 'petal', 'phase', 'phone', 'photo',
+            'piano', 'picks', 'piece', 'piles', 'pills', 'pilot', 'pinch', 'pines', 'pipes', 'pitch',
+            'pizza', 'place', 'plain', 'plane', 'plans', 'plant', 'plate', 'plays', 'plaza', 'plots',
+            'plugs', 'poems', 'point', 'poles', 'polls', 'pools', 'porch', 'posed', 'poses', 'posts',
+            'pouch', 'pound', 'pours', 'power', 'press', 'price', 'pride', 'prime', 'print', 'prior',
+            'prize', 'proof', 'props', 'proud', 'prove', 'proxy', 'pulls', 'pulse', 'pumps', 'punch',
+            'pupil', 'purse', 'push', 'query', 'quest', 'queue', 'quick', 'quiet', 'quilt', 'quirk',
+            'quite', 'quote', 'races', 'racks', 'radar', 'radio', 'rails', 'rains', 'raise', 'raked',
+            'rally', 'ranch', 'range', 'ranks', 'rapid', 'rated', 'rates', 'ratio', 'rays', 'reach',
+            'reads', 'ready', 'realm', 'rebel', 'recap', 'refer', 'reign', 'relax', 'relay', 'repay',
+            'reply', 'reset', 'rides', 'ridge', 'rifle', 'right', 'rigid', 'rings', 'rinse', 'rises',
+            'risks', 'rival', 'river', 'roads', 'roast', 'robes', 'robot', 'rocks', 'roles', 'rolls',
+            'roman', 'roofs', 'rooms', 'roots', 'ropes', 'roses', 'rough', 'round', 'route', 'royal',
+            'ruins', 'ruled', 'ruler', 'rules', 'rumor', 'rural', 'safer', 'sails', 'saint', 'sales',
+            'salon', 'salts', 'sandy', 'sauce', 'saved', 'saves', 'scale', 'scams', 'scare', 'scene',
+            'scent', 'scope', 'score', 'scout', 'scrap', 'seeds', 'seems', 'sells', 'sends', 'sense',
+            'serve', 'setup', 'seven', 'shade', 'shaft', 'shake', 'shall', 'shame', 'shape', 'share',
+            'shark', 'sharp', 'sheep', 'sheet', 'shelf', 'shell', 'shift', 'shine', 'shirt', 'shock',
+            'shoes', 'shoot', 'shore', 'short', 'shots', 'shown', 'shows', 'sided', 'sides', 'sight',
+            'signs', 'silly', 'since', 'sinks', 'sites', 'sixth', 'sixty', 'sized', 'sizes', 'skill',
+            'skins', 'skips', 'skull', 'sleep', 'slice', 'slide', 'slope', 'slots', 'slows', 'small',
+            'smart', 'smell', 'smile', 'smoke', 'snake', 'snaps', 'sneak', 'snore', 'snowy', 'sober',
+            'socks', 'sofas', 'solar', 'solid', 'solve', 'songs', 'sonic', 'sorry', 'sorts', 'souls',
+            'sound', 'soups', 'south', 'space', 'spare', 'spark', 'speak', 'speed', 'spell', 'spend',
+            'spent', 'spice', 'spine', 'split', 'spoke', 'spoon', 'sport', 'spots', 'spray', 'squad',
+            'staff', 'stage', 'stain', 'stake', 'stamp', 'stand', 'stare', 'stars', 'start', 'state',
+            'stays', 'steal', 'steam', 'steel', 'steep', 'steer', 'stems', 'steps', 'stern', 'stick',
+            'stiff', 'still', 'sting', 'stink', 'stock', 'stomp', 'stone', 'stood', 'stool', 'stops',
+            'store', 'storm', 'story', 'strap', 'strip', 'stuck', 'study', 'stuff', 'style', 'sugar',
+            'suite', 'sumer', 'sunny', 'super', 'swear', 'sweat', 'sweep', 'sweet', 'swift', 'swing',
+            'sword', 'sworn', 'table', 'tacky', 'taken', 'takes', 'tales', 'talks', 'tanks', 'tapes',
+            'tasks', 'taste', 'taxes', 'teach', 'teams', 'tears', 'teens', 'teeth', 'tells', 'temps',
+            'tends', 'tense', 'tenth', 'terms', 'tests', 'thank', 'theft', 'their', 'theme', 'there',
+            'these', 'thick', 'thing', 'think', 'third', 'those', 'three', 'threw', 'throw', 'thumb',
+            'tidal', 'tiger', 'tight', 'tiles', 'times', 'timer', 'tired', 'title', 'toast', 'today',
+            'token', 'tombs', 'tones', 'tools', 'tooth', 'topic', 'torch', 'total', 'touch', 'tough',
+            'tours', 'tower', 'towns', 'toxic', 'track', 'trade', 'trail', 'train', 'trash', 'treat',
+            'trees', 'trend', 'trial', 'tribe', 'trick', 'tried', 'tries', 'trips', 'troop', 'truck',
+            'truly', 'trunk', 'trust', 'truth', 'tubes', 'tuned', 'tunes', 'turns', 'twice', 'twins',
+            'twist', 'typed', 'types', 'ultra', 'uncle', 'under', 'undue', 'unfed', 'union', 'unite',
+            'unity', 'until', 'upper', 'upset', 'urban', 'urged', 'usage', 'users', 'usual', 'valid',
+            'value', 'vapor', 'vault', 'veins', 'venue', 'verbs', 'verse', 'video', 'views', 'villa',
+            'vinyl', 'virus', 'visit', 'vital', 'vocal', 'voice', 'vomit', 'voted', 'votes', 'vowel',
+            'wages', 'waist', 'waits', 'walks', 'walls', 'wants', 'warns', 'waste', 'watch', 'water',
+            'waves', 'weary', 'weeks', 'weird', 'wells', 'wheat', 'wheel', 'where', 'which', 'while',
+            'whips', 'white', 'whole', 'whose', 'wider', 'widow', 'width', 'winds', 'wines', 'wings',
+            'wipes', 'wired', 'wires', 'witch', 'woken', 'woman', 'women', 'woods', 'words', 'works',
+            'world', 'worms', 'worry', 'worse', 'worst', 'worth', 'would', 'wraps', 'wrist', 'write',
+            'wrong', 'wrote', 'yacht', 'yards', 'years', 'yeast', 'yield', 'young', 'youth', 'zebra',
+            'zeros', 'zones'
         ];
 
         // Game state
@@ -125,10 +247,31 @@ class WordleGame {
     }
 
     setupEventListeners() {
-        // Keyboard clicks
+        // Ensure keyboard element exists
+        if (!this.keyboard) {
+            console.error('Keyboard element not found!');
+            return;
+        }
+
+        // Simple keyboard clicks - remove redundant handlers
         this.keyboard.addEventListener('click', (e) => {
-            if (e.target.classList.contains('key')) {
-                this.handleKeyPress(e.target.dataset.key);
+            // Check if clicked element or its parent has the key class
+            let target = e.target;
+            let key = null;
+            
+            // Look for key data on clicked element or parent
+            if (target.classList.contains('key')) {
+                key = target.dataset.key;
+            } else if (target.parentElement && target.parentElement.classList.contains('key')) {
+                key = target.parentElement.dataset.key;
+                target = target.parentElement;
+            }
+            
+            if (key) {
+                console.log('Key clicked:', key);
+                this.handleKeyPress(key);
+                e.preventDefault();
+                e.stopPropagation();
             }
         });
 
