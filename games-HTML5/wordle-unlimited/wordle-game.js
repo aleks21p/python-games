@@ -223,6 +223,8 @@ class WordleGame {
     }
 
     newGame() {
+        console.log('newGame() called - this should only happen once at start or when manually starting new game');
+        
         // Reset game state
         this.currentWord = this.getRandomWord();
         this.currentRow = 0;
@@ -237,7 +239,7 @@ class WordleGame {
         this.resetKeyboard();
         this.hideOverlay();
 
-        console.log('New word:', this.currentWord); // For testing - remove in production
+        console.log('New word set to:', this.currentWord); // For testing - remove in production
     }
 
     getRandomWord() {
@@ -268,34 +270,41 @@ class WordleGame {
 
         console.log('Setting up keyboard event listeners...');
 
-        // Simple direct event delegation
-        this.keyboard.addEventListener('click', (e) => {
+        // Remove any existing listeners to prevent duplicates
+        this.keyboard.removeEventListener('click', this.handleKeyboardClick);
+        
+        // Bind the method to preserve 'this' context
+        this.handleKeyboardClick = (e) => {
             console.log('Click detected on:', e.target);
-            console.log('Target classes:', e.target.classList.toString());
-            console.log('Target dataset:', e.target.dataset);
             
             const key = e.target.dataset.key;
-            if (key) {
+            if (key && e.target.classList.contains('key')) {
                 console.log('Key found:', key);
                 this.handleKeyPress(key.toUpperCase());
                 e.preventDefault();
+                e.stopPropagation();
             } else {
-                console.log('No key data found on target');
+                console.log('No key data found or not a key element');
             }
-        });
+        };
 
-        // Physical keyboard
-        document.addEventListener('keydown', (e) => {
-            if (this.gameOver) return;
+        this.keyboard.addEventListener('click', this.handleKeyboardClick);
 
-            if (e.key === 'Enter') {
-                this.handleKeyPress('Enter');
-            } else if (e.key === 'Backspace') {
-                this.handleKeyPress('Backspace');
-            } else if (/^[a-zA-Z]$/.test(e.key)) {
-                this.handleKeyPress(e.key.toUpperCase());
-            }
-        });
+        // Physical keyboard (only add once)
+        if (!this.physicalKeyboardSetup) {
+            document.addEventListener('keydown', (e) => {
+                if (this.gameOver) return;
+
+                if (e.key === 'Enter') {
+                    this.handleKeyPress('Enter');
+                } else if (e.key === 'Backspace') {
+                    this.handleKeyPress('Backspace');
+                } else if (/^[a-zA-Z]$/.test(e.key)) {
+                    this.handleKeyPress(e.key.toUpperCase());
+                }
+            });
+            this.physicalKeyboardSetup = true;
+        }
         
         console.log('Event listeners set up complete');
     }
@@ -322,10 +331,16 @@ class WordleGame {
     }
 
     addLetter(letter) {
+        console.log(`addLetter called with: ${letter}, currentCol: ${this.currentCol}, currentRow: ${this.currentRow}`);
+        
         if (this.currentCol < 5) {
             this.guesses[this.currentRow][this.currentCol] = letter;
+            console.log('Letter added to position:', this.currentRow, this.currentCol);
             this.updateBoard();
             this.currentCol++;
+            console.log('currentCol incremented to:', this.currentCol);
+        } else {
+            console.log('Cannot add letter - row is full');
         }
     }
 
@@ -513,6 +528,13 @@ function goHome() {
 
 // Initialize game when page loads
 document.addEventListener('DOMContentLoaded', () => {
+    // Prevent multiple initialization
+    if (window.wordleGame) {
+        console.log('Wordle game already initialized');
+        return;
+    }
+    
+    console.log('Initializing Wordle game...');
     window.wordleGame = new WordleGame();
 });
 
@@ -539,3 +561,16 @@ document.addEventListener('DOMContentLoaded', () => {
 
     applyMuteState(localStorage.getItem('site_mute') === '1');
 })();
+
+// Global functions for HTML button clicks
+function newGame() {
+    console.log('Global newGame() called');
+    if (window.wordleGame) {
+        window.wordleGame.newGame();
+    }
+}
+
+function goHome() {
+    console.log('Going home');
+    window.location.href = '../index.html';
+}
