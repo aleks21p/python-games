@@ -207,6 +207,19 @@ class WordleGame {
         this.newGame();
         this.setupEventListeners();
         this.updateStatsDisplay();
+        
+        // Debug: Test keyboard buttons
+        console.log('Keyboard element:', this.keyboard);
+        console.log('Number of key buttons:', this.keyboard.querySelectorAll('.key').length);
+        
+        // Add a simple test click handler to verify DOM is working
+        const testButton = this.keyboard.querySelector('[data-key="q"]');
+        if (testButton) {
+            console.log('Q button found:', testButton);
+            console.log('Q button data-key:', testButton.dataset.key);
+        } else {
+            console.error('Q button not found!');
+        }
     }
 
     newGame() {
@@ -253,25 +266,21 @@ class WordleGame {
             return;
         }
 
-        // Simple keyboard clicks - remove redundant handlers
+        console.log('Setting up keyboard event listeners...');
+
+        // Simple direct event delegation
         this.keyboard.addEventListener('click', (e) => {
-            // Check if clicked element or its parent has the key class
-            let target = e.target;
-            let key = null;
+            console.log('Click detected on:', e.target);
+            console.log('Target classes:', e.target.classList.toString());
+            console.log('Target dataset:', e.target.dataset);
             
-            // Look for key data on clicked element or parent
-            if (target.classList.contains('key')) {
-                key = target.dataset.key;
-            } else if (target.parentElement && target.parentElement.classList.contains('key')) {
-                key = target.parentElement.dataset.key;
-                target = target.parentElement;
-            }
-            
+            const key = e.target.dataset.key;
             if (key) {
-                console.log('Key clicked:', key);
-                this.handleKeyPress(key);
+                console.log('Key found:', key);
+                this.handleKeyPress(key.toUpperCase());
                 e.preventDefault();
-                e.stopPropagation();
+            } else {
+                console.log('No key data found on target');
             }
         });
 
@@ -287,17 +296,28 @@ class WordleGame {
                 this.handleKeyPress(e.key.toUpperCase());
             }
         });
+        
+        console.log('Event listeners set up complete');
     }
 
     handleKeyPress(key) {
-        if (this.gameOver) return;
+        console.log('handleKeyPress called with:', key);
+        if (this.gameOver) {
+            console.log('Game is over, ignoring key press');
+            return;
+        }
 
         if (key === 'Enter') {
+            console.log('Processing Enter key');
             this.submitGuess();
         } else if (key === 'Backspace') {
+            console.log('Processing Backspace key');
             this.deleteLetter();
         } else if (/^[A-Z]$/.test(key)) {
+            console.log('Processing letter:', key);
             this.addLetter(key);
+        } else {
+            console.log('Key not recognized:', key);
         }
     }
 
