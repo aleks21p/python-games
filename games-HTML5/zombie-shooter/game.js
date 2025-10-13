@@ -2774,6 +2774,16 @@ class Game {
             }
         }
         
+        // Apply health upgrades to base health after skin is applied (only if not using fixed health)
+        if (currentSkin === 'default' || !this.shopItems[currentSkin]?.fixedHealth) {
+            this.player.baseHealth = (this.player.baseHealth || 10) + (this.healthUpgradeLevel * 1);
+            this.player.health = this.player.baseHealth;
+            this.player.maxHealth = this.player.baseHealth;
+        }
+        
+        // Apply pet bonuses
+        this.player.updatePetBonuses();
+        
         this.bullets = [];
         this.zombies = [];
         this.orbs = [];
