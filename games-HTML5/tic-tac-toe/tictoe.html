@@ -90,7 +90,7 @@
 
         .mode-buttons {
             display: grid;
-            grid-template-columns: 1fr 1fr;
+            grid-template-columns: repeat(2, 1fr);
             gap: 1rem;
             margin-bottom: 2rem;
         }
@@ -115,7 +115,6 @@
         }
 
         .mode-btn.pvp {
-            grid-column: 1 / -1;
             background: linear-gradient(45deg, #45b7d1, #96ceb4);
         }
 
@@ -313,7 +312,7 @@
                     <small>Strategic play</small>
                 </button>
                 <button class="mode-btn pvp" onclick="startGame('pvp')">
-                    <div>👥 Player vs Player</div>
+                    <div>👥 PvP</div>
                     <small>Challenge a friend</small>
                 </button>
             </div>
@@ -382,7 +381,7 @@
                 'easy': 'Easy AI - Random Moves',
                 'medium': 'Medium AI - 1 Random, Then Strategic', 
                 'hard': 'Hard AI - Strategic Play',
-                'pvp': 'Player vs Player'
+                'pvp': 'Player vs Player (PvP)'
             };
             indicator.textContent = modeNames[mode];
             indicator.className = `difficulty-indicator ${mode}`;
