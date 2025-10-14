@@ -346,6 +346,7 @@
 
             <div class="game-controls">
                 <button class="control-btn" onclick="newGame()">New Game</button>
+                <button class="control-btn" onclick="toggleAutoNewGame()" id="autoNewGameBtn">Auto New Game: OFF</button>
                 <button class="control-btn danger" onclick="showMenu()">Back to Menu</button>
             </div>
         </div>
@@ -359,6 +360,8 @@
         let gameActive = true;
         let score = { X: 0, O: 0, draws: 0 };
         let aiMoveCount = 0; // Track AI moves for medium difficulty
+        let autoNewGame = false; // Auto new game feature
+        let autoNewGameTimeout = null; // Timeout for auto new game
 
         // Winning combinations
         const winningCombinations = [
@@ -413,6 +416,13 @@
                 document.getElementById('statusMessage').classList.add('winner');
                 highlightWinningCells();
                 updateScore();
+                
+                // Auto new game feature
+                if (autoNewGame) {
+                    autoNewGameTimeout = setTimeout(() => {
+                        newGame();
+                    }, 2000); // Wait 2 seconds before starting new game
+                }
                 return;
             }
             
@@ -421,6 +431,13 @@
                 score.draws++;
                 document.getElementById('statusMessage').textContent = "It's a Draw! 🤝";
                 updateScore();
+                
+                // Auto new game feature
+                if (autoNewGame) {
+                    autoNewGameTimeout = setTimeout(() => {
+                        newGame();
+                    }, 2000); // Wait 2 seconds before starting new game
+                }
                 return;
             }
             
@@ -649,12 +666,34 @@
 
         // Start new game
         function newGame() {
+            // Clear any pending auto new game timeout
+            if (autoNewGameTimeout) {
+                clearTimeout(autoNewGameTimeout);
+                autoNewGameTimeout = null;
+            }
+            
             currentPlayer = 'X';
             gameBoard = ['', '', '', '', '', '', '', '', ''];
             gameActive = true;
             aiMoveCount = 0; // Reset AI move counter
             clearBoard();
             updateDisplay();
+        }
+
+        // Toggle auto new game feature
+        function toggleAutoNewGame() {
+            autoNewGame = !autoNewGame;
+            const btn = document.getElementById('autoNewGameBtn');
+            btn.textContent = autoNewGame ? 'Auto New Game: ON' : 'Auto New Game: OFF';
+            btn.style.background = autoNewGame ? 
+                'linear-gradient(45deg, #96ceb4, #6ab7ac)' : 
+                'linear-gradient(45deg, #45b7d1, #96ceb4)';
+            
+            // Clear any pending timeout when toggling off
+            if (!autoNewGame && autoNewGameTimeout) {
+                clearTimeout(autoNewGameTimeout);
+                autoNewGameTimeout = null;
+            }
         }
 
         // Initialize game
