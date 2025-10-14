@@ -2030,6 +2030,14 @@ class Game {
                         }
                     }
                     
+                    // Check exit shop button click
+                    if (this.shopExitButton && 
+                        clickX >= this.shopExitButton.x && clickX <= this.shopExitButton.x + this.shopExitButton.width &&
+                        clickY >= this.shopExitButton.y && clickY <= this.shopExitButton.y + this.shopExitButton.height) {
+                        this.inShop = false;
+                        return;
+                    }
+                    
                     } // End of shop box bounds check
                     return; // Prevent clicking through shop box
                 }
@@ -2143,6 +2151,15 @@ class Game {
                             this.saveEquippedPet();
                         }
                     });
+                    
+                    // Check exit shop button click (same button works on pets page)
+                    if (this.shopExitButton && 
+                        clickX >= this.shopExitButton.x && clickX <= this.shopExitButton.x + this.shopExitButton.width &&
+                        clickY >= this.shopExitButton.y && clickY <= this.shopExitButton.y + this.shopExitButton.height) {
+                        this.inShop = false;
+                        this.inPetsPage = false; // Also exit pets page
+                        return;
+                    }
                     
                     } // End of pets page shop box bounds check
                     return; // Prevent clicking through pets page
