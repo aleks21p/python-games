@@ -5095,10 +5095,6 @@ class Game {
             ctx.fillText(`${this.speedUpgradeCost} Coins (1.2x Speed)`, speedUpgradeX + upgradeWidth/2, speedUpgradeY + 32);
         }
 
-        // Close instruction
-        ctx.fillStyle = '#808080';
-        ctx.font = '20px Arial';
-        ctx.fillText('Click Shop again to close', SCREEN_WIDTH/2, SCREEN_HEIGHT - 80);
         ctx.textAlign = 'left';
     }
 
