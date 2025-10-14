@@ -5401,11 +5401,37 @@ class Game {
             });
         }
 
-        // Close instruction
-        ctx.fillStyle = '#808080';
-        ctx.font = '20px Arial';
+        // Exit Shop Button (bottom center)
+        const exitButtonWidth = 200;
+        const exitButtonHeight = 40;
+        const exitButtonX = SCREEN_WIDTH/2 - exitButtonWidth/2;
+        const exitButtonY = SCREEN_HEIGHT - 100;
+        
+        // Button background with gradient
+        const gradient = ctx.createLinearGradient(exitButtonX, exitButtonY, exitButtonX, exitButtonY + exitButtonHeight);
+        gradient.addColorStop(0, '#FF6B6B');  // Light red
+        gradient.addColorStop(1, '#CC5555');  // Darker red
+        ctx.fillStyle = gradient;
+        ctx.fillRect(exitButtonX, exitButtonY, exitButtonWidth, exitButtonHeight);
+        
+        // Button border
+        ctx.strokeStyle = WHITE;
+        ctx.lineWidth = 2;
+        ctx.strokeRect(exitButtonX, exitButtonY, exitButtonWidth, exitButtonHeight);
+        
+        // Button text
+        ctx.fillStyle = WHITE;
+        ctx.font = 'bold 18px Arial';
         ctx.textAlign = 'center';
-        ctx.fillText('Click Shop again to close', SCREEN_WIDTH/2, SCREEN_HEIGHT - 80);
+        ctx.fillText('Click Here to Leave Shop', SCREEN_WIDTH/2, exitButtonY + exitButtonHeight/2 + 6);
+        
+        // Store button coordinates for click detection
+        this.shopExitButton = {
+            x: exitButtonX,
+            y: exitButtonY,
+            width: exitButtonWidth,
+            height: exitButtonHeight
+        };
     }
 }
 
