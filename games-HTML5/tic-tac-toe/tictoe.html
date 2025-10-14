@@ -312,7 +312,7 @@
                 </button>
                 <button class="mode-btn" onclick="startGame('hard')">
                     <div>🔴 Hard AI</div>
-                    <small>Strategic play</small>
+                    <small>Impossible Mode</small>
                 </button>
                 <button class="mode-btn pvp" onclick="startGame('pvp')">
                     <div>👥 PvP</div>
@@ -383,7 +383,7 @@
             const modeNames = {
                 'easy': 'Easy AI - Random Moves',
                 'medium': 'Medium AI - 1 Random, Then Strategic', 
-                'hard': 'Hard AI - Strategic Play',
+                'hard': 'Hard AI - Impossible Mode',
                 'pvp': 'Player vs Player (PvP)'
             };
             indicator.textContent = modeNames[mode];
@@ -477,11 +477,36 @@
             return availableMoves[Math.floor(Math.random() * availableMoves.length)];
         }
 
-        // Get best move using minimax algorithm for hard AI
+        // Get best move using minimax algorithm for hard AI (impossible mode)
         function getBestMove() {
             let bestScore = -Infinity;
             let bestMove = -1;
             
+            // First priority: Check if AI can win immediately
+            for (let i = 0; i < 9; i++) {
+                if (gameBoard[i] === '') {
+                    gameBoard[i] = 'O';
+                    if (checkWinner()) {
+                        gameBoard[i] = '';
+                        return i; // Take the winning move immediately
+                    }
+                    gameBoard[i] = '';
+                }
+            }
+            
+            // Second priority: Block player from winning
+            for (let i = 0; i < 9; i++) {
+                if (gameBoard[i] === '') {
+                    gameBoard[i] = 'X';
+                    if (checkWinner()) {
+                        gameBoard[i] = '';
+                        return i; // Block the player's winning move
+                    }
+                    gameBoard[i] = '';
+                }
+            }
+            
+            // Third priority: Use minimax for optimal play
             for (let i = 0; i < 9; i++) {
                 if (gameBoard[i] === '') {
                     gameBoard[i] = 'O';
@@ -495,10 +520,25 @@
                 }
             }
             
+            // If no strategic move found, take center or corner
+            if (bestMove === -1) {
+                // Prefer center
+                if (gameBoard[4] === '') return 4;
+                // Then corners
+                const corners = [0, 2, 6, 8];
+                for (let corner of corners) {
+                    if (gameBoard[corner] === '') return corner;
+                }
+                // Finally any available move
+                for (let i = 0; i < 9; i++) {
+                    if (gameBoard[i] === '') return i;
+                }
+            }
+            
             return bestMove;
         }
 
-        // Minimax algorithm for hard AI
+        // Minimax algorithm for impossible hard AI
         function minimax(board, depth, isMaximizing) {
             let result = checkWinnerForMinimax();
             
