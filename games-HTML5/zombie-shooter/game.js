@@ -1354,6 +1354,10 @@ class Game {
         this.cheat9StartTime = 0;
         this.tKeyPressed = false;
 
+        // Crate rolling animation variables
+        this.crateAnimationStartTime = Date.now();
+        this.crateAnimationDuration = 1000; // 1 second
+
         // Input handling
         this.keys = {};
         this.mousePos = { x: 0, y: 0 };
@@ -5213,6 +5217,95 @@ class Game {
         ctx.fillText('Click Here to Leave', exitButtonX + exitButtonWidth/2, exitButtonY + 32);
     }
 
+    drawPetIcon(ctx, petName, x, y, size) {
+        // Helper function to draw pet icons for animations
+        if (petName === 'cat') {
+            ctx.fillStyle = '#FFA500';
+            ctx.beginPath();
+            ctx.arc(x, y, size, 0, Math.PI * 2);
+            ctx.fill();
+            // Cat ears
+            ctx.beginPath();
+            ctx.moveTo(x - 6, y - 8);
+            ctx.lineTo(x - 2, y - 14);
+            ctx.lineTo(x + 2, y - 8);
+            ctx.fill();
+            ctx.beginPath();
+            ctx.moveTo(x + 2, y - 8);
+            ctx.lineTo(x + 6, y - 14);
+            ctx.lineTo(x + 10, y - 8);
+            ctx.fill();
+        } else if (petName === 'dog') {
+            ctx.fillStyle = '#8B4513';
+            ctx.beginPath();
+            ctx.arc(x, y, size, 0, Math.PI * 2);
+            ctx.fill();
+            // Dog ears
+            ctx.fillStyle = '#654321';
+            ctx.beginPath();
+            ctx.ellipse(x - 8, y - 5, 3, 6, Math.PI * 0.3, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.beginPath();
+            ctx.ellipse(x + 8, y - 5, 3, 6, -Math.PI * 0.3, 0, Math.PI * 2);
+            ctx.fill();
+        } else if (petName === 'turtle') {
+            ctx.fillStyle = '#0066FF';
+            ctx.beginPath();
+            ctx.arc(x, y, size, 0, Math.PI * 2);
+            ctx.fill();
+            // Shell pattern
+            ctx.strokeStyle = '#004499';
+            ctx.lineWidth = 1;
+            ctx.beginPath();
+            ctx.arc(x, y, size - 2, 0, Math.PI * 2);
+            ctx.stroke();
+        } else if (petName === 'parrot') {
+            ctx.fillStyle = '#FF6B35';
+            ctx.beginPath();
+            ctx.arc(x, y, size, 0, Math.PI * 2);
+            ctx.fill();
+            // Rainbow wing
+            ctx.fillStyle = '#FFE66D';
+            ctx.fillRect(x - 5, y - 3, 6, 2);
+            ctx.fillStyle = '#06FFA5';
+            ctx.fillRect(x - 5, y, 6, 2);
+        } else if (petName === 'capybarra') {
+            ctx.fillStyle = '#FFD700';
+            ctx.beginPath();
+            ctx.arc(x, y, size + 2, 0, Math.PI * 2);
+            ctx.fill();
+            // Legendary glow
+            ctx.strokeStyle = '#FFD700';
+            ctx.lineWidth = 2;
+            ctx.beginPath();
+            ctx.arc(x, y, size + 4, 0, Math.PI * 2);
+            ctx.stroke();
+        } else if (petName === 'dragon') {
+            ctx.fillStyle = '#FF00FF';
+            ctx.beginPath();
+            ctx.arc(x, y, size + 2, 0, Math.PI * 2);
+            ctx.fill();
+            // Mythic glow
+            ctx.strokeStyle = '#FF00FF';
+            ctx.lineWidth = 2;
+            ctx.beginPath();
+            ctx.arc(x, y, size + 4, 0, Math.PI * 2);
+            ctx.stroke();
+            // Dragon horns
+            ctx.fillStyle = '#FFD700';
+            ctx.beginPath();
+            ctx.moveTo(x - 4, y - 8);
+            ctx.lineTo(x - 2, y - 12);
+            ctx.lineTo(x, y - 8);
+            ctx.fill();
+            ctx.beginPath();
+            ctx.moveTo(x, y - 8);
+            ctx.lineTo(x + 2, y - 12);
+            ctx.lineTo(x + 4, y - 8);
+            ctx.fill();
+        }
+    }
+
     drawPetsPage(ctx) {
         console.log('Drawing pets page!');
         
@@ -5282,6 +5375,18 @@ class Game {
         ctx.fillStyle = '#8B4513';
         ctx.fillRect(crateX + 75, crateY + 65, 10, 10);
         
+        // Animated pet rolling display
+        const currentTime = Date.now();
+        const animationProgress = ((currentTime - this.crateAnimationStartTime) % this.crateAnimationDuration) / this.crateAnimationDuration;
+        const commonPets = this.petCrates.common.pets;
+        const currentPetIndex = Math.floor(animationProgress * commonPets.length);
+        const currentPet = commonPets[currentPetIndex];
+        
+        // Draw animated pet icon in crate
+        const petIconX = crateX + 80;
+        const petIconY = crateY + 100;
+        this.drawPetIcon(ctx, currentPet.name, petIconX, petIconY, 12);
+        
         // Price
         ctx.fillStyle = this.coins >= this.petCrates.common.cost ? '#00FF00' : '#FF0000';
         ctx.font = '16px Arial';
@@ -5344,6 +5449,16 @@ class Game {
         // Rare chest lock
         ctx.fillStyle = '#FFD700';
         ctx.fillRect(rareCrateX + 75, rareCrateY + 65, 10, 10);
+        
+        // Animated pet rolling display for rare crate
+        const rarePets = this.petCrates.rare.pets;
+        const currentRarePetIndex = Math.floor(animationProgress * rarePets.length);
+        const currentRarePet = rarePets[currentRarePetIndex];
+        
+        // Draw animated pet icon in rare crate
+        const rarePetIconX = rareCrateX + 80;
+        const rarePetIconY = rareCrateY + 100;
+        this.drawPetIcon(ctx, currentRarePet.name, rarePetIconX, rarePetIconY, 12);
         
         // Rare price
         ctx.fillStyle = this.coins >= this.petCrates.rare.cost ? '#00FF00' : '#FF0000';
