@@ -2184,15 +2184,7 @@ class Game {
                             }, this.crateAnimationDuration);
                         }
                     }
-                            
-                            if (selectedPet && !this.ownedPets.includes(selectedPet)) {
-                                this.ownedPets.push(selectedPet);
-                                this.saveOwnedPets();
-                                console.log(`Got ${selectedPet}! (${possiblePets.find(p => p.name === selectedPet).rarity})`);
-                            }
-                        }
-                    }
-                    
+
                     // Rare crate button
                     const rareCrateX = SCREEN_WIDTH/2 - 80;
                     const rareCrateY = SCREEN_HEIGHT/2 - 80;
