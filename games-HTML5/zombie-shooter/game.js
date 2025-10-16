@@ -1355,7 +1355,10 @@ class Game {
         this.tKeyPressed = false;
 
         // Crate rolling animation variables
-        this.crateAnimationStartTime = Date.now();
+        this.commonCrateRolling = false;
+        this.rareCrateRolling = false;
+        this.commonCrateRollStartTime = 0;
+        this.rareCrateRollStartTime = 0;
         this.crateAnimationDuration = 1000; // 1 second
 
         // Input handling
@@ -2144,23 +2147,43 @@ class Game {
                     
                     if (clickX >= crateX && clickX <= crateX + crateWidth &&
                         clickY >= crateY && clickY <= crateY + crateHeight) {
+                        // Prevent clicking if animation is already running
+                        if (this.commonCrateRolling) {
+                            return;
+                        }
+                        
                         if (this.coins >= this.petCrates.common.cost) {
-                            this.coins -= this.petCrates.common.cost;
-                            this.saveCoins();
+                            // Start rolling animation
+                            this.commonCrateRolling = true;
+                            this.commonCrateRollStartTime = Date.now();
                             
-                            // Random pet from common crate with chances
-                            const possiblePets = this.petCrates.common.pets;
-                            const rand = Math.random() * 100; // 0-100
-                            let currentChance = 0;
-                            let selectedPet = null;
-                            
-                            for (const pet of possiblePets) {
-                                currentChance += pet.chance;
-                                if (rand <= currentChance) {
-                                    selectedPet = pet.name;
-                                    break;
+                            // Delay the actual pet selection until animation finishes
+                            setTimeout(() => {
+                                this.coins -= this.petCrates.common.cost;
+                                this.saveCoins();
+                                
+                                // Random pet from common crate with chances
+                                const possiblePets = this.petCrates.common.pets;
+                                const rand = Math.random() * 100; // 0-100
+                                let currentChance = 0;
+                                let selectedPet = null;
+                                
+                                for (const pet of possiblePets) {
+                                    currentChance += pet.chance;
+                                    if (rand <= currentChance) {
+                                        selectedPet = pet.name;
+                                        break;
+                                    }
                                 }
-                            }
+                                
+                                if (selectedPet && !this.ownedPets.includes(selectedPet)) {
+                                    this.ownedPets.push(selectedPet);
+                                    this.saveOwnedPets();
+                                    console.log(`Got ${selectedPet}! (${possiblePets.find(p => p.name === selectedPet).rarity})`);
+                                }
+                            }, this.crateAnimationDuration);
+                        }
+                    }
                             
                             if (selectedPet && !this.ownedPets.includes(selectedPet)) {
                                 this.ownedPets.push(selectedPet);
@@ -5375,17 +5398,26 @@ class Game {
         ctx.fillStyle = '#8B4513';
         ctx.fillRect(crateX + 75, crateY + 65, 10, 10);
         
-        // Animated pet rolling display
-        const currentTime = Date.now();
-        const animationProgress = ((currentTime - this.crateAnimationStartTime) % this.crateAnimationDuration) / this.crateAnimationDuration;
-        const commonPets = this.petCrates.common.pets;
-        const currentPetIndex = Math.floor(animationProgress * commonPets.length);
-        const currentPet = commonPets[currentPetIndex];
-        
-        // Draw animated pet icon in crate
-        const petIconX = crateX + 80;
-        const petIconY = crateY + 100;
-        this.drawPetIcon(ctx, currentPet.name, petIconX, petIconY, 12);
+        // Animated pet rolling display (only when rolling)
+        if (this.commonCrateRolling) {
+            const currentTime = Date.now();
+            const animationProgress = (currentTime - this.commonCrateRollStartTime) / this.crateAnimationDuration;
+            
+            if (animationProgress >= 1) {
+                // Animation finished, stop rolling
+                this.commonCrateRolling = false;
+            } else {
+                // Show rolling animation
+                const commonPets = this.petCrates.common.pets;
+                const currentPetIndex = Math.floor(animationProgress * commonPets.length * 3) % commonPets.length; // 3x speed for rolling effect
+                const currentPet = commonPets[currentPetIndex];
+                
+                // Draw animated pet icon in crate
+                const petIconX = crateX + 80;
+                const petIconY = crateY + 100;
+                this.drawPetIcon(ctx, currentPet.name, petIconX, petIconY, 12);
+            }
+        }
         
         // Price
         ctx.fillStyle = this.coins >= this.petCrates.common.cost ? '#00FF00' : '#FF0000';
@@ -5450,15 +5482,26 @@ class Game {
         ctx.fillStyle = '#FFD700';
         ctx.fillRect(rareCrateX + 75, rareCrateY + 65, 10, 10);
         
-        // Animated pet rolling display for rare crate
-        const rarePets = this.petCrates.rare.pets;
-        const currentRarePetIndex = Math.floor(animationProgress * rarePets.length);
-        const currentRarePet = rarePets[currentRarePetIndex];
-        
-        // Draw animated pet icon in rare crate
-        const rarePetIconX = rareCrateX + 80;
-        const rarePetIconY = rareCrateY + 100;
-        this.drawPetIcon(ctx, currentRarePet.name, rarePetIconX, rarePetIconY, 12);
+        // Animated pet rolling display for rare crate (only when rolling)
+        if (this.rareCrateRolling) {
+            const currentTime = Date.now();
+            const rareAnimationProgress = (currentTime - this.rareCrateRollStartTime) / this.crateAnimationDuration;
+            
+            if (rareAnimationProgress >= 1) {
+                // Animation finished, stop rolling
+                this.rareCrateRolling = false;
+            } else {
+                // Show rolling animation
+                const rarePets = this.petCrates.rare.pets;
+                const currentRarePetIndex = Math.floor(rareAnimationProgress * rarePets.length * 3) % rarePets.length; // 3x speed for rolling effect
+                const currentRarePet = rarePets[currentRarePetIndex];
+                
+                // Draw animated pet icon in rare crate
+                const rarePetIconX = rareCrateX + 80;
+                const rarePetIconY = rareCrateY + 100;
+                this.drawPetIcon(ctx, currentRarePet.name, rarePetIconX, rarePetIconY, 12);
+            }
+        }
         
         // Rare price
         ctx.fillStyle = this.coins >= this.petCrates.rare.cost ? '#00FF00' : '#FF0000';
