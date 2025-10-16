@@ -5182,6 +5182,35 @@ class Game {
         }
 
         ctx.textAlign = 'left';
+
+        // Exit Shop Button at the bottom
+        const exitButtonWidth = 200;
+        const exitButtonHeight = 50;
+        const exitButtonX = SCREEN_WIDTH/2 - exitButtonWidth/2;
+        const exitButtonY = SCREEN_HEIGHT - 100;
+
+        // Store button coordinates for click detection
+        this.shopExitButton = {
+            x: exitButtonX,
+            y: exitButtonY,
+            width: exitButtonWidth,
+            height: exitButtonHeight
+        };
+
+        // Button background with gradient effect
+        ctx.fillStyle = '#FF6B6B';
+        ctx.fillRect(exitButtonX, exitButtonY, exitButtonWidth, exitButtonHeight);
+        
+        // Button border
+        ctx.strokeStyle = WHITE;
+        ctx.lineWidth = 3;
+        ctx.strokeRect(exitButtonX, exitButtonY, exitButtonWidth, exitButtonHeight);
+        
+        // Button text
+        ctx.fillStyle = WHITE;
+        ctx.font = 'bold 20px Arial';
+        ctx.textAlign = 'center';
+        ctx.fillText('Click Here to Leave', exitButtonX + exitButtonWidth/2, exitButtonY + 32);
     }
 
     drawPetsPage(ctx) {
