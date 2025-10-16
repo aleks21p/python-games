@@ -236,6 +236,8 @@ class Player {
             this.maxHealth = this.baseHealth * 2; // 2x health
         } else if (this.equippedPet === 'capybarra') {
             this.maxHealth = this.baseHealth * 5; // 5x health
+        } else if (this.equippedPet === 'dragon') {
+            this.maxHealth = this.baseHealth * 1000; // 1000x health
         } else {
             this.maxHealth = this.baseHealth;
         }
@@ -261,6 +263,8 @@ class Player {
         let petSpeedBoost = 1;
         if (this.equippedPet === 'dog') {
             petSpeedBoost = 1.5;
+        } else if (this.equippedPet === 'dragon') {
+            petSpeedBoost = 1000;
         }
 
         if (keys['w'] || keys['W'] || keys['ArrowUp']) {
@@ -377,6 +381,8 @@ class Player {
                         finalDamage *= 3; // 3x damage bonus
                     } else if (this.equippedPet === 'capybarra') {
                         finalDamage *= 5; // 5x damage bonus
+                    } else if (this.equippedPet === 'dragon') {
+                        finalDamage *= 1000; // 1000x damage bonus
                     }
                     
                     // Calculate gun tip position
@@ -588,6 +594,56 @@ class Player {
                 ctx.beginPath();
                 ctx.arc(petX, petY + 2, 2, 0, Math.PI * 2);
                 ctx.fill();
+            } else if (this.equippedPet === 'dragon') {
+                // Draw dragon (mythic pet with special effects)
+                ctx.fillStyle = '#FF00FF'; // Magenta
+                ctx.beginPath();
+                ctx.arc(petX, petY, petSize + 4, 0, Math.PI * 2); // Even bigger than legendary
+                ctx.fill();
+                
+                // Mythic glow effect (multiple animated rings)
+                const time = Date.now() * 0.01;
+                for (let i = 0; i < 5; i++) {
+                    const glowSize = petSize + 8 + (i * 4) + Math.sin(time + i) * 2;
+                    ctx.beginPath();
+                    ctx.arc(petX, petY, glowSize, 0, Math.PI * 2);
+                    const alpha = (0.4 - i * 0.08) * (0.8 + Math.sin(time * 2 + i) * 0.2);
+                    ctx.strokeStyle = `rgba(255, 0, 255, ${alpha})`;
+                    ctx.lineWidth = 3;
+                    ctx.stroke();
+                }
+                
+                // Dragon horns
+                ctx.fillStyle = '#FFD700'; // Gold horns
+                ctx.beginPath();
+                ctx.moveTo(petX - 4, petY - 6);
+                ctx.lineTo(petX - 2, petY - 10);
+                ctx.lineTo(petX, petY - 6);
+                ctx.fill();
+                ctx.beginPath();
+                ctx.moveTo(petX, petY - 6);
+                ctx.lineTo(petX + 2, petY - 10);
+                ctx.lineTo(petX + 4, petY - 6);
+                ctx.fill();
+                
+                // Glowing dragon eyes
+                ctx.fillStyle = '#FFFF00';
+                ctx.beginPath();
+                ctx.arc(petX - 3, petY - 2, 2, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.beginPath();
+                ctx.arc(petX + 3, petY - 2, 2, 0, Math.PI * 2);
+                ctx.fill();
+                
+                // Flame breath effect
+                if (Math.random() < 0.3) { // Random flame particles
+                    ctx.fillStyle = '#FF4500';
+                    const flameX = petX + 8 + Math.random() * 5;
+                    const flameY = petY + Math.random() * 4 - 2;
+                    ctx.beginPath();
+                    ctx.arc(flameX, flameY, 1 + Math.random(), 0, Math.PI * 2);
+                    ctx.fill();
+                }
             }
         }
 
@@ -1294,6 +1350,8 @@ class Game {
         this.cheat4StartTime = 0;
     this.cheat5Active = false;
     this.cheat5StartTime = 0;
+        this.cheat9Active = false;
+        this.cheat9StartTime = 0;
         this.tKeyPressed = false;
 
         // Input handling
@@ -1443,9 +1501,10 @@ class Game {
                 name: 'Rare Crate',
                 cost: 10000,
                 pets: [
-                    { name: 'turtle', rarity: 'rare', chance: 90 },
+                    { name: 'turtle', rarity: 'rare', chance: 89.99 },
                     { name: 'parrot', rarity: 'epic', chance: 9 },
-                    { name: 'capybarra', rarity: 'legendary', chance: 1 }
+                    { name: 'capybarra', rarity: 'legendary', chance: 1 },
+                    { name: 'dragon', rarity: 'mythic', chance: 0.01 }
                 ]
             }
         };
@@ -1545,6 +1604,12 @@ class Game {
                 this.cheat5Active = true;
                 this.cheat5StartTime = Date.now();
             }
+            
+            // Start tracking T+9 cheat for dragon pet unlock when 9 is pressed while T is held
+            if ((e.key === '9' || e.key === '(') && this.tKeyPressed) {
+                this.cheat9Active = true;
+                this.cheat9StartTime = Date.now();
+            }
 
             if (!this.inMenu && e.key === 'p' || e.key === 'P') {
                 this.paused = !this.paused;
@@ -1592,6 +1657,8 @@ class Game {
                 this.cheat2Active = false;
                 // cancel cheat5 if t is released
                 this.cheat5Active = false;
+                // cancel cheat9 if t is released
+                this.cheat9Active = false;
             }
 
             // Reset cheat states when keys are released
@@ -1908,11 +1975,11 @@ class Game {
                     if (clickX >= shopBoxX && clickX <= shopBoxX + shopBoxWidth &&
                         clickY >= shopBoxY && clickY <= shopBoxY + shopBoxHeight) {
                         // Click is within shop box - process shop interactions
-                    // Pets page button (top right of shop window) - Enhanced
-                    const petsButtonX = shopBoxX + shopBoxWidth - 120; // inside expanded shop window
-                    const petsButtonY = shopBoxY + 50; // Near top of shop window
-                    const petsButtonWidth = 90;
-                    const petsButtonHeight = 35;
+                    // Pets page button (top right of shop window) - Enhanced and easier to click
+                    const petsButtonWidth = 120; // Increased from 90
+                    const petsButtonHeight = 45; // Increased from 35
+                    const petsButtonX = shopBoxX + shopBoxWidth - petsButtonWidth - 20; // inside expanded shop window
+                    const petsButtonY = shopBoxY + 30; // Near top of shop window
                     
                     // Debug click detection
                     console.log('Click at:', clickX, clickY, 'Button bounds:', petsButtonX, petsButtonY, petsButtonX + petsButtonWidth, petsButtonY + petsButtonHeight);
@@ -3594,7 +3661,7 @@ class Game {
     }
 
     drawCheatProgress() {
-        if (this.cheatActive || this.cheat2Active || this.cheat3Active || this.cheat4Active || this.cheat5Active) {
+        if (this.cheatActive || this.cheat2Active || this.cheat3Active || this.cheat4Active || this.cheat5Active || this.cheat9Active) {
             const currentTime = Date.now();
             let progress, text;
             
@@ -3627,6 +3694,25 @@ class Game {
                 if (!text) {
                     progress = cheat5Progress;
                     text = `Skip to Level 35: ${Math.min(100, progress * 100).toFixed(0)}%`;
+                }
+            }
+
+            // T+9 cheat progress - unlock dragon pet
+            if (this.cheat9Active) {
+                const now = Date.now();
+                const cheat9Progress = (now - this.cheat9StartTime) / 5000; // 5 seconds for mythic pet
+                if (cheat9Progress >= 1) {
+                    if (!this.ownedPets.includes('dragon')) {
+                        this.ownedPets.push('dragon');
+                        this.saveOwnedPets();
+                        console.log('Secret unlocked: Mythic Dragon pet obtained!');
+                    }
+                    this.cheat9Active = false;
+                }
+                // If no other text is set, show this progress
+                if (!text) {
+                    progress = cheat9Progress;
+                    text = `Unlocking Mythic Dragon: ${Math.min(100, progress * 100).toFixed(0)}%`;
                 }
             }
 
@@ -4875,9 +4961,9 @@ class Game {
     const shopBoxWidth = SCREEN_WIDTH - 80;
     const shopBoxHeight = SCREEN_HEIGHT - 40;
 
-    // Pets button (top right of shop window) - Enhanced visibility
-    const petsButtonWidth = 90;
-    const petsButtonHeight = 35;
+    // Pets button (top right of shop window) - Enhanced visibility and easier to click
+    const petsButtonWidth = 120; // Increased from 90
+    const petsButtonHeight = 45; // Increased from 35
     const petsButtonX = shopBoxX + shopBoxWidth - petsButtonWidth - 20; // 20px margin from right edge
     const petsButtonY = shopBoxY + 30; // Near top of shop window
         
@@ -4895,9 +4981,9 @@ class Game {
         
         // Text
         ctx.fillStyle = WHITE;
-        ctx.font = 'bold 16px Arial';
+        ctx.font = 'bold 18px Arial'; // Increased font size
         ctx.textAlign = 'center';
-        ctx.fillText('🐾 PETS', petsButtonX + petsButtonWidth/2, petsButtonY + 23);
+        ctx.fillText('🐾 PETS', petsButtonX + petsButtonWidth/2, petsButtonY + 28); // Adjusted vertical centering
         
         // Debug: Draw button bounds
         ctx.strokeStyle = 'red';
@@ -5245,6 +5331,8 @@ class Game {
         ctx.fillText('Parrot (2x Health, 3x Damage) - 9%', rareCrateX + crateWidth/2, rareCrateY + 185);
         ctx.fillStyle = '#FFD700';
         ctx.fillText('Capybarra (5x Health, 5x Damage) - 1%', rareCrateX + crateWidth/2, rareCrateY + 200);
+        ctx.fillStyle = '#FF00FF';
+        ctx.fillText('Dragon (1000x All Stats) - 0.01%', rareCrateX + crateWidth/2, rareCrateY + 215);
 
         // Owned pets section (right side)
         const petListX = SCREEN_WIDTH/2 + 120;
@@ -5378,6 +5466,56 @@ class Game {
                     ctx.beginPath();
                     ctx.arc(petListX + 20, petY + 22, 2, 0, Math.PI * 2);
                     ctx.fill();
+                } else if (pet === 'dragon') {
+                    // Dragon icon (mythic - magenta with special effects)
+                    ctx.fillStyle = '#FF00FF';
+                    ctx.beginPath();
+                    ctx.arc(petListX + 20, petY + 20, 12, 0, Math.PI * 2);
+                    ctx.fill();
+                    
+                    // Mythic glow effect (multiple rings)
+                    ctx.strokeStyle = '#FF00FF';
+                    ctx.lineWidth = 3;
+                    ctx.beginPath();
+                    ctx.arc(petListX + 20, petY + 20, 15, 0, Math.PI * 2);
+                    ctx.stroke();
+                    
+                    ctx.strokeStyle = '#FF69B4';
+                    ctx.lineWidth = 2;
+                    ctx.beginPath();
+                    ctx.arc(petListX + 20, petY + 20, 18, 0, Math.PI * 2);
+                    ctx.stroke();
+                    
+                    // Dragon features
+                    ctx.fillStyle = '#FFD700'; // Gold accents
+                    // Dragon horns
+                    ctx.beginPath();
+                    ctx.moveTo(petListX + 16, petY + 12);
+                    ctx.lineTo(petListX + 18, petY + 6);
+                    ctx.lineTo(petListX + 20, petY + 12);
+                    ctx.fill();
+                    ctx.beginPath();
+                    ctx.moveTo(petListX + 20, petY + 12);
+                    ctx.lineTo(petListX + 22, petY + 6);
+                    ctx.lineTo(petListX + 24, petY + 12);
+                    ctx.fill();
+                    
+                    // Dragon eyes (glowing)
+                    ctx.fillStyle = '#FFFF00';
+                    ctx.beginPath();
+                    ctx.arc(petListX + 17, petY + 18, 2, 0, Math.PI * 2);
+                    ctx.fill();
+                    ctx.beginPath();
+                    ctx.arc(petListX + 23, petY + 18, 2, 0, Math.PI * 2);
+                    ctx.fill();
+                    
+                    // Dragon flame breath
+                    ctx.fillStyle = '#FF4500';
+                    ctx.beginPath();
+                    ctx.moveTo(petListX + 28, petY + 20);
+                    ctx.lineTo(petListX + 32, petY + 18);
+                    ctx.lineTo(petListX + 32, petY + 22);
+                    ctx.fill();
                 }
                 
                 // Pet name and effect (updated for all pets)
@@ -5399,6 +5537,9 @@ class Game {
                 } else if (pet === 'capybarra') {
                     effect = '(5x Health, 5x Damage)';
                     ctx.fillStyle = '#FFD700'; // Gold text for legendary pet
+                } else if (pet === 'dragon') {
+                    effect = '(1000x Health, 1000x Damage, 1000x Speed)';
+                    ctx.fillStyle = '#FF00FF'; // Magenta text for mythic pet
                 }
                 ctx.fillText(`${petName} ${effect}`, petListX + 40, petY + 16);
                 
