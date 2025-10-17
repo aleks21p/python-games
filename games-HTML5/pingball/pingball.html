@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pingball - Pinball Game</title>
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🏓</text></svg>">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Arial', sans-serif;
+            background: linear-gradient(135deg, #1e3c72, #2a5298);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            overflow-x: hidden;
+        }
+
+        .game-container {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 20px;
+            padding: 20px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+            backdrop-filter: blur(10px);
+            text-align: center;
+        }
+
+        h1 {
+            font-size: 2.5em;
+            margin-bottom: 20px;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
+            background: linear-gradient(45deg, #FFD700, #FFA500);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        #gameCanvas {
+            border: 3px solid #FFD700;
+            border-radius: 15px;
+            background: linear-gradient(135deg, #0f1b3c, #1a2b5c);
+            box-shadow: 0 0 20px rgba(255, 215, 0, 0.3);
+            cursor: crosshair;
+        }
+
+        .ui-panel {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 15px;
+            padding: 10px 20px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+            font-size: 1.2em;
+            font-weight: bold;
+        }
+
+        .score {
+            color: #FFD700;
+        }
+
+        .lives {
+            color: #FF6B6B;
+        }
+
+        .controls {
+            margin-top: 15px;
+            font-size: 0.9em;
+            color: #B0C4DE;
+            max-width: 800px;
+        }
+
+        .controls h3 {
+            color: #FFD700;
+            margin-bottom: 8px;
+        }
+
+        .controls p {
+            margin: 5px 0;
+        }
+
+        .game-over-screen {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: rgba(0, 0, 0, 0.9);
+            color: white;
+            padding: 40px;
+            border-radius: 20px;
+            text-align: center;
+            z-index: 100;
+            display: none;
+        }
+
+        .restart-btn {
+            background: linear-gradient(45deg, #FFD700, #FFA500);
+            color: #1e3c72;
+            border: none;
+            padding: 15px 30px;
+            font-size: 1.2em;
+            font-weight: bold;
+            border-radius: 10px;
+            cursor: pointer;
+            margin-top: 20px;
+            transition: transform 0.2s;
+        }
+
+        .restart-btn:hover {
+            transform: scale(1.05);
+        }
+
+        .power-indicator {
+            position: absolute;
+            right: 20px;
+            bottom: 50px;
+            width: 20px;
+            height: 200px;
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 10px;
+            border: 2px solid #FFD700;
+        }
+
+        .power-fill {
+            position: absolute;
+            bottom: 0;
+            width: 100%;
+            background: linear-gradient(to top, #FF4444, #FFFF44, #44FF44);
+            border-radius: 8px;
+            transition: height 0.1s;
+        }
+    </style>
+</head>
+<body>
+    <div class="game-container">
+        <h1>🏓 Pingball</h1>
+        
+        <div style="position: relative;">
+            <canvas id="gameCanvas" width="800" height="1000"></canvas>
+            
+            <div class="power-indicator" id="powerIndicator" style="display: none;">
+                <div class="power-fill" id="powerFill"></div>
+            </div>
+        </div>
+
+        <div class="ui-panel">
+            <div class="score">Score: <span id="scoreDisplay">0</span></div>
+            <div class="lives">Lives: <span id="livesDisplay">3</span></div>
+        </div>
+
+        <div class="controls">
+            <h3>🕹️ Controls</h3>
+            <p><strong>Launch:</strong> Click & drag down in the launcher zone (bottom-right), then release</p>
+            <p><strong>Flippers:</strong> Click anywhere or move mouse left/right sides to activate flippers</p>
+            <p><strong>Nudge:</strong> Quick mouse movements for table nudge (use sparingly!)</p>
+        </div>
+    </div>
+
+    <div class="game-over-screen" id="gameOverScreen">
+        <h2>Game Over!</h2>
+        <p>Final Score: <span id="finalScore">0</span></p>
+        <button class="restart-btn" onclick="restartGame()">Play Again</button>
+    </div>
+
+    <script src="pingball.js"></script>
+</body>
+</html>
