@@ -111,7 +111,9 @@ class TRexRunner {
         this.startBtn.addEventListener('click', () => this.start());
         this.pauseBtn.addEventListener('click', () => this.pause());
         this.restartBtn.addEventListener('click', () => this.restart());
-        this.fastModeBtn.addEventListener('click', () => this.toggleFastMode());
+        if (this.fastModeBtn) {
+            this.fastModeBtn.addEventListener('click', () => this.toggleFastMode());
+        }
     }
     
     onKeyDown(e) {
@@ -183,11 +185,8 @@ class TRexRunner {
     
     reset() {
         this.score = 0;
-        // Keep current speed instead of resetting to preserve difficulty progression
-        // Only reset to base speed if game just started
-        if (this.currentSpeed <= this.baseSpeed + 1) {
-            this.currentSpeed = this.fastMode ? 6 : this.baseSpeed;
-        }
+        // Reset speed based on fast mode setting
+        this.currentSpeed = this.fastMode ? 6 : this.baseSpeed;
         this.obstacles = [];
         this.clouds = [];
         this.tRex.yPos = this.tRex.groundYPos;
@@ -216,8 +215,10 @@ class TRexRunner {
     
     toggleFastMode() {
         this.fastMode = !this.fastMode;
-        this.fastModeBtn.textContent = this.fastMode ? 'Fast Mode: ON' : 'Fast Mode: OFF';
-        this.fastModeBtn.style.backgroundColor = this.fastMode ? '#4CAF50' : '#f44336';
+        if (this.fastModeBtn) {
+            this.fastModeBtn.textContent = this.fastMode ? 'Fast Mode: ON' : 'Fast Mode: OFF';
+            this.fastModeBtn.style.backgroundColor = this.fastMode ? '#4CAF50' : '#f44336';
+        }
         
         // Update current speed based on mode
         if (this.fastMode) {
@@ -440,16 +441,11 @@ class TRexRunner {
         // Clear canvas
         this.ctx.clearRect(0, 0, this.CANVAS_WIDTH, this.CANVAS_HEIGHT);
         
-        // Apply night mode
-        if (this.isNightMode) {
-            this.ctx.fillStyle = '#535353';
-            this.ctx.fillRect(0, 0, this.CANVAS_WIDTH, this.CANVAS_HEIGHT);
-            this.ctx.globalCompositeOperation = 'difference';
-        } else {
-            this.ctx.fillStyle = '#f7f7f7';
-            this.ctx.fillRect(0, 0, this.CANVAS_WIDTH, this.CANVAS_HEIGHT);
-            this.ctx.globalCompositeOperation = 'source-over';
-        }
+        // Apply smooth night mode transition
+        const bgGray = Math.floor(247 - (247 - 83) * this.nightModeOpacity);
+        this.ctx.fillStyle = `rgb(${bgGray}, ${bgGray}, ${bgGray})`;
+        this.ctx.fillRect(0, 0, this.CANVAS_WIDTH, this.CANVAS_HEIGHT);
+        this.ctx.globalCompositeOperation = 'source-over';
         
         // Draw clouds
         this.drawClouds();
@@ -476,14 +472,17 @@ class TRexRunner {
         const x = this.tRex.x;
         const y = this.tRex.yPos;
         
-        this.ctx.fillStyle = this.isNightMode ? '#f7f7f7' : '#535353';
+        // Smooth color transition for T-Rex
+        const tRexGray = Math.floor(83 + (247 - 83) * (this.nightModeOpacity || 0));
+        this.ctx.fillStyle = `rgb(${tRexGray}, ${tRexGray}, ${tRexGray})`;
         
         if (this.tRex.status === 'CRASHED') {
             // Draw crashed T-Rex (simplified)
             this.ctx.fillRect(x, y + 10, 44, 37);
             this.ctx.fillRect(x + 10, y, 24, 15);
             // Eyes (X marks)
-            this.ctx.fillStyle = this.isNightMode ? '#535353' : '#f7f7f7';
+            const eyeGray = Math.floor(247 - (247 - 83) * (this.nightModeOpacity || 0));
+            this.ctx.fillStyle = `rgb(${eyeGray}, ${eyeGray}, ${eyeGray})`;
             this.ctx.fillRect(x + 15, y + 3, 8, 2);
             this.ctx.fillRect(x + 19, y + 1, 2, 6);
             this.ctx.fillRect(x + 25, y + 3, 8, 2);
@@ -493,7 +492,8 @@ class TRexRunner {
             this.ctx.fillRect(x, y + 20, 44, 27);
             this.ctx.fillRect(x + 10, y + 15, 24, 10);
             // Eye
-            this.ctx.fillStyle = this.isNightMode ? '#535353' : '#f7f7f7';
+            const eyeGray2 = Math.floor(247 - (247 - 83) * (this.nightModeOpacity || 0));
+            this.ctx.fillStyle = `rgb(${eyeGray2}, ${eyeGray2}, ${eyeGray2})`;
             this.ctx.fillRect(x + 15, y + 18, 4, 4);
         } else {
             // Draw running/jumping T-Rex
@@ -509,13 +509,16 @@ class TRexRunner {
             this.ctx.fillRect(x + 22, y + 35, 6, 12 + legOffset);
             
             // Eye
-            this.ctx.fillStyle = this.isNightMode ? '#535353' : '#f7f7f7';
+            const eyeGray3 = Math.floor(247 - (247 - 83) * (this.nightModeOpacity || 0));
+            this.ctx.fillStyle = `rgb(${eyeGray3}, ${eyeGray3}, ${eyeGray3})`;
             this.ctx.fillRect(x + 15, y + 5, 4, 4);
         }
     }
     
     drawObstacles() {
-        this.ctx.fillStyle = this.isNightMode ? '#f7f7f7' : '#535353';
+        // Smooth color transition for obstacles
+        const obstacleGray = Math.floor(83 + (247 - 83) * (this.nightModeOpacity || 0));
+        this.ctx.fillStyle = `rgb(${obstacleGray}, ${obstacleGray}, ${obstacleGray})`;
         
         this.obstacles.forEach(obstacle => {
             switch (obstacle.type) {
@@ -579,7 +582,8 @@ class TRexRunner {
                     this.ctx.fillRect(obstacle.x + 8, obstacle.y + 20, 8, 3);
                     
                     // Eye (small detail)
-                    this.ctx.fillStyle = this.isNightMode ? '#535353' : '#f7f7f7';
+                    const birdEyeGray = Math.floor(247 - (247 - 83) * (this.nightModeOpacity || 0));
+                    this.ctx.fillStyle = `rgb(${birdEyeGray}, ${birdEyeGray}, ${birdEyeGray})`;
                     this.ctx.fillRect(obstacle.x + 37, obstacle.y + 18, 2, 2);
                     this.ctx.fillStyle = this.isNightMode ? '#f7f7f7' : '#535353';
                     break;
