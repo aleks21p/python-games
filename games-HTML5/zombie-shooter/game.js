@@ -2084,6 +2084,53 @@ class Game {
                         index++;
                     }
                     
+                    // Check refund button clicks first
+                    if (this.refundButtons) {
+                        // Gun refund button
+                        if (this.refundButtons.gun && this.gunUpgradeLevel > 0) {
+                            const btn = this.refundButtons.gun;
+                            if (clickX >= btn.x && clickX <= btn.x + btn.width &&
+                                clickY >= btn.y && clickY <= btn.y + btn.height) {
+                                this.coins += btn.refundAmount;
+                                this.gunUpgradeLevel--;
+                                this.saveCoins();
+                                this.saveGunUpgrade();
+                                return; // Don't process upgrade click
+                            }
+                        }
+                        
+                        // Health refund button
+                        if (this.refundButtons.health && this.healthUpgradeLevel > 0) {
+                            const btn = this.refundButtons.health;
+                            if (clickX >= btn.x && clickX <= btn.x + btn.width &&
+                                clickY >= btn.y && clickY <= btn.y + btn.height) {
+                                this.coins += btn.refundAmount;
+                                this.healthUpgradeLevel--;
+                                // Reduce max health when refunding
+                                if (this.player) {
+                                    this.player.maxHealth = Math.max(1, this.player.maxHealth - 1);
+                                    this.player.health = Math.min(this.player.health, this.player.maxHealth);
+                                }
+                                this.saveCoins();
+                                this.saveHealthUpgrade();
+                                return; // Don't process upgrade click
+                            }
+                        }
+                        
+                        // Speed refund button
+                        if (this.refundButtons.speed && this.speedUpgradeLevel > 0) {
+                            const btn = this.refundButtons.speed;
+                            if (clickX >= btn.x && clickX <= btn.x + btn.width &&
+                                clickY >= btn.y && clickY <= btn.y + btn.height) {
+                                this.coins += btn.refundAmount;
+                                this.speedUpgradeLevel--;
+                                this.saveCoins();
+                                this.saveSpeedUpgrade();
+                                return; // Don't process upgrade click
+                            }
+                        }
+                    }
+                    
                     // Check gun upgrade click
                     if (clickX >= gunUpgradeX && clickX <= gunUpgradeX + gunUpgradeWidth &&
                         clickY >= gunUpgradeY && clickY <= gunUpgradeY + gunUpgradeHeight) {
@@ -5230,6 +5277,38 @@ class Game {
             ctx.fillText(`${this.gunUpgradeCost} Coins`, gunUpgradeX + gunUpgradeWidth/2, gunUpgradeY + 32);
         }
 
+        // Draw gun upgrade refund button (if level > 0)
+        if (this.gunUpgradeLevel > 0) {
+            const refundButtonSize = 20;
+            const refundButtonX = gunUpgradeX + gunUpgradeWidth - refundButtonSize - 2;
+            const refundButtonY = gunUpgradeY + 2;
+            
+            // Red background
+            ctx.fillStyle = '#FF0000';
+            ctx.fillRect(refundButtonX, refundButtonY, refundButtonSize, refundButtonSize);
+            
+            // White border
+            ctx.strokeStyle = WHITE;
+            ctx.lineWidth = 1;
+            ctx.strokeRect(refundButtonX, refundButtonY, refundButtonSize, refundButtonSize);
+            
+            // '$' symbol
+            ctx.fillStyle = WHITE;
+            ctx.font = '12px Arial';
+            ctx.textAlign = 'center';
+            ctx.fillText('$', refundButtonX + refundButtonSize/2, refundButtonY + 14);
+            
+            // Store refund button coordinates
+            if (!this.refundButtons) this.refundButtons = {};
+            this.refundButtons.gun = {
+                x: refundButtonX,
+                y: refundButtonY,
+                width: refundButtonSize,
+                height: refundButtonSize,
+                refundAmount: Math.floor(this.gunUpgradeCost * 0.5)
+            };
+        }
+
         // Health upgrade button (left side below gun upgrade)
         const healthUpgradeX = gunUpgradeX - 220;
         const healthUpgradeY = gunUpgradeY;
@@ -5258,6 +5337,38 @@ class Game {
             ctx.fillText(`${this.healthUpgradeCost} Coins (+2 Health)`, healthUpgradeX + upgradeWidth/2, healthUpgradeY + 32);
         }
 
+        // Draw health upgrade refund button (if level > 0)
+        if (this.healthUpgradeLevel > 0) {
+            const refundButtonSize = 20;
+            const refundButtonX = healthUpgradeX + upgradeWidth - refundButtonSize - 2;
+            const refundButtonY = healthUpgradeY + 2;
+            
+            // Red background
+            ctx.fillStyle = '#FF0000';
+            ctx.fillRect(refundButtonX, refundButtonY, refundButtonSize, refundButtonSize);
+            
+            // White border
+            ctx.strokeStyle = WHITE;
+            ctx.lineWidth = 1;
+            ctx.strokeRect(refundButtonX, refundButtonY, refundButtonSize, refundButtonSize);
+            
+            // '$' symbol
+            ctx.fillStyle = WHITE;
+            ctx.font = '12px Arial';
+            ctx.textAlign = 'center';
+            ctx.fillText('$', refundButtonX + refundButtonSize/2, refundButtonY + 14);
+            
+            // Store refund button coordinates
+            if (!this.refundButtons) this.refundButtons = {};
+            this.refundButtons.health = {
+                x: refundButtonX,
+                y: refundButtonY,
+                width: refundButtonSize,
+                height: refundButtonSize,
+                refundAmount: Math.floor(this.healthUpgradeCost * 0.5)
+            };
+        }
+
         // Speed upgrade button (right side below gun upgrade)
         const speedUpgradeX = gunUpgradeX + 220;
         const speedUpgradeY = gunUpgradeY;
@@ -5282,6 +5393,38 @@ class Game {
             ctx.fillText(`Speed Upgrade ${this.speedUpgradeLevel}/${this.maxSpeedUpgradeLevel}`, speedUpgradeX + upgradeWidth/2, speedUpgradeY + 18);
             ctx.font = '12px Arial';
             ctx.fillText(`${this.speedUpgradeCost} Coins (1.2x Speed)`, speedUpgradeX + upgradeWidth/2, speedUpgradeY + 32);
+        }
+
+        // Draw speed upgrade refund button (if level > 0)
+        if (this.speedUpgradeLevel > 0) {
+            const refundButtonSize = 20;
+            const refundButtonX = speedUpgradeX + upgradeWidth - refundButtonSize - 2;
+            const refundButtonY = speedUpgradeY + 2;
+            
+            // Red background
+            ctx.fillStyle = '#FF0000';
+            ctx.fillRect(refundButtonX, refundButtonY, refundButtonSize, refundButtonSize);
+            
+            // White border
+            ctx.strokeStyle = WHITE;
+            ctx.lineWidth = 1;
+            ctx.strokeRect(refundButtonX, refundButtonY, refundButtonSize, refundButtonSize);
+            
+            // '$' symbol
+            ctx.fillStyle = WHITE;
+            ctx.font = '12px Arial';
+            ctx.textAlign = 'center';
+            ctx.fillText('$', refundButtonX + refundButtonSize/2, refundButtonY + 14);
+            
+            // Store refund button coordinates
+            if (!this.refundButtons) this.refundButtons = {};
+            this.refundButtons.speed = {
+                x: refundButtonX,
+                y: refundButtonY,
+                width: refundButtonSize,
+                height: refundButtonSize,
+                refundAmount: Math.floor(this.speedUpgradeCost * 0.5)
+            };
         }
 
         ctx.textAlign = 'left';

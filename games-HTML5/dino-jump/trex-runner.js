@@ -9,14 +9,14 @@ class TRexRunner {
         this.GROUND_HEIGHT = 12;
         this.RUNNER_WIDTH = 44;
         this.RUNNER_HEIGHT = 47;
-        this.RUNNER_MAX_JUMP_HEIGHT = 30;
+        this.RUNNER_MAX_JUMP_HEIGHT = 35; // Increased from 30 to allow higher jumps
         
         // Game state
         this.gameState = 'WAITING'; // WAITING, RUNNING, CRASHED
         this.score = 0;
         this.highScore = parseInt(localStorage.getItem('trex-highscore')) || 0;
-        this.currentSpeed = 6;
-        this.speedIncrement = 0.001;
+        this.currentSpeed = 4; // Reduced from 6 to make game easier
+        this.speedIncrement = 0.0005; // Reduced from 0.001 to make speed increase slower
         this.gameStartTime = 0;
         
         // Dino/T-Rex properties
@@ -192,7 +192,7 @@ class TRexRunner {
     
     startJump() {
         if (!this.tRex.jumping) {
-            this.tRex.jumpVelocity = -10;
+            this.tRex.jumpVelocity = -12; // Increased jump power from -10 to -12 for easier gameplay
             this.tRex.jumping = true;
             this.tRex.status = 'JUMPING';
         }
@@ -278,21 +278,23 @@ class TRexRunner {
         });
         
         // Add new obstacles
-        if (this.obstacles.length === 0 || this.obstacles[this.obstacles.length - 1].x < this.CANVAS_WIDTH - 200) {
+        if (this.obstacles.length === 0 || this.obstacles[this.obstacles.length - 1].x < this.CANVAS_WIDTH - 300) { // Increased spacing from 200 to 300 for easier gameplay
             this.addObstacle();
         }
     }
     
     addObstacle() {
-        const obstacleTypes = ['CACTUS_SMALL', 'CACTUS_LARGE', 'PTERODACTYL'];
+        const obstacleTypes = ['CACTUS_SMALL', 'CACTUS_LARGE', 'CACTUS_TRIPLE', 'PTERODACTYL'];
         let type;
         
-        // Higher chance for cacti than pterodactyls
+        // Higher chance for cacti than pterodactyls, with easier distribution
         const rand = Math.random();
-        if (rand < 0.7) {
+        if (rand < 0.5) {
             type = 'CACTUS_SMALL';
-        } else if (rand < 0.9) {
+        } else if (rand < 0.75) {
             type = 'CACTUS_LARGE';
+        } else if (rand < 0.9) {
+            type = 'CACTUS_TRIPLE';
         } else {
             type = 'PTERODACTYL';
         }
@@ -300,8 +302,8 @@ class TRexRunner {
         const obstacle = {
             type: type,
             x: this.CANVAS_WIDTH + Math.random() * 100,
-            width: type === 'PTERODACTYL' ? 46 : (type === 'CACTUS_LARGE' ? 25 : 17),
-            height: type === 'PTERODACTYL' ? 40 : (type === 'CACTUS_LARGE' ? 50 : 35),
+            width: type === 'PTERODACTYL' ? 46 : (type === 'CACTUS_LARGE' ? 25 : (type === 'CACTUS_TRIPLE' ? 35 : 17)),
+            height: type === 'PTERODACTYL' ? 40 : (type === 'CACTUS_LARGE' ? 50 : (type === 'CACTUS_TRIPLE' ? 45 : 35)),
             y: type === 'PTERODACTYL' ? this.CANVAS_HEIGHT - this.GROUND_HEIGHT - 40 - Math.random() * 20 : this.CANVAS_HEIGHT - this.GROUND_HEIGHT,
             animFrame: 0
         };
@@ -489,15 +491,55 @@ class TRexRunner {
                     this.ctx.fillRect(obstacle.x + 17, obstacle.y + 20, 8, 15);
                     break;
                     
+                case 'CACTUS_TRIPLE':
+                    // Triple cactus - three cacti grouped together
+                    // First cactus
+                    this.ctx.fillRect(obstacle.x + 2, obstacle.y, 8, obstacle.height);
+                    this.ctx.fillRect(obstacle.x, obstacle.y + 12, 4, 12);
+                    // Second cactus (middle, taller)
+                    this.ctx.fillRect(obstacle.x + 13, obstacle.y - 5, 10, obstacle.height + 5);
+                    this.ctx.fillRect(obstacle.x + 11, obstacle.y + 10, 5, 15);
+                    this.ctx.fillRect(obstacle.x + 23, obstacle.y + 15, 5, 10);
+                    // Third cactus
+                    this.ctx.fillRect(obstacle.x + 27, obstacle.y + 3, 8, obstacle.height - 3);
+                    this.ctx.fillRect(obstacle.x + 32, obstacle.y + 15, 4, 10);
+                    break;
+                    
                 case 'PTERODACTYL':
-                    // Pterodactyl with flapping animation
-                    const flap = Math.floor(Date.now() / 200) % 2;
-                    this.ctx.fillRect(obstacle.x + 10, obstacle.y + 15, 26, 10);
-                    // Wings
-                    this.ctx.fillRect(obstacle.x, obstacle.y + 5 + flap * 3, 15, 8);
-                    this.ctx.fillRect(obstacle.x + 31, obstacle.y + 5 + flap * 3, 15, 8);
-                    // Beak
-                    this.ctx.fillRect(obstacle.x + 36, obstacle.y + 18, 10, 4);
+                    // Improved pterodactyl with more realistic bird appearance
+                    const flap = Math.floor(Date.now() / 150) % 3; // 3-frame animation for smoother flapping
+                    
+                    // Body (more streamlined)
+                    this.ctx.fillRect(obstacle.x + 15, obstacle.y + 18, 20, 8);
+                    
+                    // Head with better shape
+                    this.ctx.fillRect(obstacle.x + 35, obstacle.y + 16, 8, 12);
+                    
+                    // Beak (more prominent)
+                    this.ctx.fillRect(obstacle.x + 43, obstacle.y + 20, 6, 3);
+                    
+                    // Wings with better flapping animation
+                    if (flap === 0) {
+                        // Wings up
+                        this.ctx.fillRect(obstacle.x + 5, obstacle.y + 8, 18, 6);
+                        this.ctx.fillRect(obstacle.x + 25, obstacle.y + 8, 18, 6);
+                    } else if (flap === 1) {
+                        // Wings middle
+                        this.ctx.fillRect(obstacle.x + 2, obstacle.y + 15, 20, 5);
+                        this.ctx.fillRect(obstacle.x + 28, obstacle.y + 15, 20, 5);
+                    } else {
+                        // Wings down
+                        this.ctx.fillRect(obstacle.x + 5, obstacle.y + 22, 18, 6);
+                        this.ctx.fillRect(obstacle.x + 25, obstacle.y + 22, 18, 6);
+                    }
+                    
+                    // Tail feathers
+                    this.ctx.fillRect(obstacle.x + 8, obstacle.y + 20, 8, 3);
+                    
+                    // Eye (small detail)
+                    this.ctx.fillStyle = this.isNightMode ? '#535353' : '#f7f7f7';
+                    this.ctx.fillRect(obstacle.x + 37, obstacle.y + 18, 2, 2);
+                    this.ctx.fillStyle = this.isNightMode ? '#f7f7f7' : '#535353';
                     break;
             }
         });
