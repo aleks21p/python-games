@@ -1611,6 +1611,31 @@ class Game {
             if (e.key === 't') {
                 this.tKeyPressed = true;
             }
+            
+            // Start tracking T+1 cheat when 1 is pressed while T is held
+            if ((e.key === '1' || e.key === '!') && this.tKeyPressed) {
+                this.cheatActive = true;
+                this.cheatStartTime = Date.now();
+            }
+            
+            // Start tracking T+2 cheat when 2 is pressed while T is held
+            if ((e.key === '2' || e.key === '@') && this.tKeyPressed) {
+                this.cheat2Active = true;
+                this.cheat2StartTime = Date.now();
+            }
+            
+            // Start tracking T+3 cheat when 3 is pressed while T is held
+            if ((e.key === '3' || e.key === '#') && this.tKeyPressed) {
+                this.cheat3Active = true;
+                this.cheat3StartTime = Date.now();
+            }
+            
+            // Start tracking T+4 cheat when 4 is pressed while T is held
+            if ((e.key === '4' || e.key === '$') && this.tKeyPressed) {
+                this.cheat4Active = true;
+                this.cheat4StartTime = Date.now();
+            }
+            
             // Start tracking T+5 cheat when 5 is pressed while T is held
             if ((e.key === '5' || e.key === '%') && this.tKeyPressed) {
                 this.cheat5Active = true;
@@ -1667,9 +1692,9 @@ class Game {
                 this.tKeyPressed = false;
                 this.cheatActive = false;
                 this.cheat2Active = false;
-                // cancel cheat5 if t is released
+                this.cheat3Active = false;
+                this.cheat4Active = false;
                 this.cheat5Active = false;
-                // cancel cheat9 if t is released
                 this.cheat9Active = false;
             }
 
@@ -3786,15 +3811,65 @@ class Game {
             if (this.cheatActive) {
                 progress = (currentTime - this.cheatStartTime) / 2000;
                 text = `Skip to Level 15: ${Math.min(100, progress * 100).toFixed(0)}%`;
+                // Complete T+1 cheat: Skip to Level 15
+                if (progress >= 1) {
+                    this.level = 15;
+                    this.orbsCollected = 0;
+                    this.orbsNeeded = this.level * 10;
+                    this.player.updateShootSpeed(this.level);
+                    this.cheatActive = false;
+                    console.log('Cheat T+1 activated: Skipped to Level 15');
+                }
             } else if (this.cheat2Active) {
                 progress = (currentTime - this.cheat2StartTime) / 2000;
                 text = `Skip to Final Boss: ${Math.min(100, progress * 100).toFixed(0)}%`;
+                // Complete T+2 cheat: Skip to Final Boss (Level 50)
+                if (progress >= 1) {
+                    this.level = 50;
+                    this.orbsCollected = 0;
+                    this.orbsNeeded = this.level * 10;
+                    this.player.updateShootSpeed(this.level);
+                    this.cheat2Active = false;
+                    console.log('Cheat T+2 activated: Skipped to Final Boss Level 50');
+                }
             } else if (this.cheat3Active) {
                 progress = (currentTime - this.cheat3StartTime) / 2000;
                 text = `Set Coins to 100 QUINTILLION: ${Math.min(100, progress * 100).toFixed(0)}%`;
+                // Complete T+3 cheat: Give 100 quintillion coins
+                if (progress >= 1) {
+                    this.coins = 100000000000000000000; // 100 quintillion
+                    this.saveCoins();
+                    this.cheat3Active = false;
+                    console.log('Cheat T+3 activated: Given 100 quintillion coins');
+                }
             } else if (this.cheat4Active) {
                 progress = (currentTime - this.cheat4StartTime) / 2000;
                 text = `Clear All Progress: ${Math.min(100, progress * 100).toFixed(0)}%`;
+                // Complete T+4 cheat: Reset all progress
+                if (progress >= 1) {
+                    // Clear all progress
+                    this.coins = 0;
+                    this.level = 1;
+                    this.orbsCollected = 0;
+                    this.orbsNeeded = 10;
+                    this.ownedSkins = [];
+                    this.activeSkin = null;
+                    this.ownedPets = [];
+                    this.activePet = null;
+                    this.gunLevel = 1;
+                    this.healthLevel = 1;
+                    this.speedLevel = 1;
+                    this.player.updateShootSpeed(this.level);
+                    // Save all the reset values
+                    this.saveCoins();
+                    this.saveOwnedSkins();
+                    this.saveActiveSkin();
+                    this.saveOwnedPets();
+                    this.saveActivePet();
+                    this.saveUpgrades();
+                    this.cheat4Active = false;
+                    console.log('Cheat T+4 activated: All progress reset');
+                }
             }
 
             // T+5 cheat progress
