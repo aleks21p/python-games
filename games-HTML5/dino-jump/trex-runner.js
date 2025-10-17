@@ -56,6 +56,11 @@ class TRexRunner {
         // Night mode
         this.invertTimer = 0;
         this.isNightMode = false;
+        this.nightModeOpacity = 0; // For smooth fade transition
+        
+        // Fast mode
+        this.fastMode = false;
+        this.baseSpeed = 4; // Store the original slow speed
         
         // Initialize positions
         this.tRex.groundYPos = this.CANVAS_HEIGHT - this.GROUND_HEIGHT - this.RUNNER_HEIGHT;
@@ -70,6 +75,7 @@ class TRexRunner {
         this.restartBtn = document.getElementById('restartBtn');
         this.gameOverScreen = document.getElementById('gameOverScreen');
         this.finalScoreElement = document.getElementById('finalScore');
+        this.fastModeBtn = document.getElementById('fastModeBtn');
         
         this.init();
     }
@@ -102,9 +108,10 @@ class TRexRunner {
         });
         
         // Button controls
-        this.startBtn.addEventListener('click', () => this.startGame());
-        this.pauseBtn.addEventListener('click', () => this.pauseGame());
+        this.startBtn.addEventListener('click', () => this.start());
+        this.pauseBtn.addEventListener('click', () => this.pause());
         this.restartBtn.addEventListener('click', () => this.restart());
+        this.fastModeBtn.addEventListener('click', () => this.toggleFastMode());
     }
     
     onKeyDown(e) {
@@ -176,7 +183,11 @@ class TRexRunner {
     
     reset() {
         this.score = 0;
-        this.currentSpeed = 6;
+        // Keep current speed instead of resetting to preserve difficulty progression
+        // Only reset to base speed if game just started
+        if (this.currentSpeed <= this.baseSpeed + 1) {
+            this.currentSpeed = this.fastMode ? 6 : this.baseSpeed;
+        }
         this.obstacles = [];
         this.clouds = [];
         this.tRex.yPos = this.tRex.groundYPos;
@@ -188,6 +199,7 @@ class TRexRunner {
         this.gameStartTime = Date.now();
         this.isNightMode = false;
         this.invertTimer = 0;
+        this.nightModeOpacity = 0;
     }
     
     startJump() {
@@ -200,6 +212,25 @@ class TRexRunner {
     
     speedDrop() {
         this.tRex.speedDrop = 8;
+    }
+    
+    toggleFastMode() {
+        this.fastMode = !this.fastMode;
+        this.fastModeBtn.textContent = this.fastMode ? 'Fast Mode: ON' : 'Fast Mode: OFF';
+        this.fastModeBtn.style.backgroundColor = this.fastMode ? '#4CAF50' : '#f44336';
+        
+        // Update current speed based on mode
+        if (this.fastMode) {
+            // Set to 1.0x speed (6) if currently slower
+            if (this.currentSpeed < 6) {
+                this.currentSpeed = 6;
+            }
+        } else {
+            // Set to 0.7x speed (4) if currently at default
+            if (this.currentSpeed === 6) {
+                this.currentSpeed = this.baseSpeed;
+            }
+        }
     }
     
     setDuck(isDucking) {
@@ -344,14 +375,25 @@ class TRexRunner {
     
     updateNightMode() {
         if (Math.floor(this.score) % 700 === 0 && Math.floor(this.score) > 0) {
-            this.invertTimer = 150;
+            this.invertTimer = 120; // Reduced for smoother transition
         }
         
         if (this.invertTimer > 0) {
             this.invertTimer--;
-            if (this.invertTimer % 10 === 0) {
-                this.isNightMode = !this.isNightMode;
+            
+            // Smooth fade transition instead of abrupt switching
+            if (this.invertTimer > 60) {
+                // Fade to night mode
+                this.nightModeOpacity = Math.min(1, (120 - this.invertTimer) / 60);
+                this.isNightMode = this.nightModeOpacity > 0.5;
+            } else {
+                // Fade back to day mode
+                this.nightModeOpacity = Math.max(0, this.invertTimer / 60);
+                this.isNightMode = this.nightModeOpacity > 0.5;
             }
+        } else {
+            // Not in transition
+            this.nightModeOpacity = this.isNightMode ? 1 : 0;
         }
     }
     
