@@ -1359,7 +1359,12 @@ class Game {
         this.rareCrateRolling = false;
         this.commonCrateRollStartTime = 0;
         this.rareCrateRollStartTime = 0;
-        this.crateAnimationDuration = 1000; // 1 second
+        this.crateAnimationDuration = 1000; // 1 second rolling
+        this.crateRevealDuration = 500; // 0.5 second reveal
+        this.commonCrateRevealPet = null;
+        this.rareCrateRevealPet = null;
+        this.commonCrateRevealing = false;
+        this.rareCrateRevealing = false;
 
         // Input handling
         this.keys = {};
@@ -2147,8 +2152,8 @@ class Game {
                     
                     if (clickX >= crateX && clickX <= crateX + crateWidth &&
                         clickY >= crateY && clickY <= crateY + crateHeight) {
-                        // Prevent clicking if animation is already running
-                        if (this.commonCrateRolling) {
+                        // Prevent clicking if animation is already running or revealing
+                        if (this.commonCrateRolling || this.commonCrateRevealing) {
                             return;
                         }
                         
@@ -2176,11 +2181,18 @@ class Game {
                                     }
                                 }
                                 
-                                if (selectedPet && !this.ownedPets.includes(selectedPet)) {
-                                    this.ownedPets.push(selectedPet);
-                                    this.saveOwnedPets();
-                                    console.log(`Got ${selectedPet}! (${possiblePets.find(p => p.name === selectedPet).rarity})`);
-                                }
+                                // Start reveal phase
+                                this.commonCrateRevealPet = selectedPet;
+                                this.commonCrateRevealing = true;
+                                
+                                // Award pet after reveal phase
+                                setTimeout(() => {
+                                    if (selectedPet && !this.ownedPets.includes(selectedPet)) {
+                                        this.ownedPets.push(selectedPet);
+                                        this.saveOwnedPets();
+                                        console.log(`Got ${selectedPet}! (${possiblePets.find(p => p.name === selectedPet).rarity})`);
+                                    }
+                                }, this.crateRevealDuration);
                             }, this.crateAnimationDuration);
                         }
                     }
@@ -2191,29 +2203,48 @@ class Game {
                     
                     if (clickX >= rareCrateX && clickX <= rareCrateX + crateWidth &&
                         clickY >= rareCrateY && clickY <= rareCrateY + crateHeight) {
+                        // Prevent clicking if animation is already running or revealing
+                        if (this.rareCrateRolling || this.rareCrateRevealing) {
+                            return;
+                        }
+                        
                         if (this.coins >= this.petCrates.rare.cost) {
-                            this.coins -= this.petCrates.rare.cost;
-                            this.saveCoins();
+                            // Start rolling animation
+                            this.rareCrateRolling = true;
+                            this.rareCrateRollStartTime = Date.now();
                             
-                            // Random pet from rare crate with chances
-                            const possiblePets = this.petCrates.rare.pets;
-                            const rand = Math.random() * 100; // 0-100
-                            let currentChance = 0;
-                            let selectedPet = null;
+                            // Delay the actual pet selection until animation finishes
+                            setTimeout(() => {
+                                this.coins -= this.petCrates.rare.cost;
+                                this.saveCoins();
+                                
+                                // Random pet from rare crate with chances
+                                const possiblePets = this.petCrates.rare.pets;
+                                const rand = Math.random() * 100; // 0-100
+                                let currentChance = 0;
+                                let selectedPet = null;
                             
-                            for (const pet of possiblePets) {
-                                currentChance += pet.chance;
-                                if (rand <= currentChance) {
-                                    selectedPet = pet.name;
-                                    break;
+                                for (const pet of possiblePets) {
+                                    currentChance += pet.chance;
+                                    if (rand <= currentChance) {
+                                        selectedPet = pet.name;
+                                        break;
+                                    }
                                 }
-                            }
-                            
-                            if (selectedPet && !this.ownedPets.includes(selectedPet)) {
-                                this.ownedPets.push(selectedPet);
-                                this.saveOwnedPets();
-                                console.log(`Got ${selectedPet}! (${possiblePets.find(p => p.name === selectedPet).rarity})`);
-                            }
+                                
+                                // Start reveal phase
+                                this.rareCrateRevealPet = selectedPet;
+                                this.rareCrateRevealing = true;
+                                
+                                // Award pet after reveal phase
+                                setTimeout(() => {
+                                    if (selectedPet && !this.ownedPets.includes(selectedPet)) {
+                                        this.ownedPets.push(selectedPet);
+                                        this.saveOwnedPets();
+                                        console.log(`Got ${selectedPet}! (${possiblePets.find(p => p.name === selectedPet).rarity})`);
+                                    }
+                                }, this.crateRevealDuration);
+                            }, this.crateAnimationDuration);
                         }
                     }
                     
@@ -5390,7 +5421,7 @@ class Game {
         ctx.fillStyle = '#8B4513';
         ctx.fillRect(crateX + 75, crateY + 65, 10, 10);
         
-        // Animated pet rolling display (only when rolling)
+        // Animated pet rolling display (only when rolling or revealing)
         if (this.commonCrateRolling) {
             const currentTime = Date.now();
             const animationProgress = (currentTime - this.commonCrateRollStartTime) / this.crateAnimationDuration;
@@ -5408,6 +5439,26 @@ class Game {
                 const petIconX = crateX + 80;
                 const petIconY = crateY + 100;
                 this.drawPetIcon(ctx, currentPet.name, petIconX, petIconY, 12);
+            }
+        } else if (this.commonCrateRevealing && this.commonCrateRevealPet) {
+            // Show the revealed pet for 0.5 seconds
+            const currentTime = Date.now();
+            const revealProgress = (currentTime - this.commonCrateRollStartTime - this.crateAnimationDuration) / this.crateRevealDuration;
+            
+            if (revealProgress >= 1) {
+                // Reveal finished
+                this.commonCrateRevealing = false;
+                this.commonCrateRevealPet = null;
+            } else {
+                // Draw the revealed pet with a glow effect
+                const petIconX = crateX + 80;
+                const petIconY = crateY + 100;
+                
+                // Add glow effect for revealed pet
+                ctx.shadowColor = '#FFD700';
+                ctx.shadowBlur = 15;
+                this.drawPetIcon(ctx, this.commonCrateRevealPet, petIconX, petIconY, 14); // Slightly larger
+                ctx.shadowBlur = 0;
             }
         }
         
@@ -5474,7 +5525,7 @@ class Game {
         ctx.fillStyle = '#FFD700';
         ctx.fillRect(rareCrateX + 75, rareCrateY + 65, 10, 10);
         
-        // Animated pet rolling display for rare crate (only when rolling)
+        // Animated pet rolling display for rare crate (only when rolling or revealing)
         if (this.rareCrateRolling) {
             const currentTime = Date.now();
             const rareAnimationProgress = (currentTime - this.rareCrateRollStartTime) / this.crateAnimationDuration;
@@ -5492,6 +5543,26 @@ class Game {
                 const rarePetIconX = rareCrateX + 80;
                 const rarePetIconY = rareCrateY + 100;
                 this.drawPetIcon(ctx, currentRarePet.name, rarePetIconX, rarePetIconY, 12);
+            }
+        } else if (this.rareCrateRevealing && this.rareCrateRevealPet) {
+            // Show the revealed pet for 0.5 seconds
+            const currentTime = Date.now();
+            const revealProgress = (currentTime - this.rareCrateRollStartTime - this.crateAnimationDuration) / this.crateRevealDuration;
+            
+            if (revealProgress >= 1) {
+                // Reveal finished
+                this.rareCrateRevealing = false;
+                this.rareCrateRevealPet = null;
+            } else {
+                // Draw the revealed pet with a glow effect
+                const rarePetIconX = rareCrateX + 80;
+                const rarePetIconY = rareCrateY + 100;
+                
+                // Add glow effect for revealed pet
+                ctx.shadowColor = '#FFD700';
+                ctx.shadowBlur = 15;
+                this.drawPetIcon(ctx, this.rareCrateRevealPet, rarePetIconX, rarePetIconY, 14); // Slightly larger
+                ctx.shadowBlur = 0;
             }
         }
         
