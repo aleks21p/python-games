@@ -83,6 +83,13 @@ class TRexRunner {
     init() {
         this.setupEventListeners();
         this.updateUI();
+        
+        // Initialize fast mode button state
+        if (this.fastModeBtn) {
+            this.fastModeBtn.textContent = 'Fast Mode: OFF';
+            this.fastModeBtn.style.backgroundColor = '#f44336';
+        }
+        
         this.gameLoop();
     }
     
@@ -112,7 +119,13 @@ class TRexRunner {
         this.pauseBtn.addEventListener('click', () => this.pause());
         this.restartBtn.addEventListener('click', () => this.restart());
         if (this.fastModeBtn) {
-            this.fastModeBtn.addEventListener('click', () => this.toggleFastMode());
+            // Remove any existing event listeners before adding new one
+            this.fastModeBtn.removeEventListener('click', this.toggleFastMode);
+            this.fastModeBtn.addEventListener('click', (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                this.toggleFastMode();
+            });
         }
     }
     
@@ -214,24 +227,38 @@ class TRexRunner {
     }
     
     toggleFastMode() {
-        this.fastMode = !this.fastMode;
-        if (this.fastModeBtn) {
-            this.fastModeBtn.textContent = this.fastMode ? 'Fast Mode: ON' : 'Fast Mode: OFF';
-            this.fastModeBtn.style.backgroundColor = this.fastMode ? '#4CAF50' : '#f44336';
+        // Prevent rapid clicking or if button is disabled
+        if (!this.fastModeBtn || this.fastModeBtn.disabled) {
+            return;
         }
+        
+        // Temporarily disable button to prevent rapid clicks
+        this.fastModeBtn.disabled = true;
+        this.fastModeBtn.style.opacity = '0.7';
+        
+        // Toggle the mode
+        this.fastMode = !this.fastMode;
+        
+        // Update button appearance
+        this.fastModeBtn.textContent = this.fastMode ? 'Fast Mode: ON' : 'Fast Mode: OFF';
+        this.fastModeBtn.style.backgroundColor = this.fastMode ? '#4CAF50' : '#f44336';
         
         // Update current speed based on mode
         if (this.fastMode) {
-            // Set to 1.0x speed (6) if currently slower
-            if (this.currentSpeed < 6) {
-                this.currentSpeed = 6;
-            }
+            // Fast mode: start at 1.0x speed
+            this.currentSpeed = 6;
         } else {
-            // Set to 0.7x speed (4) if currently at default
-            if (this.currentSpeed === 6) {
-                this.currentSpeed = this.baseSpeed;
-            }
+            // Normal mode: start at 0.7x speed  
+            this.currentSpeed = this.baseSpeed;
         }
+        
+        // Re-enable button after a short delay
+        setTimeout(() => {
+            if (this.fastModeBtn) {
+                this.fastModeBtn.disabled = false;
+                this.fastModeBtn.style.opacity = '1';
+            }
+        }, 300);
     }
     
     setDuck(isDucking) {
