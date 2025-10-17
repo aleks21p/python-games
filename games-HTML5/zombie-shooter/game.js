@@ -264,7 +264,7 @@ class Player {
         if (this.equippedPet === 'dog') {
             petSpeedBoost = 1.5;
         } else if (this.equippedPet === 'dragon') {
-            petSpeedBoost = 1000;
+            petSpeedBoost = 0.7; // 30% reduction from current speed instead of 1000x
         }
 
         if (keys['w'] || keys['W'] || keys['ArrowUp']) {
@@ -2034,6 +2034,27 @@ class Game {
                             // Second row (shifted left by 100px to match rendering)
                             itemX = secondRowStartX + (itemWidth + itemSpacing) * (index - 3) - 100;
                             itemY = secondRowY;
+                        }
+                        
+                        // Check sell button click first (if item is owned and not default)
+                        if (this.sellButtons && this.sellButtons[itemId] && item.owned && itemId !== 'default') {
+                            const sellBtn = this.sellButtons[itemId];
+                            if (clickX >= sellBtn.x && clickX <= sellBtn.x + sellBtn.width &&
+                                clickY >= sellBtn.y && clickY <= sellBtn.y + sellBtn.height) {
+                                // Sell the item
+                                this.coins += sellBtn.sellPrice;
+                                item.owned = false;
+                                
+                                // If this was the active skin, switch to default
+                                if (this.activePlayerSkin === itemId) {
+                                    this.activePlayerSkin = 'default';
+                                }
+                                
+                                this.saveCoins();
+                                this.saveSkins();
+                                console.log(`Sold ${item.name} for ${sellBtn.sellPrice} coins`);
+                                return; // Don't process main item click
+                            }
                         }
                         
                         if (clickX >= itemX && clickX <= itemX + itemWidth &&
@@ -5139,6 +5160,38 @@ class Game {
                     ctx.fillStyle = '#FFFF00';
                     ctx.fillText('Click to Equip', itemX + itemWidth/2, itemY + 62);
                 }
+                
+                // Draw sell button in top-right corner for owned items (except default)
+                if (itemId !== 'default') {
+                    const sellButtonSize = 20;
+                    const sellButtonX = itemX + itemWidth - sellButtonSize - 2;
+                    const sellButtonY = itemY + 2;
+                    
+                    // Sell button background
+                    ctx.fillStyle = '#FF4444';
+                    ctx.fillRect(sellButtonX, sellButtonY, sellButtonSize, sellButtonSize);
+                    
+                    // Sell button border
+                    ctx.strokeStyle = WHITE;
+                    ctx.lineWidth = 1;
+                    ctx.strokeRect(sellButtonX, sellButtonY, sellButtonSize, sellButtonSize);
+                    
+                    // Sell button text ($ symbol)
+                    ctx.fillStyle = WHITE;
+                    ctx.font = '12px Arial';
+                    ctx.textAlign = 'center';
+                    ctx.fillText('$', sellButtonX + sellButtonSize/2, sellButtonY + 14);
+                    
+                    // Store sell button coordinates for click detection
+                    if (!this.sellButtons) this.sellButtons = {};
+                    this.sellButtons[itemId] = {
+                        x: sellButtonX,
+                        y: sellButtonY,
+                        width: sellButtonSize,
+                        height: sellButtonSize,
+                        sellPrice: Math.floor(item.cost * 0.5) // 50% of original cost
+                    };
+                }
             } else {
                 ctx.fillStyle = this.coins >= item.cost ? '#FFFF00' : '#FF0000';
                 ctx.fillText(`${item.cost} Coins`, itemX + itemWidth/2, itemY + 62);
@@ -5582,7 +5635,7 @@ class Game {
         ctx.fillStyle = '#FFD700';
         ctx.fillText('Capybarra (5x Health, 5x Damage) - 1%', rareCrateX + crateWidth/2, rareCrateY + 200);
         ctx.fillStyle = '#FF00FF';
-        ctx.fillText('Dragon (1000x All Stats) - 0.01%', rareCrateX + crateWidth/2, rareCrateY + 215);
+        ctx.fillText('Dragon (1000x HP/DMG, -30% Speed) - 0.01%', rareCrateX + crateWidth/2, rareCrateY + 215);
 
         // Owned pets section (right side)
         const petListX = SCREEN_WIDTH/2 + 120;
@@ -5788,7 +5841,7 @@ class Game {
                     effect = '(5x Health, 5x Damage)';
                     ctx.fillStyle = '#FFD700'; // Gold text for legendary pet
                 } else if (pet === 'dragon') {
-                    effect = '(1000x Health, 1000x Damage, 1000x Speed)';
+                    effect = '(1000x Health, 1000x Damage, -30% Speed)';
                     ctx.fillStyle = '#FF00FF'; // Magenta text for mythic pet
                 }
                 ctx.fillText(`${petName} ${effect}`, petListX + 40, petY + 16);
