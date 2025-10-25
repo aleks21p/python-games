@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Street Fighter Test</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 20px;
+            background: #000;
+            color: #fff;
+            font-family: Arial, sans-serif;
+        }
+        canvas {
+            border: 2px solid #FFD700;
+            background: linear-gradient(180deg, #87CEEB 0%, #228B22 100%);
+        }
+    </style>
+</head>
+<body>
+    <h1>Street Fighter Game Test</h1>
+    <p>If you see a canvas below with fighters, the game is working!</p>
+    <canvas id="gameCanvas" width="1200" height="700"></canvas>
+    
+    <script>
+        console.log('Test page loaded');
+        
+        // Simple test to draw on canvas
+        const canvas = document.getElementById('gameCanvas');
+        const ctx = canvas.getContext('2d');
+        
+        // Draw ground
+        ctx.fillStyle = '#228B22';
+        ctx.fillRect(0, 600, canvas.width, 100);
+        
+        // Draw simple fighters
+        ctx.fillStyle = '#FFFFFF';
+        ctx.fillRect(200, 500, 60, 120); // Player 1
+        
+        ctx.fillStyle = '#FFD700';
+        ctx.fillRect(1000, 500, 60, 120); // Player 2
+        
+        // Draw text
+        ctx.fillStyle = '#FFD700';
+        ctx.font = '48px Arial';
+        ctx.fillText('STREET FIGHTER READY!', 300, 300);
+        
+        console.log('Canvas drawing complete');
+    </script>
+</body>
+</html>

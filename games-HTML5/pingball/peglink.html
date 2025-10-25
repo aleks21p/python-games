@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Peglink - Peggle-style Game</title>
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🎯</text></svg>">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Arial', sans-serif;
+            background: linear-gradient(135deg, #1e3c72, #2a5298);
+            margin: 0;
+            padding: 0;
+            height: 100vh;
+            width: 100vw;
+            color: white;
+            overflow: hidden;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .game-container {
+            position: relative;
+            background: rgba(0, 0, 0, 0.2);
+            border-radius: 15px;
+            padding: 20px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+        }
+
+        h1 {
+            font-size: 3em;
+            margin-bottom: 20px;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.8);
+            background: linear-gradient(45deg, #FFD700, #FFA500);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            text-align: center;
+        }
+
+        #gameCanvas {
+            background: linear-gradient(135deg, #0f1b3c, #1a2b5c);
+            border: 3px solid #FFD700;
+            border-radius: 10px;
+            cursor: crosshair;
+            display: block;
+            box-shadow: 0 0 20px rgba(255, 215, 0, 0.3);
+        }
+
+        .instructions {
+            margin-top: 20px;
+            text-align: center;
+            font-size: 16px;
+            color: #B0C4DE;
+            max-width: 960px;
+        }
+
+        .instructions h3 {
+            color: #FFD700;
+            margin-bottom: 10px;
+        }
+
+        .instructions p {
+            margin: 8px 0;
+            line-height: 1.4;
+        }
+
+        .peg-legend {
+            display: flex;
+            justify-content: center;
+            gap: 30px;
+            margin: 15px 0;
+            flex-wrap: wrap;
+        }
+
+        .peg-type {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 14px;
+        }
+
+        .peg-icon {
+            width: 16px;
+            height: 16px;
+            border-radius: 50%;
+            border: 2px solid white;
+        }
+
+        .blue-peg { background-color: #4169E1; }
+        .orange-peg { background-color: #FF8C00; }
+        .power-peg { background-color: #FFD700; }
+        .bonus-peg { background-color: #32CD32; }
+    </style>
+</head>
+<body>
+    <div class="game-container">
+        <h1>🎯 Peglink</h1>
+        <canvas id="gameCanvas" width="960" height="720"></canvas>
+        
+        <div class="instructions">
+            <h3>How to Play</h3>
+            <p>Aim with your mouse and click to launch balls. Destroy all blue pegs to win!</p>
+            
+            <div class="peg-legend">
+                <div class="peg-type">
+                    <div class="peg-icon blue-peg"></div>
+                    <span>Blue (Required)</span>
+                </div>
+                <div class="peg-type">
+                    <div class="peg-icon orange-peg"></div>
+                    <span>Orange (Bonus)</span>
+                </div>
+                <div class="peg-type">
+                    <div class="peg-icon power-peg"></div>
+                    <span>Power (Split Ball)</span>
+                </div>
+                <div class="peg-type">
+                    <div class="peg-icon bonus-peg"></div>
+                    <span>Bonus (+Ball)</span>
+                </div>
+            </div>
+            
+            <p>The bucket moves automatically - catch balls to get them back!</p>
+        </div>
+    </div>
+
+    <script src="peglink.js"></script>
+</body>
+</html>
