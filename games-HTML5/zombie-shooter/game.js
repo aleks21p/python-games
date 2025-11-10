@@ -1124,6 +1124,148 @@ class FinalBoss {
     }
 }
 
+// Super Boss Bullet class
+class SuperBossBullet {
+    constructor(x, y, dx, dy) {
+        this.x = x;
+        this.y = y;
+        this.dx = dx * 4; // Faster bullets
+        this.dy = dy * 4;
+        this.size = 6;
+        this.damage = 3; // 3 health damage per bullet
+        this.isSuperBossBullet = true;
+    }
+
+    update() {
+        this.x += this.dx;
+        this.y += this.dy;
+        return this.x >= 0 && this.x <= SCREEN_WIDTH && this.y >= 0 && this.y <= SCREEN_HEIGHT;
+    }
+
+    draw(ctx) {
+        // Draw purple glowing bullet
+        ctx.save();
+        ctx.shadowBlur = 20;
+        ctx.shadowColor = '#8A2BE2';
+        ctx.fillStyle = '#8A2BE2';
+        ctx.beginPath();
+        ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+        ctx.fill();
+        
+        // Inner bright core
+        ctx.fillStyle = '#DDA0DD';
+        ctx.beginPath();
+        ctx.arc(this.x, this.y, this.size * 0.6, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.restore();
+    }
+}
+
+// Super Boss class (Level 50)
+class SuperBoss {
+    constructor(x, y) {
+        this.x = x;
+        this.y = y;
+        this.size = 100; // Larger than final boss
+        this.speed = 0.4; // Slower movement
+        this.health = 201600000; // 1000x mini boss health (201600 * 1000)
+        this.maxHealth = 201600000;
+        this.damage = 3;
+        this.lastShot = 0;
+        this.shootDelay = Math.random() * 500 + 100; // Random between 100-600ms (6-70 bullets per second)
+        this.lastDamageTime = 0;
+        this.damageCooldown = 5000;
+        this.burstCount = 0;
+        this.burstSize = Math.floor(Math.random() * 65) + 6; // Random 6-70 bullets per burst
+    }
+
+    update(player) {
+        const dx = player.x - this.x;
+        const dy = player.y - this.y;
+        const distance = Math.sqrt(dx * dx + dy * dy);
+
+        if (distance > 0) {
+            const normalizedDx = (dx / distance) * this.speed;
+            const normalizedDy = (dy / distance) * this.speed;
+            this.x += normalizedDx;
+            this.y += normalizedDy;
+        }
+    }
+
+    shoot(currentTime, player, bullets) {
+        if (currentTime - this.lastShot > this.shootDelay) {
+            this.lastShot = currentTime;
+            
+            // Shoot multiple bullets in a burst
+            if (this.burstCount < this.burstSize) {
+                // Create bullet aimed at player with slight spread
+                const angle = Math.atan2(player.y - this.y, player.x - this.x);
+                const spread = (Math.random() - 0.5) * 0.5; // Small spread for accuracy
+                const dx = Math.cos(angle + spread);
+                const dy = Math.sin(angle + spread);
+                
+                bullets.push(new SuperBossBullet(this.x, this.y, dx, dy));
+                this.burstCount++;
+                
+                // Very short delay between bullets in burst
+                this.shootDelay = 50;
+            } else {
+                // Reset burst and set longer delay before next burst
+                this.burstCount = 0;
+                this.burstSize = Math.floor(Math.random() * 65) + 6; // New random burst size
+                this.shootDelay = Math.random() * 500 + 300; // Pause between bursts
+            }
+        }
+    }
+
+    draw(ctx) {
+        // Draw super boss body with enhanced visibility
+        ctx.save();
+        
+        // Outer purple aura
+        for (let i = 0; i < 6; i++) {
+            const auraSize = this.size + (i * 15);
+            ctx.beginPath();
+            ctx.arc(this.x, this.y, auraSize, 0, Math.PI * 2);
+            ctx.strokeStyle = `rgba(138, 43, 226, ${0.4 - i * 0.06})`;
+            ctx.lineWidth = 6;
+            ctx.stroke();
+        }
+        
+        // Main body with gradient
+        const gradient = ctx.createRadialGradient(this.x, this.y, 0, this.x, this.y, this.size);
+        gradient.addColorStop(0, '#DDA0DD');
+        gradient.addColorStop(0.7, '#8A2BE2');
+        gradient.addColorStop(1, '#4B0082');
+        
+        ctx.fillStyle = gradient;
+        ctx.beginPath();
+        ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+        ctx.fill();
+        
+        // Add pulsing effect
+        const pulseIntensity = Math.sin(Date.now() * 0.01) * 0.3 + 0.7;
+        ctx.shadowBlur = 30;
+        ctx.shadowColor = '#8A2BE2';
+        ctx.fillStyle = `rgba(138, 43, 226, ${pulseIntensity})`;
+        ctx.beginPath();
+        ctx.arc(this.x, this.y, this.size * 0.8, 0, Math.PI * 2);
+        ctx.fill();
+        
+        ctx.restore();
+        
+        // Add "SUPER BOSS" text above
+        ctx.save();
+        ctx.fillStyle = '#8A2BE2';
+        ctx.font = 'bold 16px Arial';
+        ctx.textAlign = 'center';
+        ctx.shadowBlur = 10;
+        ctx.shadowColor = '#8A2BE2';
+        ctx.fillText('SUPER BOSS', this.x, this.y - this.size - 20);
+        ctx.restore();
+    }
+}
+
 // Orb class
 class Orb {
     constructor(x, y) {
@@ -1335,6 +1477,11 @@ class Game {
         this.finalBoss = null;
         this.finalBossSpawned = false;
         this.finalBossDefeated = false;
+        
+        // Super boss system (Level 50)
+        this.superBoss = null;
+        this.superBossSpawned = false;
+        this.superBossDefeated = false;
 
         // Game state
         this.gameOver = false;
@@ -3036,6 +3183,9 @@ class Game {
         this.finalBoss = null;
         this.finalBossSpawned = false;
         this.finalBossDefeated = false;
+        this.superBoss = null;
+        this.superBossSpawned = false;
+        this.superBossDefeated = false;
         
         // Reset cheat state
         this.cheatActive = false;
@@ -3105,6 +3255,18 @@ class Game {
         // Spawn final boss at center
         this.finalBoss = new FinalBoss(SCREEN_WIDTH / 2, SCREEN_HEIGHT / 2);
         this.finalBossSpawned = true;
+    }
+
+    spawnSuperBoss() {
+        // Spawn the super boss at level 50
+        // Clear all enemies and previous bosses
+        this.zombies = [];
+        this.boss = null;
+        this.finalBoss = null;
+
+        // Spawn super boss at center
+        this.superBoss = new SuperBoss(SCREEN_WIDTH / 2, SCREEN_HEIGHT / 2);
+        this.superBossSpawned = true;
     }
 
     spawnZombie() {
@@ -3251,7 +3413,7 @@ class Game {
             const bullet = this.bullets[i];
 
             // Check if enemy bullet hits player (boss bullets)
-            if (bullet.isBossBullet || bullet.isFinalBossBullet || bullet.isEnemyBullet) {
+            if (bullet.isBossBullet || bullet.isFinalBossBullet || bullet.isSuperBossBullet || bullet.isEnemyBullet) {
                 const dx = bullet.x - this.player.x;
                 const dy = bullet.y - this.player.y;
                 const distance = Math.sqrt(dx * dx + dy * dy);
@@ -3269,7 +3431,7 @@ class Game {
             }
 
             // Check boss collision (only for player bullets)
-            if (this.boss && !bullet.isBossBullet && !bullet.isFinalBossBullet) {
+            if (this.boss && !bullet.isBossBullet && !bullet.isFinalBossBullet && !bullet.isSuperBossBullet) {
                 const dx = bullet.x - this.boss.x;
                 const dy = bullet.y - this.boss.y;
                 const distance = Math.sqrt(dx * dx + dy * dy);
@@ -3289,7 +3451,7 @@ class Game {
             }
 
             // Check final boss collision (only for player bullets)
-            if (this.finalBoss && !bullet.isBossBullet && !bullet.isFinalBossBullet) {
+            if (this.finalBoss && !bullet.isBossBullet && !bullet.isFinalBossBullet && !bullet.isSuperBossBullet) {
                 const dx = bullet.x - this.finalBoss.x;
                 const dy = bullet.y - this.finalBoss.y;
                 const distance = Math.sqrt(dx * dx + dy * dy);
@@ -3303,6 +3465,31 @@ class Game {
                         this.finalBoss = null;
                         this.finalBossDefeated = true;
                         this.score += 5000; // Massive score bonus
+                    }
+                    continue;
+                }
+            }
+
+            // Check super boss collision (only for player bullets)
+            if (this.superBoss && !bullet.isBossBullet && !bullet.isFinalBossBullet && !bullet.isSuperBossBullet) {
+                const dx = bullet.x - this.superBoss.x;
+                const dy = bullet.y - this.superBoss.y;
+                const distance = Math.sqrt(dx * dx + dy * dy);
+
+                if (distance < bullet.size + this.superBoss.size) {
+                    // Hit super boss!
+                    this.bullets.splice(i, 1);
+                    this.superBoss.health -= bullet.damage;
+                    
+                    // Show damage numbers
+                    this.spawnImpact(bullet.x, bullet.y, bullet.damage, '#8A2BE2');
+                    
+                    if (this.superBoss.health <= 0) {
+                        // Super boss defeated!
+                        this.spawnOrbs(this.superBoss.x, this.superBoss.y, 1000); // 1000 orbs
+                        this.superBoss = null;
+                        this.superBossDefeated = true;
+                        this.score += 10000; // Massive score bonus
                     }
                     continue;
                 }
@@ -3623,6 +3810,7 @@ class Game {
             this.zombies.forEach(zombie => zombie.update(this.player));
             if (this.boss) this.boss.update(this.player);
             if (this.finalBoss) this.finalBoss.update(this.player);
+            if (this.superBoss) this.superBoss.update(this.player);
             
             return;  // Skip other updates during countdown
         }
@@ -3636,8 +3824,12 @@ class Game {
         // Update cheat codes
         this.updateCheatCodes();
 
+        // Check if super boss should spawn (Level 50)
+        if (this.level >= 50 && !this.superBossSpawned && !this.superBossDefeated && this.finalBossDefeated) {
+            this.spawnSuperBoss();
+        }
         // Check if final boss should spawn
-        if (this.level >= 25 && !this.finalBossSpawned && !this.finalBossDefeated) {
+        else if (this.level >= 25 && this.level < 50 && !this.finalBossSpawned && !this.finalBossDefeated) {
             this.spawnFinalBoss();
         }
         // Check if first boss should spawn (only between levels 15-24)
@@ -3689,6 +3881,12 @@ class Game {
             this.finalBoss.update(this.player);
             const finalBossBullets = this.finalBoss.shoot(currentTime);
             this.bullets.push(...finalBossBullets);
+        }
+
+        // Update super boss
+        if (this.superBoss) {
+            this.superBoss.update(this.player);
+            this.superBoss.shoot(currentTime, this.player, this.bullets);
         }
 
         // Update zombies
@@ -4807,6 +5005,9 @@ class Game {
         }
         if (this.finalBoss) {
             this.finalBoss.draw(ctx);
+        }
+        if (this.superBoss) {
+            this.superBoss.draw(ctx);
         }
         
         // Draw player last so it's on top
