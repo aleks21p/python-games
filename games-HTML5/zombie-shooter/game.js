@@ -229,16 +229,17 @@ class Player {
     }
 
     updatePetBonuses() {
-        // Apply pet health bonuses
+        // Apply pet health bonuses - only for pets that should have them
         if (this.equippedPet === 'turtle') {
             this.maxHealth = this.baseHealth * 2; // 2x health
         } else if (this.equippedPet === 'parrot') {
             this.maxHealth = this.baseHealth * 2; // 2x health
         } else if (this.equippedPet === 'capybarra') {
-            this.maxHealth = this.baseHealth * 5; // 5x health
+            this.maxHealth = this.baseHealth * 3; // 3x health (reduced from 5x)
         } else if (this.equippedPet === 'dragon') {
-            this.maxHealth = this.baseHealth * 1000; // 1000x health
+            this.maxHealth = this.baseHealth * 10; // 10x health (reduced from 1000x)
         } else {
+            // Cat and dog get no health bonuses - they provide other benefits
             this.maxHealth = this.baseHealth;
         }
         
@@ -378,11 +379,11 @@ class Player {
                     if (this.equippedPet === 'turtle') {
                         finalDamage *= 1.2; // 1.2x damage bonus
                     } else if (this.equippedPet === 'parrot') {
-                        finalDamage *= 3; // 3x damage bonus
+                        finalDamage *= 2.5; // 2.5x damage bonus (reduced from 3x)
                     } else if (this.equippedPet === 'capybarra') {
-                        finalDamage *= 5; // 5x damage bonus
+                        finalDamage *= 3; // 3x damage bonus (reduced from 5x)
                     } else if (this.equippedPet === 'dragon') {
-                        finalDamage *= 1000; // 1000x damage bonus
+                        finalDamage *= 5; // 5x damage bonus (reduced from 1000x)
                     }
                     
                     // Calculate gun tip position
@@ -6053,13 +6054,13 @@ class Game {
                     effect = '(2x Health, 1.2x Damage)';
                     ctx.fillStyle = '#4169E1'; // Blue text for rare pet
                 } else if (pet === 'parrot') {
-                    effect = '(2x Health, 3x Damage)';
+                    effect = '(2x Health, 2.5x Damage)';
                     ctx.fillStyle = '#FF6B35'; // Orange text for epic pet
                 } else if (pet === 'capybarra') {
-                    effect = '(5x Health, 5x Damage)';
+                    effect = '(3x Health, 3x Damage)';
                     ctx.fillStyle = '#FFD700'; // Gold text for legendary pet
                 } else if (pet === 'dragon') {
-                    effect = '(1000x Health, 1000x Damage, -30% Speed)';
+                    effect = '(10x Health, 5x Damage, -30% Speed)';
                     ctx.fillStyle = '#FF00FF'; // Magenta text for mythic pet
                 }
                 ctx.fillText(`${petName} ${effect}`, petListX + 40, petY + 16);
