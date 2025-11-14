@@ -1,5 +1,5 @@
 # python-games
-Python Games by Aleks 2511
+Python Games by Aleks 2025.11
 
 ## CI & Build Info
 
