@@ -79,7 +79,7 @@ class SoundboardApp {
         // Audio objects storage
         this.audioObjects = {};
         this.currentlyPlaying = new Set();
-        this.masterVolume = 0.5;
+        this.masterVolume = 1.0;
         
         // DOM elements
         this.soundGrid = document.getElementById('soundGrid');
@@ -95,7 +95,6 @@ class SoundboardApp {
         this.preloadSounds();
         this.createSoundButtons();
         this.setupEventListeners();
-        this.updateVolumeDisplay();
     }
     
     preloadSounds() {
@@ -162,13 +161,6 @@ class SoundboardApp {
     }
     
     setupEventListeners() {
-        // Volume control
-        this.volumeSlider.addEventListener('input', (e) => {
-            this.masterVolume = e.target.value / 100;
-            this.updateVolumeDisplay();
-            this.updateAllVolumes();
-        });
-        
         // Stop all sounds button
         this.stopAllBtn.addEventListener('click', () => {
             this.stopAllSounds();

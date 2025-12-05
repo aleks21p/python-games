@@ -11,7 +11,7 @@ self.addEventListener('install', (event) => {
     
     // List of audio files to cache (matches the soundboard.js list)
     const audioFiles = [
-        '5x30.mp3',
+        'vibe check.mp3',
         '67.mp3',
         'allah-hu-akbar_4xWvL6y.mp3',
         'american-anthem-gun-and-eagle.mp3',

@@ -15,7 +15,7 @@
 
         body {
             font-family: 'Arial', sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: linear-gradient(135deg, #0a1f0a 0%, #0d2b0d 25%, #1a3d1a 50%, #0f2d0f 75%, #143d14 100%);
             background-attachment: fixed;
             min-height: 100vh;
             display: flex;
@@ -37,7 +37,7 @@
             text-align: center;
             max-width: 95vw;
             width: 100%;
-            max-width: 1000px;
+            max-width: 1400px;
         }
 
         .soundboard-title {
@@ -77,7 +77,7 @@
 
         .sound-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            grid-template-columns: repeat(6, 1fr);
             gap: 1.5rem;
             margin: 2rem 0;
         }
@@ -141,7 +141,7 @@
 
         .volume-control {
             margin: 2rem 0;
-            display: flex;
+            display: none;
             align-items: center;
             justify-content: center;
             gap: 1rem;
@@ -304,15 +304,13 @@
         <button id="stopAllBtn" class="stop-all-btn">🛑 Stop All Sounds</button>
         
         <p class="soundboard-subtitle">
-            Click any button to play fun sound effects! Control the volume and stop all sounds with the controls above.
+            Click any button to play fun sound effects!
         </p>
         
         <div class="controls-info">
             <h3>How to Use</h3>
             <p><strong>Click any button</strong> to play that sound</p>
-            <p><strong>Adjust volume</strong> with the slider below</p>
-            <p><strong>Stop All Sounds</strong> button above to silence everything at once</p>
-            <p><strong>Or press the Space key</strong> to immediately stop all sounds</p>
+            <p><strong>Press Space</strong> to stop all sounds</p>
         </div>
 
         <div class="volume-control">
