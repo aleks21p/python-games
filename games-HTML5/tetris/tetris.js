@@ -23,7 +23,10 @@ class TetrisGame {
         this.paused = false;
         this.dropTimer = 0;
         this.dropInterval = 1000; // milliseconds
+        this.baseDropInterval = 1000; // starting speed
         this.lastTime = 0;
+        this.gameTime = 0; // total time played in milliseconds
+        this.speedIncreaseTimer = 0; // timer for 10-second speed increases
         
         // Piece definitions (Tetrominos)
         this.pieces = {
@@ -77,7 +80,39 @@ class TetrisGame {
         
         this.pieceTypes = Object.keys(this.pieces);
         
+        // Initialize leaderboard from localStorage
+        this.loadLeaderboard();
+        
         this.init();
+    }
+    
+    loadLeaderboard() {
+        const saved = localStorage.getItem('tetrisLeaderboard');
+        this.leaderboard = saved ? JSON.parse(saved) : [];
+    }
+    
+    saveScore(playerName = 'Anonymous') {
+        // Sanitize and limit name to 10 characters
+        playerName = playerName.trim() || 'Anonymous';
+        playerName = playerName.substring(0, 10);
+        
+        const entry = {
+            name: playerName,
+            score: this.score,
+            lines: this.lines,
+            level: this.level,
+            date: new Date().toISOString(),
+            timestamp: Date.now()
+        };
+        
+        this.leaderboard.push(entry);
+        
+        // Sort by score (descending) and keep top 50
+        this.leaderboard.sort((a, b) => b.score - a.score);
+        this.leaderboard = this.leaderboard.slice(0, 50);
+        
+        // Save to localStorage
+        localStorage.setItem('tetrisLeaderboard', JSON.stringify(this.leaderboard));
     }
     
     init() {
@@ -279,6 +314,17 @@ class TetrisGame {
         const deltaTime = currentTime - this.lastTime;
         this.lastTime = currentTime;
         
+        // Track total game time and speed increases
+        this.gameTime += deltaTime;
+        this.speedIncreaseTimer += deltaTime;
+        
+        // Increase speed by 20% every 10 seconds (10000 milliseconds)
+        if (this.speedIncreaseTimer >= 10000) {
+            this.baseDropInterval *= 0.8; // 20% faster (multiply by 0.8)
+            this.dropInterval = Math.max(50, this.baseDropInterval); // minimum 50ms
+            this.speedIncreaseTimer = 0;
+        }
+        
         // Handle piece dropping
         this.dropTimer += deltaTime;
         if (this.dropTimer >= this.dropInterval) {
@@ -459,7 +505,15 @@ class TetrisGame {
     showGameOver() {
         document.getElementById('finalScore').textContent = this.score;
         document.getElementById('finalLines').textContent = this.lines;
+        
+        // Clear and focus name input
+        const nameInput = document.getElementById('playerName');
+        nameInput.value = '';
+        
         document.getElementById('gameOver').style.display = 'block';
+        
+        // Focus on name input after a brief delay
+        setTimeout(() => nameInput.focus(), 100);
     }
     
     restart() {
@@ -472,6 +526,9 @@ class TetrisGame {
         this.paused = false;
         this.dropTimer = 0;
         this.dropInterval = 1000;
+        this.baseDropInterval = 1000;
+        this.gameTime = 0;
+        this.speedIncreaseTimer = 0;
         
         // Create new pieces
         this.currentPiece = this.createPiece();
@@ -485,6 +542,71 @@ class TetrisGame {
         
         // Restart game loop
         this.gameLoop();
+    }
+    
+    saveScoreAndRestart() {
+        // Get player name from input
+        const nameInput = document.getElementById('playerName');
+        const playerName = nameInput.value.trim() || 'Anonymous';
+        
+        // Save score with name if score > 0
+        if (this.score > 0) {
+            this.saveScore(playerName);
+        }
+        
+        // Restart the game
+        this.restart();
+    }
+    
+    showLeaderboard() {
+        const modal = document.getElementById('leaderboardModal');
+        const list = document.getElementById('leaderboardList');
+        
+        // Clear existing entries
+        list.innerHTML = '';
+        
+        if (this.leaderboard.length === 0) {
+            list.innerHTML = '<li style="text-align: center; color: #aaa; padding: 2rem;">No scores yet. Play a game to set a record!</li>';
+        } else {
+            this.leaderboard.forEach((entry, index) => {
+                const li = document.createElement('li');
+                li.className = 'leaderboard-item' + (index < 3 ? ' top-3' : '');
+                
+                const date = new Date(entry.date);
+                const dateStr = date.toLocaleDateString() + ' ' + date.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+                
+                let medal = '';
+                if (index === 0) medal = '🥇';
+                else if (index === 1) medal = '🥈';
+                else if (index === 2) medal = '🥉';
+                
+                const playerName = entry.name || 'Anonymous';
+                
+                li.innerHTML = `
+                    <span class="leaderboard-rank">${medal || (index + 1) + '.'}</span>
+                    <div class="leaderboard-info">
+                        <div class="leaderboard-name">${playerName}</div>
+                        <div class="leaderboard-score">${entry.score.toLocaleString()} pts</div>
+                        <div class="leaderboard-details">Lines: ${entry.lines} | Level: ${entry.level} | ${dateStr}</div>
+                    </div>
+                `;
+                list.appendChild(li);
+            });
+        }
+        
+        modal.style.display = 'block';
+    }
+    
+    closeLeaderboard() {
+        document.getElementById('leaderboardModal').style.display = 'none';
+    }
+    
+    clearLeaderboard() {
+        if (confirm('Are you sure you want to clear all scores? This cannot be undone!')) {
+            this.leaderboard = [];
+            localStorage.removeItem('tetrisLeaderboard');
+            this.showLeaderboard(); // Refresh the display
+        }
     }
 }
 
@@ -500,5 +622,13 @@ document.addEventListener('visibilitychange', () => {
         if (document.hidden) {
             game.paused = true;
         }
+    }
+});
+
+// Close leaderboard modal when clicking outside of it
+window.addEventListener('click', (event) => {
+    const modal = document.getElementById('leaderboardModal');
+    if (event.target === modal) {
+        game.closeLeaderboard();
     }
 });

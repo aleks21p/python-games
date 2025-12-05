@@ -130,13 +130,13 @@
     
     .home-btn {
         width: 100%;
-        padding: 0.8rem;
+        padding: 0.5rem;
         margin-top: 0.5rem;
         background: linear-gradient(45deg, #667eea, #764ba2);
         border: none;
         border-radius: 5px;
         color: white;
-        font-size: 1rem;
+        font-size: 0.85rem;
         font-weight: bold;
         cursor: pointer;
         transition: transform 0.2s;
@@ -146,6 +146,24 @@
     }
     
     .home-btn:hover {
+        transform: scale(1.05);
+    }
+    
+    .leaderboard-btn {
+        width: 100%;
+        padding: 0.5rem;
+        margin-top: 0.5rem;
+        background: linear-gradient(45deg, #f39c12, #e67e22);
+        border: none;
+        border-radius: 5px;
+        color: white;
+        font-size: 0.85rem;
+        font-weight: bold;
+        cursor: pointer;
+        transition: transform 0.2s;
+    }
+    
+    .leaderboard-btn:hover {
         transform: scale(1.05);
     }
     
@@ -163,6 +181,29 @@
         display: none;
     }
     
+    .name-input {
+        width: 100%;
+        max-width: 200px;
+        padding: 0.5rem;
+        margin: 1rem auto;
+        font-size: 1rem;
+        text-align: center;
+        border: 2px solid #4ecdc4;
+        border-radius: 5px;
+        background: rgba(255,255,255,0.1);
+        color: white;
+        outline: none;
+    }
+    
+    .name-input::placeholder {
+        color: rgba(255,255,255,0.5);
+    }
+    
+    .name-input:focus {
+        border-color: #ff6b6b;
+        background: rgba(255,255,255,0.15);
+    }
+    
     .next-piece {
         margin-top: 1rem;
         text-align: center;
@@ -177,6 +218,127 @@
         border: 1px solid #444;
         border-radius: 4px;
         background: #111;
+    }
+    
+    .leaderboard-modal {
+        display: none;
+        position: fixed;
+        z-index: 1000;
+        left: 0;
+        top: 0;
+        width: 100%;
+        height: 100%;
+        background-color: rgba(0,0,0,0.7);
+        backdrop-filter: blur(5px);
+    }
+    
+    .leaderboard-content {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+        padding: 2rem;
+        border-radius: 15px;
+        max-width: 500px;
+        width: 90%;
+        max-height: 80vh;
+        overflow-y: auto;
+        box-shadow: 0 10px 40px rgba(0,0,0,0.5);
+        border: 2px solid #4ecdc4;
+    }
+    
+    .leaderboard-content h2 {
+        color: #4ecdc4;
+        text-align: center;
+        margin-top: 0;
+        font-size: 1.8rem;
+    }
+    
+    .close-btn {
+        color: #aaa;
+        float: right;
+        font-size: 28px;
+        font-weight: bold;
+        cursor: pointer;
+        line-height: 20px;
+    }
+    
+    .close-btn:hover,
+    .close-btn:focus {
+        color: #fff;
+    }
+    
+    .leaderboard-list {
+        list-style: none;
+        padding: 0;
+        margin: 1rem 0;
+    }
+    
+    .leaderboard-item {
+        background: rgba(78, 205, 196, 0.1);
+        margin: 0.5rem 0;
+        padding: 1rem;
+        border-radius: 8px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        border-left: 4px solid #4ecdc4;
+    }
+    
+    .leaderboard-item.top-3 {
+        background: rgba(255, 215, 0, 0.2);
+        border-left-color: #ffd700;
+    }
+    
+    .leaderboard-rank {
+        font-size: 1.5rem;
+        font-weight: bold;
+        color: #4ecdc4;
+        min-width: 40px;
+    }
+    
+    .leaderboard-info {
+        flex-grow: 1;
+        margin: 0 1rem;
+        color: #fff;
+    }
+    
+    .leaderboard-name {
+        font-size: 1rem;
+        font-weight: bold;
+        color: #ffd700;
+        margin-bottom: 0.25rem;
+    }
+    
+    .leaderboard-score {
+        font-size: 1.2rem;
+        font-weight: bold;
+        color: #4ecdc4;
+    }
+    
+    .leaderboard-details {
+        font-size: 0.85rem;
+        color: #aaa;
+        margin-top: 0.25rem;
+    }
+    
+    .clear-scores-btn {
+        width: 100%;
+        padding: 0.6rem;
+        margin-top: 1rem;
+        background: linear-gradient(45deg, #e74c3c, #c0392b);
+        border: none;
+        border-radius: 5px;
+        color: white;
+        font-size: 0.9rem;
+        font-weight: bold;
+        cursor: pointer;
+        transition: transform 0.2s;
+    }
+    
+    .clear-scores-btn:hover {
+        transform: scale(1.05);
     }
     
     @media (max-width: 768px) {
@@ -208,7 +370,13 @@
                 <h2>Game Over!</h2>
                 <p>Final Score: <span id="finalScore">0</span></p>
                 <p>Lines Cleared: <span id="finalLines">0</span></p>
-                <button class="restart-btn" onclick="game.restart()">Play Again</button>
+                <input type="text" 
+                       id="playerName" 
+                       class="name-input" 
+                       placeholder="Enter name" 
+                       maxlength="10"
+                       onkeypress="if(event.key==='Enter') game.saveScoreAndRestart()">
+                <button class="restart-btn" onclick="game.saveScoreAndRestart()">Save & Play Again</button>
             </div>
         </div>
         
@@ -245,7 +413,20 @@
             </div>
             
             <button class="restart-btn" onclick="game.restart()">Restart</button>
+            <button class="leaderboard-btn" onclick="game.showLeaderboard()">Leaderboard</button>
             <a href="../index.html" class="home-btn">Home</a>
+        </div>
+    </div>
+    
+    <!-- Leaderboard Modal -->
+    <div id="leaderboardModal" class="leaderboard-modal">
+        <div class="leaderboard-content">
+            <span class="close-btn" onclick="game.closeLeaderboard()">&times;</span>
+            <h2>🏆 Leaderboard</h2>
+            <ul id="leaderboardList" class="leaderboard-list">
+                <!-- Leaderboard entries will be inserted here -->
+            </ul>
+            <button class="clear-scores-btn" onclick="game.clearLeaderboard()">Clear All Scores</button>
         </div>
     </div>
     
