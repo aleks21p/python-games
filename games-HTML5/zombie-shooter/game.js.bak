@@ -4731,6 +4731,236 @@ class Game {
                 ctx.textAlign = 'left';
             } else {
                 ctx.fillStyle = '#808080';
+                ctx.font = '24px Arial';
+                ctx.textAlign = 'center';
+                const text = this.translations[this.selectedLanguage].selectOption;
+                ctx.fillText(text, SCREEN_WIDTH/2, SCREEN_HEIGHT/2 + 50);
+                ctx.textAlign = 'left';
+            }
+
+            // Close instruction at bottom
+            ctx.fillStyle = '#808080';
+            ctx.font = '20px Arial';
+            const closeText = this.translations[this.selectedLanguage].closeOptions;
+            const closeTextWidth = ctx.measureText(closeText).width;
+            ctx.fillText(closeText, SCREEN_WIDTH/2 - closeTextWidth/2, SCREEN_HEIGHT - 80);
+        }
+
+    // (Removed quick save/import instructions to declutter the options UI)
+
+        // Draw Shop menu if active
+        if (this.inShop) {
+            console.log('Drawing shop. Pets page:', this.inPetsPage);
+            if (this.inPetsPage) {
+                this.drawPetsPage(ctx);
+            } else {
+                this.drawShopPage(ctx);
+            }
+        }
+
+        // Developer menu removed - no longer rendering
+            // Semi-transparent black background
+            ctx.fillStyle = 'rgba(0, 0, 0, 0.95)';
+            ctx.fillRect(40, 20, SCREEN_WIDTH - 80, SCREEN_HEIGHT - 40);
+            ctx.strokeStyle = WHITE;
+            ctx.strokeRect(40, 20, SCREEN_WIDTH - 80, SCREEN_HEIGHT - 40);
+
+            // Title
+            ctx.fillStyle = '#00CCCC';
+            ctx.font = '32px Arial';
+            ctx.textAlign = 'center';
+            ctx.fillText('Developer Tools', SCREEN_WIDTH/2, 90);
+
+            // Subtitle
+            ctx.fillStyle = WHITE;
+            ctx.font = '18px Arial';
+            ctx.fillText('View / Edit localStorage (developer only)', SCREEN_WIDTH/2, 120);
+
+            // Create content area similar to debug tab
+            const contentBox = {
+                width: 500,
+                height: 300,
+                x: SCREEN_WIDTH/2 - 250,
+                y: SCREEN_HEIGHT/2 - 50
+            };
+
+            // Draw content box
+            ctx.fillStyle = '#222222';
+            ctx.fillRect(contentBox.x, contentBox.y, contentBox.width, contentBox.height);
+            ctx.strokeStyle = '#444444';
+            ctx.strokeRect(contentBox.x, contentBox.y, contentBox.width, contentBox.height);
+
+            // List localStorage keys with pagination (reuse debug tab logic)
+            const keys = Object.keys(window.localStorage).sort();
+            if (keys.length === 0) {
+                ctx.fillStyle = '#808080';
+                ctx.font = '16px Arial';
+                ctx.textAlign = 'center';
+                ctx.fillText(this.translations[this.selectedLanguage].noLocalStorageKeys, SCREEN_WIDTH/2, contentBox.y + 80);
+            } else {
+                ctx.font = '14px Arial';
+                ctx.textAlign = 'left';
+                const pageSize = this.debugPageSize || 6;
+                const page = this.debugPage || 0;
+                const start = page * pageSize;
+                const end = Math.min(start + pageSize, keys.length);
+                let y = contentBox.y + 40;
+                const lineHeight = 28;
+
+                for (let i = start; i < end; i++) {
+                    const k = keys[i];
+                    ctx.fillStyle = '#FFFF00';
+                    ctx.fillText(k, contentBox.x + 20, y);
+
+                    const btnX = contentBox.x + contentBox.width - 220;
+                    const btnW = 60;
+                    const btnH = 20;
+
+                    // View
+                    ctx.fillStyle = '#4CAF50';
+                    ctx.fillRect(btnX, y - 14, btnW, btnH);
+                    ctx.fillStyle = WHITE;
+                    ctx.font = '12px Arial';
+                    ctx.fillText(this.translations[this.selectedLanguage].view, btnX + 8, y);
+
+                    // Edit
+                    ctx.fillStyle = '#2196F3';
+                    ctx.fillRect(btnX + btnW + 10, y - 14, btnW, btnH);
+                    ctx.fillStyle = WHITE;
+                    ctx.fillText(this.translations[this.selectedLanguage].edit, btnX + btnW + 18, y);
+
+                    // Delete
+                    ctx.fillStyle = '#F44336';
+                    ctx.fillRect(btnX + (btnW + 10) * 2, y - 14, btnW, btnH);
+                    ctx.fillStyle = WHITE;
+                    ctx.fillText(this.translations[this.selectedLanguage].delete, btnX + (btnW + 10) * 2 + 10, y);
+
+                    y += lineHeight;
+                }
+
+                // Pagination controls
+                const controlsY = contentBox.y + contentBox.height - 30;
+                const ctrlW = 80;
+                const ctrlH = 24;
+                const ctrlX = contentBox.x + contentBox.width/2 - (ctrlW * 2 + 10)/2;
+
+                // Prev
+                ctx.fillStyle = page > 0 ? '#666666' : '#333333';
+                ctx.fillRect(ctrlX, controlsY, ctrlW, ctrlH);
+                ctx.fillStyle = WHITE;
+                ctx.font = '12px Arial';
+                ctx.textAlign = 'center';
+                ctx.fillText('Prev', ctrlX + ctrlW/2, controlsY + 16);
+
+                // Page label
+                const pageLabel = `Page ${page + 1} / ${Math.max(1, Math.ceil(keys.length / pageSize))}`;
+                ctx.fillStyle = '#CCCCCC';
+                ctx.fillText(pageLabel, ctrlX + ctrlW + 10 + 60, controlsY + 16);
+
+                // Next
+                const nextX = ctrlX + ctrlW + 140;
+                ctx.fillStyle = end < keys.length ? '#666666' : '#333333';
+                ctx.fillRect(nextX, controlsY, ctrlW, ctrlH);
+                ctx.fillStyle = WHITE;
+                ctx.fillText('Next', nextX + ctrlW/2, controlsY + 16);
+            }
+
+            ctx.textAlign = 'left';
+
+            // Close instruction at bottom
+            ctx.fillStyle = '#808080';
+            ctx.font = '20px Arial';
+            ctx.textAlign = 'center';
+            ctx.fillText('Press ESC to close', SCREEN_WIDTH/2, SCREEN_HEIGHT - 60);
+            ctx.textAlign = 'left';
+        }
+
+        // Debug overlay (dt, particle counts)
+        try { this._drawDebugOverlay(); } catch (e) {}
+    }
+
+    drawPauseMenu() {
+        // Semi-transparent background
+        ctx.fillStyle = 'rgba(0, 0, 0, 0.8)';
+        ctx.fillRect(0, 0, SCREEN_WIDTH, SCREEN_HEIGHT);
+
+        // Pause menu box
+        const boxWidth = 500;
+        const boxHeight = 300;
+        const boxX = SCREEN_WIDTH/2 - boxWidth/2;
+        const boxY = SCREEN_HEIGHT/2 - boxHeight/2;
+
+        // Draw box with gradient
+        const gradient = ctx.createLinearGradient(boxX, boxY, boxX, boxY + boxHeight);
+        gradient.addColorStop(0, '#444444');
+        gradient.addColorStop(1, '#222222');
+        ctx.fillStyle = gradient;
+        ctx.fillRect(boxX, boxY, boxWidth, boxHeight);
+        
+        // Box border
+        ctx.strokeStyle = WHITE;
+        ctx.lineWidth = 3;
+        ctx.strokeRect(boxX, boxY, boxWidth, boxHeight);
+
+        // Menu title
+        ctx.fillStyle = WHITE;
+        ctx.font = 'bold 48px Arial';
+        ctx.textAlign = 'center';
+        ctx.fillText('PAUSED', SCREEN_WIDTH/2, boxY + 80);
+
+        // Instructions
+        ctx.font = '28px Arial';
+        ctx.fillText('Press P to Resume', SCREEN_WIDTH/2, boxY + 150);
+        ctx.fillText('Press ESC for Menu', SCREEN_WIDTH/2, boxY + 200);
+        
+        ctx.textAlign = 'left'; // Reset alignment
+    }
+
+    draw() {
+        // Save the current transform
+        ctx.save();
+        // Apply screen shake if active (reduced by 70%)
+        if (this.shakeStrength && this.shakeStrength > 0) {
+            const sx = (Math.random() * 2 - 1) * this.shakeStrength * 0.3;
+            const sy = (Math.random() * 2 - 1) * this.shakeStrength * 0.3;
+            ctx.translate(Math.round(sx), Math.round(sy));
+        }
+        
+        // Apply upside-down effect if enabled
+        if (this.isUpsideDown) {
+            ctx.translate(SCREEN_WIDTH, SCREEN_HEIGHT);
+            ctx.rotate(Math.PI);
+        }
+        
+        // Clear canvas
+        ctx.fillStyle = BLACK;
+        ctx.fillRect(0, 0, SCREEN_WIDTH, SCREEN_HEIGHT);
+
+        if (this.inMenu) {
+            this.drawMenu();
+            ctx.restore();
+            return;
+        }
+
+        // Draw game objects in proper order (back to front)
+        this.orbs.forEach(orb => orb.draw(ctx));
+        this.bullets.forEach(bullet => bullet.draw(ctx));
+        this.zombies.forEach(zombie => zombie.draw(ctx));
+        
+        // Draw bosses
+        if (this.boss) {
+            this.boss.draw(ctx);
+        }
+        if (this.finalBoss) {
+            this.finalBoss.draw(ctx);
+        }
+        if (this.superBoss) {
+            this.superBoss.draw(ctx);
+        }
+        
+        // Draw player last so it's on top
+        this.player.draw(ctx);
+
     // Draw particles (above world, below UI)
     for (const p of this.particles) p.draw(ctx);
     // Draw damage popups
