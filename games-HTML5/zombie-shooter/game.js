@@ -1374,7 +1374,7 @@ class Game {
                 developer: 'Developer Options',
                 home: 'Home',
                 soundDesign: 'Sound Design: Miles',
-                art: 'Art & Textures: Aleks P',
+                art: 'main game and code:Aleks P',
                 sponsors: 'Sponsors: Shaun & Flecher'
             }
         };
@@ -4281,35 +4281,7 @@ class Game {
             ctx.textAlign = 'left';
         })(shopBtn);
 
-        // Draw Developer button (cyan gradient)
-        const developerBtn = this.menuButtons.developer;
-        (function(btn){
-            const r = 14;
-            const grad = ctx.createLinearGradient(btn.x, btn.y, btn.x + btn.width, btn.y + btn.height);
-            grad.addColorStop(0, '#4ecdc4');
-            grad.addColorStop(1, '#45b7d1');
-            ctx.fillStyle = grad;
-            ctx.beginPath();
-            ctx.moveTo(btn.x + r, btn.y);
-            ctx.lineTo(btn.x + btn.width - r, btn.y);
-            ctx.quadraticCurveTo(btn.x + btn.width, btn.y, btn.x + btn.width, btn.y + r);
-            ctx.lineTo(btn.x + btn.width, btn.y + btn.height - r);
-            ctx.quadraticCurveTo(btn.x + btn.width, btn.y + btn.height, btn.x + btn.width - r, btn.y + btn.height);
-            ctx.lineTo(btn.x + r, btn.y + btn.height);
-            ctx.quadraticCurveTo(btn.x, btn.y + btn.height, btn.x, btn.y + btn.height - r);
-            ctx.lineTo(btn.x, btn.y + r);
-            ctx.quadraticCurveTo(btn.x, btn.y, btn.x + r, btn.y);
-            ctx.closePath();
-            ctx.fill();
-            ctx.lineWidth = 2;
-            ctx.strokeStyle = 'rgba(255,255,255,0.12)';
-            ctx.stroke();
-            ctx.fillStyle = 'white';
-            ctx.font = '28px "Orbitron", Arial';
-            ctx.textAlign = 'center';
-            ctx.fillText(this.translations ? (this.translations[this.selectedLanguage].developer || 'Dev') : 'Dev', btn.x + btn.width/2, btn.y + 36);
-            ctx.textAlign = 'left';
-        }).call(this, developerBtn);
+        // Developer button removed
 
         // Draw Home button (blue-gray)
         const homeBtn = this.menuButtons.home;
@@ -4731,6 +4703,121 @@ class Game {
                 ctx.textAlign = 'left';
             } else {
                 ctx.fillStyle = '#808080';
+                ctx.font = '24px Arial';
+                ctx.textAlign = 'center';
+                const text = this.translations[this.selectedLanguage].selectOption;
+                ctx.fillText(text, SCREEN_WIDTH/2, SCREEN_HEIGHT/2 + 50);
+                ctx.textAlign = 'left';
+            }
+
+            // Close instruction at bottom
+            ctx.fillStyle = '#808080';
+            ctx.font = '20px Arial';
+            const closeText = this.translations[this.selectedLanguage].closeOptions;
+            const closeTextWidth = ctx.measureText(closeText).width;
+            ctx.fillText(closeText, SCREEN_WIDTH/2 - closeTextWidth/2, SCREEN_HEIGHT - 80);
+        }
+
+    // (Removed quick save/import instructions to declutter the options UI)
+
+        // Draw Shop menu if active
+        if (this.inShop) {
+            console.log('Drawing shop. Pets page:', this.inPetsPage);
+            if (this.inPetsPage) {
+                this.drawPetsPage(ctx);
+            } else {
+                this.drawShopPage(ctx);
+            }
+        }
+
+        // Developer menu removed - no longer rendering
+
+        // Debug overlay (dt, particle counts)
+        try { this._drawDebugOverlay(); } catch (e) {}
+    }
+
+    drawPauseMenu() {
+        // Semi-transparent background
+        ctx.fillStyle = 'rgba(0, 0, 0, 0.8)';
+        ctx.fillRect(0, 0, SCREEN_WIDTH, SCREEN_HEIGHT);
+
+        // Pause menu box
+        const boxWidth = 500;
+        const boxHeight = 300;
+        const boxX = SCREEN_WIDTH/2 - boxWidth/2;
+        const boxY = SCREEN_HEIGHT/2 - boxHeight/2;
+
+        // Draw box with gradient
+        const gradient = ctx.createLinearGradient(boxX, boxY, boxX, boxY + boxHeight);
+        gradient.addColorStop(0, '#444444');
+        gradient.addColorStop(1, '#222222');
+        ctx.fillStyle = gradient;
+        ctx.fillRect(boxX, boxY, boxWidth, boxHeight);
+        
+        // Box border
+        ctx.strokeStyle = WHITE;
+        ctx.lineWidth = 3;
+        ctx.strokeRect(boxX, boxY, boxWidth, boxHeight);
+
+        // Menu title
+        ctx.fillStyle = WHITE;
+        ctx.font = 'bold 48px Arial';
+        ctx.textAlign = 'center';
+        ctx.fillText('PAUSED', SCREEN_WIDTH/2, boxY + 80);
+
+        // Instructions
+        ctx.font = '28px Arial';
+        ctx.fillText('Press P to Resume', SCREEN_WIDTH/2, boxY + 150);
+        ctx.fillText('Press ESC for Menu', SCREEN_WIDTH/2, boxY + 200);
+        
+        ctx.textAlign = 'left'; // Reset alignment
+    }
+
+    draw() {
+        // Save the current transform
+        ctx.save();
+        // Apply screen shake if active (reduced by 70%)
+        if (this.shakeStrength && this.shakeStrength > 0) {
+            const sx = (Math.random() * 2 - 1) * this.shakeStrength * 0.3;
+            const sy = (Math.random() * 2 - 1) * this.shakeStrength * 0.3;
+            ctx.translate(Math.round(sx), Math.round(sy));
+        }
+        
+        // Apply upside-down effect if enabled
+        if (this.isUpsideDown) {
+            ctx.translate(SCREEN_WIDTH, SCREEN_HEIGHT);
+            ctx.rotate(Math.PI);
+        }
+        
+        // Clear canvas
+        ctx.fillStyle = BLACK;
+        ctx.fillRect(0, 0, SCREEN_WIDTH, SCREEN_HEIGHT);
+
+        if (this.inMenu) {
+            this.drawMenu();
+            ctx.restore();
+            return;
+        }
+
+        // Draw game objects in proper order (back to front)
+        this.orbs.forEach(orb => orb.draw(ctx));
+        this.bullets.forEach(bullet => bullet.draw(ctx));
+        this.zombies.forEach(zombie => zombie.draw(ctx));
+        
+        // Draw bosses
+        if (this.boss) {
+            this.boss.draw(ctx);
+        }
+        if (this.finalBoss) {
+            this.finalBoss.draw(ctx);
+        }
+        if (this.superBoss) {
+            this.superBoss.draw(ctx);
+        }
+        
+        // Draw player last so it's on top
+        this.player.draw(ctx);
+
     // Draw particles (above world, below UI)
     for (const p of this.particles) p.draw(ctx);
     // Draw damage popups

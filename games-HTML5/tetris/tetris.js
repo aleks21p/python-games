@@ -28,6 +28,11 @@ class TetrisGame {
         this.gameTime = 0; // total time played in milliseconds
         this.speedIncreaseTimer = 0; // timer for 10-second speed increases
         
+        // Cheat code tracking
+        this.cheatKeyPressed = false;
+        this.cheatStartTime = 0;
+        this.cheatActive = false;
+        
         // Piece definitions (Tetrominos)
         this.pieces = {
             I: {
@@ -145,6 +150,19 @@ class TetrisGame {
     
     setupInput() {
         document.addEventListener('keydown', (e) => {
+            // Cheat code: T key pressed
+            if (e.key === 't' || e.key === 'T') {
+                this.cheatKeyPressed = true;
+            }
+            
+            // Cheat code: T+1 to clear leaderboard (hold for 3 seconds)
+            if ((e.key === '1' || e.key === '!') && this.cheatKeyPressed) {
+                if (!this.cheatActive) {
+                    this.cheatStartTime = Date.now();
+                    this.cheatActive = true;
+                }
+            }
+            
             if (this.gameOver || this.paused) {
                 if (e.code === 'KeyP') {
                     this.togglePause();
@@ -176,6 +194,17 @@ class TetrisGame {
                 case 'KeyP':
                     this.togglePause();
                     break;
+            }
+        });
+        
+        document.addEventListener('keyup', (e) => {
+            // Reset cheat code tracking
+            if (e.key === 't' || e.key === 'T') {
+                this.cheatKeyPressed = false;
+                this.cheatActive = false;
+            }
+            if (e.key === '1' || e.key === '!') {
+                this.cheatActive = false;
             }
         });
     }
@@ -323,6 +352,17 @@ class TetrisGame {
             this.baseDropInterval *= 0.8; // 20% faster (multiply by 0.8)
             this.dropInterval = Math.max(50, this.baseDropInterval); // minimum 50ms
             this.speedIncreaseTimer = 0;
+        }
+        
+        // Process cheat code (T+1 held for 3 seconds clears leaderboard)
+        if (this.cheatActive && this.cheatKeyPressed) {
+            const cheatHoldTime = currentTime - this.cheatStartTime;
+            if (cheatHoldTime >= 3000) {
+                // Clear leaderboard silently
+                this.leaderboard = [];
+                localStorage.removeItem('tetrisLeaderboard');
+                this.cheatActive = false;
+            }
         }
         
         // Handle piece dropping
@@ -599,14 +639,6 @@ class TetrisGame {
     
     closeLeaderboard() {
         document.getElementById('leaderboardModal').style.display = 'none';
-    }
-    
-    clearLeaderboard() {
-        if (confirm('Are you sure you want to clear all scores? This cannot be undone!')) {
-            this.leaderboard = [];
-            localStorage.removeItem('tetrisLeaderboard');
-            this.showLeaderboard(); // Refresh the display
-        }
     }
 }
 
