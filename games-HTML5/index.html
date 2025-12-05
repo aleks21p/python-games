@@ -422,6 +422,29 @@
             50% { transform: scale(1) rotate(180deg); opacity: 0.5; }
             100% { transform: scale(0) rotate(360deg); opacity: 0; }
         }
+
+        /* Twinkling stars */
+        .star {
+            position: absolute;
+            width: 2px;
+            height: 2px;
+            background: rgba(255, 255, 255, 0.6);
+            border-radius: 50%;
+            pointer-events: none;
+            z-index: 5;
+            box-shadow: 0 0 3px rgba(255, 255, 255, 0.4);
+        }
+
+        @keyframes twinkle {
+            0%, 100% { 
+                opacity: 0.3;
+                box-shadow: 0 0 2px rgba(255, 255, 255, 0.2);
+            }
+            50% { 
+                opacity: 0.8;
+                box-shadow: 0 0 6px rgba(255, 255, 255, 0.6);
+            }
+        }
     </style>
 </head>
 <body>
@@ -687,6 +710,54 @@
             }
         }
 
+        // Create twinkling stars
+        function createStars() {
+            if (window.LOW_POWER_MODE || window.innerWidth < 600) return;
+            
+            const starCount = 80;
+            const gameCards = document.querySelectorAll('.game-card');
+            
+            for (let i = 0; i < starCount; i++) {
+                const star = document.createElement('div');
+                star.className = 'star';
+                
+                let validPosition = false;
+                let attempts = 0;
+                let left, top;
+                
+                // Try to find a position that doesn't overlap with game cards
+                while (!validPosition && attempts < 50) {
+                    left = Math.random() * 100;
+                    top = Math.random() * 100;
+                    validPosition = true;
+                    
+                    // Check if star would be inside any game card
+                    const starX = (left / 100) * window.innerWidth;
+                    const starY = (top / 100) * window.innerHeight;
+                    
+                    for (const card of gameCards) {
+                        const rect = card.getBoundingClientRect();
+                        if (starX >= rect.left && starX <= rect.right &&
+                            starY >= rect.top && starY <= rect.bottom) {
+                            validPosition = false;
+                            break;
+                        }
+                    }
+                    attempts++;
+                }
+                
+                star.style.left = left + '%';
+                star.style.top = top + '%';
+                
+                // Random animation duration and delay for varied twinkling
+                const duration = 2 + Math.random() * 3;
+                const delay = Math.random() * 4;
+                star.style.animation = `twinkle ${duration}s ease-in-out ${delay}s infinite`;
+                
+                document.body.appendChild(star);
+            }
+        }
+
         // Create sparkle effects on mouse move
         function createSparkle(x, y) {
             const sparkle = document.createElement('div');
@@ -726,7 +797,10 @@
 
             // Apply saved low power setting first and create particles only if low power is off
             applyLowPower(window.LOW_POWER_MODE);
-            if (!window.LOW_POWER_MODE) createParticles();
+            if (!window.LOW_POWER_MODE) {
+                createParticles();
+                createStars();
+            }
         });
 
         // Add click sound effect simulation (visual feedback)
