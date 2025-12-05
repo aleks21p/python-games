@@ -1372,7 +1372,6 @@ class Game {
                 hard: 'Hard',
                 difficultyNote: '(Difficulty selection coming soon)',
                 developer: 'Developer Options',
-                home: 'Home',
                 soundDesign: 'Sound Design: Miles',
                 art: 'main game and code:Aleks P',
                 sponsors: 'Sponsors: Shaun & Flecher'
@@ -1390,8 +1389,7 @@ class Game {
         this.menuButtons = {
             start: { x: SCREEN_WIDTH/2 - buttonWidth/2, y: SCREEN_HEIGHT/2 - 50, width: buttonWidth, height: buttonHeight },
             options: { x: SCREEN_WIDTH/2 - buttonWidth/2, y: SCREEN_HEIGHT/2 + 50, width: buttonWidth, height: buttonHeight },
-            shop: { x: SCREEN_WIDTH/2 - buttonWidth/2, y: SCREEN_HEIGHT/2 + 150, width: buttonWidth, height: buttonHeight },
-            home: { x: SCREEN_WIDTH/2 - buttonWidth/2, y: SCREEN_HEIGHT/2 + 250, width: buttonWidth, height: buttonHeight }
+            shop: { x: SCREEN_WIDTH/2 - buttonWidth/2, y: SCREEN_HEIGHT/2 + 150, width: buttonWidth, height: buttonHeight }
         };
         
         // Shop state
@@ -2090,14 +2088,7 @@ class Game {
                     }
                 } catch (e) {}
 
-                // Check Home button - navigate back to main landing page
-                const homeBtn = this.menuButtons.home;
-                if (homeBtn && clickX >= homeBtn.x && clickX <= homeBtn.x + homeBtn.width &&
-                    clickY >= homeBtn.y && clickY <= homeBtn.y + homeBtn.height) {
-                    if (this.audio && typeof this.audio.playClick === 'function') this.audio.playClick();
-                    try { window.open(LANDING_PAGE_PATH, '_blank'); } catch (e) { try { window.open('index.html', '_blank'); } catch (e2) {} }
-                    return;
-                }
+
 
                 // Check shop item clicks
                 if (this.inShop && !this.inPetsPage) {
@@ -4281,90 +4272,8 @@ class Game {
             ctx.textAlign = 'left';
         })(shopBtn);
 
-        // Developer button removed
 
-        // Draw Home button (blue-gray)
-        const homeBtn = this.menuButtons.home;
-        if (homeBtn) {
-            ctx.fillStyle = '#336699';
-            ctx.fillRect(homeBtn.x, homeBtn.y, homeBtn.width, homeBtn.height);
-            ctx.strokeStyle = WHITE;
-            ctx.strokeRect(homeBtn.x, homeBtn.y, homeBtn.width, homeBtn.height);
-            ctx.fillStyle = WHITE;
-            ctx.font = '32px Arial';
-            const homeText = this.translations[this.selectedLanguage].home || 'Home';
-            const homeTextWidth = ctx.measureText(homeText).width;
-            // Draw a small house icon to the left of the label
-            const iconSize = 22;
-            const iconPadding = 14;
-            const iconX = homeBtn.x + (homeBtn.width - homeTextWidth) / 2 - iconSize - iconPadding;
-            const iconY = homeBtn.y + (homeBtn.height / 2) - (iconSize / 2);
-            
-            // Save context for rounded rectangles
-            ctx.save();
-            
-            // Helper function for rounded rectangle
-            const roundedRect = (x, y, w, h, r) => {
-                ctx.beginPath();
-                ctx.moveTo(x + r, y);
-                ctx.lineTo(x + w - r, y);
-                ctx.quadraticCurveTo(x + w, y, x + w, y + r);
-                ctx.lineTo(x + w, y + h - r);
-                ctx.quadraticCurveTo(x + w, y + h, x + w - r, y + h);
-                ctx.lineTo(x + r, y + h);
-                ctx.quadraticCurveTo(x, y + h, x, y + h - r);
-                ctx.lineTo(x, y + r);
-                ctx.quadraticCurveTo(x, y, x + r, y);
-                ctx.closePath();
-            };
-            
-            // Draw house roof (triangle)
-            ctx.fillStyle = WHITE;
-            ctx.strokeStyle = '#1a4d73';
-            ctx.lineWidth = 1.5;
-            ctx.beginPath();
-            ctx.moveTo(iconX + iconSize * 0.5, iconY);
-            ctx.lineTo(iconX + iconSize * 0.1, iconY + iconSize * 0.4);
-            ctx.lineTo(iconX + iconSize * 0.9, iconY + iconSize * 0.4);
-            ctx.closePath();
-            ctx.fill();
-            ctx.stroke();
-            
-            // Draw house base (rounded rectangle)
-            const baseY = iconY + iconSize * 0.35;
-            const baseH = iconSize * 0.65;
-            roundedRect(iconX + iconSize * 0.15, baseY, iconSize * 0.7, baseH, 2);
-            ctx.fill();
-            ctx.stroke();
-            
-            // Draw door (rounded rectangle cutout)
-            ctx.fillStyle = '#336699';
-            ctx.strokeStyle = '#1a4d73';
-            ctx.lineWidth = 1;
-            const doorW = iconSize * 0.25;
-            const doorH = iconSize * 0.4;
-            const doorX = iconX + (iconSize - doorW) / 2;
-            const doorY = iconY + iconSize - doorH;
-            roundedRect(doorX, doorY, doorW, doorH, 1);
-            ctx.fill();
-            ctx.stroke();
-            
-            // Draw window (small rounded square)
-            ctx.fillStyle = '#87CEEB';
-            ctx.strokeStyle = '#1a4d73';
-            const windowSize = iconSize * 0.15;
-            const windowX = iconX + iconSize * 0.25;
-            const windowY = iconY + iconSize * 0.5;
-            roundedRect(windowX, windowY, windowSize, windowSize, 1);
-            ctx.fill();
-            ctx.stroke();
-            
-            ctx.restore();
-            
-            // draw the home text
-            ctx.fillStyle = WHITE;
-            ctx.fillText(homeText, homeBtn.x + (homeBtn.width - homeTextWidth) / 2, homeBtn.y + 40);
-        }
+        // Developer button removed
 
         // Draw Options menu if active
         if (this.inOptions) {
