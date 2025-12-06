@@ -32,57 +32,58 @@
     body {
         display: flex;
         justify-content: center; 
-        align-items: center;
+        align-items: flex-start;
         min-height: 100vh;
         margin: 0;
+        padding-top: 1.4rem;
         background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
         font-family: Arial, sans-serif;
-        overflow: hidden;
+        overflow: auto;
     }
     
     .game-container {
         display: flex;
-        gap: 1rem; /* reduced gap */
+        gap: 1.4rem;
         align-items: flex-start;
-        padding: 0.5rem; /* tighter padding */
+        padding: 0.7rem;
     }
     
     .game-board {
         position: relative;
         background: #222;
-        border: 3px solid #444;
-        border-radius: 8px;
-        box-shadow: 0 0 20px rgba(0,0,0,0.5);
+        border: 4px solid #444;
+        border-radius: 11px;
+        box-shadow: 0 0 28px rgba(0,0,0,0.5);
     }
     
     canvas {
         display: block;
         background: #000;
-        border-radius: 5px;
+        border-radius: 7px;
     }
     
     .game-info {
         color: white;
         background: rgba(0,0,0,0.7);
-        padding: 1rem; /* slightly less padding */
-        border-radius: 8px;
-    min-width: 140px; /* reduce width to fit wider board */
+        padding: 1.4rem;
+        border-radius: 11px;
+        min-width: 196px;
         backdrop-filter: blur(8px);
-        font-size: 0.95rem; /* slightly smaller text */
+        font-size: 1.33rem;
     }
     
     .game-info h2 {
-        margin: 0 0 0.75rem 0;
+        margin: 0 0 1.05rem 0;
         color: #4ecdc4;
         text-align: center;
-        font-size: 1.25rem;
+        font-size: 1.75rem;
     }
     
     .stat {
         display: flex;
         justify-content: space-between;
-        margin: 0.5rem 0;
-        font-size: 1.1rem;
+        margin: 0.7rem 0;
+        font-size: 1.54rem;
     }
     
     .stat-label {
@@ -95,30 +96,30 @@
     }
     
     .controls {
-        margin-top: 1.5rem;
-        font-size: 0.9rem;
+        margin-top: 2.1rem;
+        font-size: 1.26rem;
         line-height: 1.4;
     }
     
     .controls h3 {
         color: #4ecdc4;
-        margin: 0 0 0.5rem 0;
+        margin: 0 0 0.7rem 0;
     }
     
     .controls div {
-        margin: 0.3rem 0;
+        margin: 0.42rem 0;
         color: #ddd;
     }
     
     .restart-btn {
         width: 100%;
-        padding: 0.8rem;
-        margin-top: 1rem;
+        padding: 1.12rem;
+        margin-top: 1.4rem;
         background: linear-gradient(45deg, #ff6b6b, #4ecdc4);
         border: none;
-        border-radius: 5px;
+        border-radius: 7px;
         color: white;
-        font-size: 1rem;
+        font-size: 1.4rem;
         font-weight: bold;
         cursor: pointer;
         transition: transform 0.2s;
@@ -130,13 +131,13 @@
     
     .home-btn {
         width: 100%;
-        padding: 0.5rem;
-        margin-top: 0.5rem;
+        padding: 0.7rem;
+        margin-top: 0.7rem;
         background: linear-gradient(45deg, #667eea, #764ba2);
         border: none;
-        border-radius: 5px;
+        border-radius: 7px;
         color: white;
-        font-size: 0.85rem;
+        font-size: 1.19rem;
         font-weight: bold;
         cursor: pointer;
         transition: transform 0.2s;
@@ -151,13 +152,13 @@
     
     .leaderboard-btn {
         width: 100%;
-        padding: 0.5rem;
-        margin-top: 0.5rem;
+        padding: 0.7rem;
+        margin-top: 0.7rem;
         background: linear-gradient(45deg, #f39c12, #e67e22);
         border: none;
-        border-radius: 5px;
+        border-radius: 7px;
         color: white;
-        font-size: 0.85rem;
+        font-size: 1.19rem;
         font-weight: bold;
         cursor: pointer;
         transition: transform 0.2s;
@@ -174,23 +175,24 @@
         transform: translate(-50%, -50%);
         background: rgba(0,0,0,0.9);
         color: white;
-        padding: 2rem;
-        border-radius: 10px;
+        padding: 2.8rem;
+        border-radius: 14px;
         text-align: center;
-        border: 2px solid #ff6b6b;
+        border: 3px solid #ff6b6b;
         display: none;
-        min-width: 320px;
+        min-width: 448px;
+        font-size: 1.4rem;
     }
     
     .name-input {
         width: 100%;
-        max-width: 280px;
-        padding: 0.75rem;
-        margin: 1rem auto;
-        font-size: 1.1rem;
+        max-width: 392px;
+        padding: 1.05rem;
+        margin: 1.4rem auto;
+        font-size: 1.54rem;
         text-align: center;
-        border: 2px solid #4ecdc4;
-        border-radius: 5px;
+        border: 3px solid #4ecdc4;
+        border-radius: 7px;
         background: rgba(255,255,255,0.1);
         color: white;
         outline: none;
@@ -207,18 +209,18 @@
     }
     
     .next-piece {
-        margin-top: 1rem;
+        margin-top: 1.4rem;
         text-align: center;
     }
     
     .next-piece h3 {
         color: #4ecdc4;
-        margin: 0 0 0.5rem 0;
+        margin: 0 0 0.7rem 0;
     }
     
     #nextCanvas {
-        border: 1px solid #444;
-        border-radius: 4px;
+        border: 1.5px solid #444;
+        border-radius: 6px;
         background: #111;
     }
     
@@ -349,7 +351,7 @@
 <body>
     <div class="game-container">
         <div class="game-board">
-            <canvas id="gameCanvas" width="240" height="480"></canvas>
+            <canvas id="gameCanvas" width="336" height="672"></canvas>
             <div class="game-over" id="gameOver">
                 <h2>Game Over!</h2>
                 <p>Final Score: <span id="finalScore">0</span></p>
@@ -384,7 +386,7 @@
             
             <div class="next-piece">
                 <h3>Next Piece</h3>
-                <canvas id="nextCanvas" width="64" height="64"></canvas>
+                <canvas id="nextCanvas" width="90" height="90"></canvas>
             </div>
             
             <div class="controls">

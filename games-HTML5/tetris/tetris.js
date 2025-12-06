@@ -10,7 +10,7 @@ class TetrisGame {
     this.BOARD_WIDTH = 10;
     this.BOARD_HEIGHT = 20;
     // Reduced block size so the board fits comfortably on most screens
-    this.BLOCK_SIZE = 24;
+    this.BLOCK_SIZE = 33.6;
         
         // Game state
         this.board = [];
