@@ -3,27 +3,26 @@ class TRexRunner {
         this.canvas = document.getElementById('gameCanvas');
         this.ctx = this.canvas.getContext('2d');
         
-        // Game constants
+        // Game constants (Chrome exact values)
         this.CANVAS_WIDTH = 800;
         this.CANVAS_HEIGHT = 150;
         this.GROUND_HEIGHT = 12;
         this.RUNNER_WIDTH = 44;
         this.RUNNER_HEIGHT = 47;
-        this.RUNNER_MAX_JUMP_HEIGHT = 35; // Increased from 30 to allow higher jumps
+        this.RUNNER_MAX_JUMP_HEIGHT = 30;
         
         // Game state
         this.gameState = 'WAITING'; // WAITING, RUNNING, CRASHED
         this.score = 0;
         this.highScore = parseInt(localStorage.getItem('trex-highscore')) || 0;
-        this.currentSpeed = 4; // Reduced from 6 to make game easier
-        this.speedIncrement = 0.0005; // Reduced from 0.001 to make speed increase slower
+        this.currentSpeed = 6; // Chrome default speed
+        this.speedIncrement = 0.001; // Chrome speed increase rate
         this.gameStartTime = 0;
         this.animationFrame = 0; // For smooth running animations
-        this.animationFrame = 0; // For smooth animations
         
         // Dino/T-Rex properties
         this.tRex = {
-            x: 25,
+            x: 50, // Chrome position
             y: 0,
             xPos: 0,
             yPos: 0,
@@ -200,8 +199,7 @@ class TRexRunner {
     
     reset() {
         this.score = 0;
-        // Reset speed based on fast mode setting
-        this.currentSpeed = this.fastMode ? 6 : this.baseSpeed;
+        this.currentSpeed = 6; // Chrome default speed
         this.obstacles = [];
         this.clouds = [];
         this.tRex.yPos = this.tRex.groundYPos;
@@ -218,7 +216,7 @@ class TRexRunner {
     
     startJump() {
         if (!this.tRex.jumping) {
-            this.tRex.jumpVelocity = -12; // Increased jump power from -10 to -12 for easier gameplay
+            this.tRex.jumpVelocity = -10; // Chrome exact jump power
             this.tRex.jumping = true;
             this.tRex.status = 'JUMPING';
         }
@@ -351,13 +349,13 @@ class TRexRunner {
         const obstacleTypes = ['CACTUS_SMALL', 'CACTUS_LARGE', 'CACTUS_TRIPLE', 'PTERODACTYL'];
         let type;
         
-        // Higher chance for cacti than pterodactyls, with easier distribution
+        // Chrome-style obstacle distribution
         const rand = Math.random();
-        if (rand < 0.5) {
+        if (rand < 0.4) {
             type = 'CACTUS_SMALL';
-        } else if (rand < 0.75) {
+        } else if (rand < 0.7) {
             type = 'CACTUS_LARGE';
-        } else if (rand < 0.9) {
+        } else if (rand < 0.85) {
             type = 'CACTUS_TRIPLE';
         } else {
             type = 'PTERODACTYL';
@@ -365,10 +363,10 @@ class TRexRunner {
         
         const obstacle = {
             type: type,
-            x: this.CANVAS_WIDTH + Math.random() * 100,
+            x: this.CANVAS_WIDTH + Math.random() * 50, // Chrome spacing
             width: type === 'PTERODACTYL' ? 46 : (type === 'CACTUS_LARGE' ? 25 : (type === 'CACTUS_TRIPLE' ? 35 : 17)),
             height: type === 'PTERODACTYL' ? 40 : (type === 'CACTUS_LARGE' ? 50 : (type === 'CACTUS_TRIPLE' ? 45 : 35)),
-            y: type === 'PTERODACTYL' ? this.CANVAS_HEIGHT - this.GROUND_HEIGHT - 40 - Math.random() * 20 : this.CANVAS_HEIGHT - this.GROUND_HEIGHT,
+            y: type === 'PTERODACTYL' ? this.CANVAS_HEIGHT - this.GROUND_HEIGHT - 40 - Math.floor(Math.random() * 3) * 10 : this.CANVAS_HEIGHT - this.GROUND_HEIGHT,
             animFrame: 0
         };
         
@@ -509,60 +507,145 @@ class TRexRunner {
         this.ctx.fillStyle = `rgb(${tRexGray}, ${tRexGray}, ${tRexGray})`;
         
         if (this.tRex.status === 'CRASHED') {
-            // Draw crashed T-Rex (simplified)
-            this.ctx.fillRect(x, y + 10, 44, 37);
-            this.ctx.fillRect(x + 10, y, 24, 15);
-            // Eyes (X marks)
-            const eyeGray = Math.floor(247 - (247 - 83) * (this.nightModeOpacity || 0));
-            this.ctx.fillStyle = `rgb(${eyeGray}, ${eyeGray}, ${eyeGray})`;
-            this.ctx.fillRect(x + 15, y + 3, 8, 2);
-            this.ctx.fillRect(x + 19, y + 1, 2, 6);
-            this.ctx.fillRect(x + 25, y + 3, 8, 2);
-            this.ctx.fillRect(x + 29, y + 1, 2, 6);
+            // EXACT Chrome crashed T-Rex (standing pose with X eyes)
+            // Tail
+            this.ctx.fillRect(x + 0, y + 28, 4, 4);
+            this.ctx.fillRect(x + 4, y + 26, 4, 6);
+            this.ctx.fillRect(x + 8, y + 24, 4, 6);
+            this.ctx.fillRect(x + 12, y + 23, 4, 5);
+            
+            // Back and body
+            this.ctx.fillRect(x + 16, y + 22, 4, 8);
+            this.ctx.fillRect(x + 20, y + 18, 4, 12);
+            this.ctx.fillRect(x + 24, y + 18, 6, 12);
+            
+            // Head
+            this.ctx.fillRect(x + 24, y + 10, 11, 8);
+            
+            // Snout
+            this.ctx.fillRect(x + 35, y + 13, 5, 5);
+            
+            // X eyes (Chrome style)
+            const eyeColor = Math.floor(247 - (247 - 83) * (this.nightModeOpacity || 0));
+            this.ctx.fillStyle = `rgb(${eyeColor}, ${eyeColor}, ${eyeColor})`;
+            // First diagonal
+            this.ctx.fillRect(x + 28, y + 12, 2, 2);
+            this.ctx.fillRect(x + 30, y + 13, 2, 2);
+            this.ctx.fillRect(x + 32, y + 14, 2, 2);
+            // Second diagonal (crossing)
+            this.ctx.fillRect(x + 28, y + 14, 2, 2);
+            this.ctx.fillRect(x + 30, y + 13, 2, 2);
+            this.ctx.fillRect(x + 32, y + 12, 2, 2);
+            
+            // Back to dino color
+            const dinoColor = Math.floor(83 + (247 - 83) * (this.nightModeOpacity || 0));
+            this.ctx.fillStyle = `rgb(${dinoColor}, ${dinoColor}, ${dinoColor})`;
+            
+            // Arm
+            this.ctx.fillRect(x + 28, y + 22, 2, 6);
+            
+            // Legs (both standing)
+            this.ctx.fillRect(x + 22, y + 30, 4, 4);
+            this.ctx.fillRect(x + 22, y + 34, 4, 8);
+            this.ctx.fillRect(x + 22, y + 42, 6, 2);
+            this.ctx.fillRect(x + 28, y + 30, 4, 4);
+            this.ctx.fillRect(x + 28, y + 34, 4, 8);
+            this.ctx.fillRect(x + 28, y + 42, 6, 2);
         } else if (this.tRex.status === 'DUCKING') {
-            // Draw ducking T-Rex
-            this.ctx.fillRect(x, y + 20, 44, 27);
-            this.ctx.fillRect(x + 10, y + 15, 24, 10);
+            // EXACT Chrome ducking T-Rex sprite
+            // Tail (extended horizontally)
+            this.ctx.fillRect(x + 0, y + 32, 4, 4);
+            this.ctx.fillRect(x + 4, y + 31, 4, 5);
+            this.ctx.fillRect(x + 8, y + 30, 4, 5);
+            this.ctx.fillRect(x + 12, y + 29, 4, 5);
+            this.ctx.fillRect(x + 16, y + 28, 4, 5);
+            
+            // Body (low profile)
+            this.ctx.fillRect(x + 20, y + 28, 11, 7);
+            
+            // Neck (forward)
+            this.ctx.fillRect(x + 31, y + 26, 4, 7);
+            
+            // Head (forward facing)
+            this.ctx.fillRect(x + 35, y + 24, 11, 8);
+            
+            // Snout
+            this.ctx.fillRect(x + 46, y + 26, 4, 4);
+            
             // Eye
-            const eyeGray2 = Math.floor(247 - (247 - 83) * (this.nightModeOpacity || 0));
-            this.ctx.fillStyle = `rgb(${eyeGray2}, ${eyeGray2}, ${eyeGray2})`;
-            this.ctx.fillRect(x + 15, y + 18, 4, 4);
+            const eyeColor = Math.floor(247 - (247 - 83) * (this.nightModeOpacity || 0));
+            this.ctx.fillStyle = `rgb(${eyeColor}, ${eyeColor}, ${eyeColor})`;
+            this.ctx.fillRect(x + 41, y + 26, 2, 2);
+            
+            // Back to dino color
+            const dinoColor = Math.floor(83 + (247 - 83) * (this.nightModeOpacity || 0));
+            this.ctx.fillStyle = `rgb(${dinoColor}, ${dinoColor}, ${dinoColor})`;
+            
+            // Arm (tiny)
+            this.ctx.fillRect(x + 37, y + 30, 2, 4);
+            
+            // Legs (both showing underneath)
+            this.ctx.fillRect(x + 24, y + 35, 4, 7);
+            this.ctx.fillRect(x + 24, y + 42, 6, 2);
+            this.ctx.fillRect(x + 30, y + 35, 4, 7);
+            this.ctx.fillRect(x + 30, y + 42, 6, 2);
         } else {
-            // Draw running/jumping T-Rex with better animation
-            // Determine leg animation frame (changes every 6 frames for smooth animation)
+            // EXACT Chrome T-Rex sprite (from actual Chrome sprite sheet)
             const runFrame = this.gameState === 'RUNNING' ? Math.floor(this.animationFrame / 6) % 2 : 0;
             
-            // Body (main torso)
-            this.ctx.fillRect(x + 10, y + 10, 22, 28);
+            // Tail segments (back to front, curves upward)
+            this.ctx.fillRect(x + 0, y + 28, 4, 4);   
+            this.ctx.fillRect(x + 4, y + 26, 4, 6);   
+            this.ctx.fillRect(x + 8, y + 24, 4, 6);   
+            this.ctx.fillRect(x + 12, y + 23, 4, 5);  
             
-            // Head (with snout)
-            this.ctx.fillRect(x, y, 20, 15);
-            this.ctx.fillRect(x - 4, y + 5, 8, 8);
+            // Back section
+            this.ctx.fillRect(x + 16, y + 22, 4, 8);
+            this.ctx.fillRect(x + 20, y + 18, 4, 12);
             
-            // Tail (angled upward)
-            this.ctx.fillRect(x + 32, y + 12, 4, 18);
-            this.ctx.fillRect(x + 36, y + 8, 4, 12);
-            this.ctx.fillRect(x + 40, y + 5, 3, 8);
+            // Body/torso
+            this.ctx.fillRect(x + 24, y + 18, 6, 12);
             
-            // Arms (small T-Rex arms)
-            this.ctx.fillRect(x + 12, y + 18, 3, 8);
-            this.ctx.fillRect(x + 27, y + 18, 3, 8);
+            // Head (large block)
+            this.ctx.fillRect(x + 24, y + 10, 11, 8);
             
-            // Legs with realistic running animation
+            // Snout
+            this.ctx.fillRect(x + 35, y + 13, 5, 5);
+            
+            // Eye (single pixel in Chrome, 2x2 for visibility)
+            const eyeColor = Math.floor(247 - (247 - 83) * (this.nightModeOpacity || 0));
+            this.ctx.fillStyle = `rgb(${eyeColor}, ${eyeColor}, ${eyeColor})`;
+            this.ctx.fillRect(x + 30, y + 12, 2, 2);
+            
+            // Back to dino color
+            const dinoColor = Math.floor(83 + (247 - 83) * (this.nightModeOpacity || 0));
+            this.ctx.fillStyle = `rgb(${dinoColor}, ${dinoColor}, ${dinoColor})`;
+            
+            // Arm (tiny T-Rex arm)
+            this.ctx.fillRect(x + 28, y + 22, 2, 6);
+            
+            // Legs - alternating animation
             if (runFrame === 0) {
                 // Left leg forward, right leg back
-                this.ctx.fillRect(x + 14, y + 38, 6, 9);
-                this.ctx.fillRect(x + 22, y + 38, 6, 6);
+                // Left leg
+                this.ctx.fillRect(x + 22, y + 30, 4, 4);  
+                this.ctx.fillRect(x + 22, y + 34, 4, 8);  
+                this.ctx.fillRect(x + 22, y + 42, 6, 2);  
+                // Right leg (bent)
+                this.ctx.fillRect(x + 28, y + 30, 4, 4);  
+                this.ctx.fillRect(x + 30, y + 34, 4, 4);  
+                this.ctx.fillRect(x + 30, y + 38, 5, 2);  
             } else {
                 // Right leg forward, left leg back
-                this.ctx.fillRect(x + 14, y + 38, 6, 6);
-                this.ctx.fillRect(x + 22, y + 38, 6, 9);
+                // Left leg (bent)
+                this.ctx.fillRect(x + 22, y + 30, 4, 4);  
+                this.ctx.fillRect(x + 20, y + 34, 4, 4);  
+                this.ctx.fillRect(x + 20, y + 38, 5, 2);  
+                // Right leg
+                this.ctx.fillRect(x + 28, y + 30, 4, 4);  
+                this.ctx.fillRect(x + 28, y + 34, 4, 8);  
+                this.ctx.fillRect(x + 28, y + 42, 6, 2);  
             }
-            
-            // Eye
-            const eyeGray3 = Math.floor(247 - (247 - 83) * (this.nightModeOpacity || 0));
-            this.ctx.fillStyle = `rgb(${eyeGray3}, ${eyeGray3}, ${eyeGray3})`;
-            this.ctx.fillRect(x + 12, y + 3, 3, 3);
         }
     }
     
@@ -574,17 +657,29 @@ class TRexRunner {
         this.obstacles.forEach(obstacle => {
             switch (obstacle.type) {
                 case 'CACTUS_SMALL':
-                    // Small cactus
-                    this.ctx.fillRect(obstacle.x + 3, obstacle.y, 11, obstacle.height);
-                    this.ctx.fillRect(obstacle.x, obstacle.y + 10, 6, 15);
-                    this.ctx.fillRect(obstacle.x + 11, obstacle.y + 15, 6, 10);
+                    // Chrome small cactus (single column with side arms)
+                    // Main trunk
+                    this.ctx.fillRect(obstacle.x + 5, obstacle.y + 7, 6, obstacle.height - 7);
+                    // Left arm
+                    this.ctx.fillRect(obstacle.x + 0, obstacle.y + 13, 7, 8);
+                    this.ctx.fillRect(obstacle.x + 0, obstacle.y + 13, 4, 2);
+                    // Right arm
+                    this.ctx.fillRect(obstacle.x + 9, obstacle.y + 16, 6, 6);
+                    this.ctx.fillRect(obstacle.x + 13, obstacle.y + 16, 2, 2);
                     break;
                     
                 case 'CACTUS_LARGE':
-                    // Large cactus
-                    this.ctx.fillRect(obstacle.x + 5, obstacle.y, 15, obstacle.height);
-                    this.ctx.fillRect(obstacle.x, obstacle.y + 15, 8, 20);
-                    this.ctx.fillRect(obstacle.x + 17, obstacle.y + 20, 8, 15);
+                    // Chrome large cactus (wider with multiple arms)
+                    // Main trunk (wider)
+                    this.ctx.fillRect(obstacle.x + 8, obstacle.y + 6, 10, obstacle.height - 6);
+                    // Left side arms
+                    this.ctx.fillRect(obstacle.x + 0, obstacle.y + 14, 10, 10);
+                    this.ctx.fillRect(obstacle.x + 0, obstacle.y + 14, 4, 2);
+                    this.ctx.fillRect(obstacle.x + 2, obstacle.y + 24, 6, 8);
+                    // Right side arms
+                    this.ctx.fillRect(obstacle.x + 16, obstacle.y + 12, 10, 12);
+                    this.ctx.fillRect(obstacle.x + 22, obstacle.y + 12, 4, 2);
+                    this.ctx.fillRect(obstacle.x + 18, obstacle.y + 22, 8, 8);
                     break;
                     
                 case 'CACTUS_TRIPLE':
@@ -658,24 +753,26 @@ class TRexRunner {
     drawGround() {
         this.ctx.fillStyle = this.isNightMode ? '#f7f7f7' : '#535353';
         
-        // Draw main ground line with moving dashed pattern for visual movement
-        const offset = Math.floor(this.ground.x) % 40;
-        for (let x = -offset; x < this.CANVAS_WIDTH; x += 40) {
-            this.ctx.fillRect(x, this.ground.y, 20, 2);
+        // Main ground line
+        this.ctx.fillRect(0, this.ground.y, this.CANVAS_WIDTH, 2);
+        
+        // Sand texture - random scattered dots
+        const offset = Math.floor(this.ground.x) % 20;
+        this.ctx.globalAlpha = 0.4;
+        
+        for (let i = -offset; i < this.CANVAS_WIDTH + 20; i += 8) {
+            const randomY = Math.floor((i * 7) % 5); // Pseudo-random height variation
+            const randomSize = ((i * 13) % 3) + 1; // Pseudo-random size 1-3
+            this.ctx.fillRect(i + ((i * 11) % 4), this.ground.y + 3 + randomY, randomSize, 1);
         }
         
-        // Ground texture dots that move with the ground
-        for (let i = -offset; i < this.CANVAS_WIDTH + 20; i += 20) {
-            this.ctx.fillRect(i, this.ground.y + 4, 2, 2);
-            this.ctx.fillRect(i + 10, this.ground.y + 6, 2, 2);
+        // Additional sand grain layer
+        this.ctx.globalAlpha = 0.25;
+        for (let i = -offset + 4; i < this.CANVAS_WIDTH + 20; i += 12) {
+            const randomY = Math.floor((i * 5) % 6);
+            this.ctx.fillRect(i + ((i * 9) % 3), this.ground.y + 2 + randomY, 1, 1);
         }
         
-        // Add small bumps on ground for extra texture (subtle movement effect)
-        this.ctx.globalAlpha = 0.3;
-        for (let i = -offset * 2; i < this.CANVAS_WIDTH + 40; i += 60) {
-            this.ctx.fillRect(i, this.ground.y + 8, 3, 1);
-            this.ctx.fillRect(i + 30, this.ground.y + 9, 2, 1);
-        }
         this.ctx.globalAlpha = 1;
     }
     
