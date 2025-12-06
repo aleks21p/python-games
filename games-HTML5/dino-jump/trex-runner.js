@@ -18,6 +18,8 @@ class TRexRunner {
         this.currentSpeed = 4; // Reduced from 6 to make game easier
         this.speedIncrement = 0.0005; // Reduced from 0.001 to make speed increase slower
         this.gameStartTime = 0;
+        this.animationFrame = 0; // For smooth running animations
+        this.animationFrame = 0; // For smooth animations
         
         // Dino/T-Rex properties
         this.tRex = {
@@ -274,6 +276,9 @@ class TRexRunner {
     update() {
         if (this.gameState !== 'RUNNING') return;
         
+        // Update animation frame counter
+        this.animationFrame++;
+        
         // Update score
         this.score += this.currentSpeed * 0.1;
         
@@ -523,22 +528,41 @@ class TRexRunner {
             this.ctx.fillStyle = `rgb(${eyeGray2}, ${eyeGray2}, ${eyeGray2})`;
             this.ctx.fillRect(x + 15, y + 18, 4, 4);
         } else {
-            // Draw running/jumping T-Rex
-            // Body
-            this.ctx.fillRect(x + 10, y + 10, 20, 25);
-            // Head
-            this.ctx.fillRect(x, y, 24, 20);
-            // Tail
-            this.ctx.fillRect(x + 30, y + 15, 14, 15);
-            // Legs (with simple animation)
-            const legOffset = this.gameState === 'RUNNING' ? Math.floor(Date.now() / 100) % 2 * 2 : 0;
-            this.ctx.fillRect(x + 12, y + 35, 6, 12 - legOffset);
-            this.ctx.fillRect(x + 22, y + 35, 6, 12 + legOffset);
+            // Draw running/jumping T-Rex with better animation
+            // Determine leg animation frame (changes every 6 frames for smooth animation)
+            const runFrame = this.gameState === 'RUNNING' ? Math.floor(this.animationFrame / 6) % 2 : 0;
+            
+            // Body (main torso)
+            this.ctx.fillRect(x + 10, y + 10, 22, 28);
+            
+            // Head (with snout)
+            this.ctx.fillRect(x, y, 20, 15);
+            this.ctx.fillRect(x - 4, y + 5, 8, 8);
+            
+            // Tail (angled upward)
+            this.ctx.fillRect(x + 32, y + 12, 4, 18);
+            this.ctx.fillRect(x + 36, y + 8, 4, 12);
+            this.ctx.fillRect(x + 40, y + 5, 3, 8);
+            
+            // Arms (small T-Rex arms)
+            this.ctx.fillRect(x + 12, y + 18, 3, 8);
+            this.ctx.fillRect(x + 27, y + 18, 3, 8);
+            
+            // Legs with realistic running animation
+            if (runFrame === 0) {
+                // Left leg forward, right leg back
+                this.ctx.fillRect(x + 14, y + 38, 6, 9);
+                this.ctx.fillRect(x + 22, y + 38, 6, 6);
+            } else {
+                // Right leg forward, left leg back
+                this.ctx.fillRect(x + 14, y + 38, 6, 6);
+                this.ctx.fillRect(x + 22, y + 38, 6, 9);
+            }
             
             // Eye
             const eyeGray3 = Math.floor(247 - (247 - 83) * (this.nightModeOpacity || 0));
             this.ctx.fillStyle = `rgb(${eyeGray3}, ${eyeGray3}, ${eyeGray3})`;
-            this.ctx.fillRect(x + 15, y + 5, 4, 4);
+            this.ctx.fillRect(x + 12, y + 3, 3, 3);
         }
     }
     
@@ -633,13 +657,26 @@ class TRexRunner {
     
     drawGround() {
         this.ctx.fillStyle = this.isNightMode ? '#f7f7f7' : '#535353';
-        this.ctx.fillRect(0, this.ground.y, this.CANVAS_WIDTH, 2);
         
-        // Ground texture dots
-        for (let i = this.ground.x; i < this.CANVAS_WIDTH + 20; i += 20) {
+        // Draw main ground line with moving dashed pattern for visual movement
+        const offset = Math.floor(this.ground.x) % 40;
+        for (let x = -offset; x < this.CANVAS_WIDTH; x += 40) {
+            this.ctx.fillRect(x, this.ground.y, 20, 2);
+        }
+        
+        // Ground texture dots that move with the ground
+        for (let i = -offset; i < this.CANVAS_WIDTH + 20; i += 20) {
             this.ctx.fillRect(i, this.ground.y + 4, 2, 2);
             this.ctx.fillRect(i + 10, this.ground.y + 6, 2, 2);
         }
+        
+        // Add small bumps on ground for extra texture (subtle movement effect)
+        this.ctx.globalAlpha = 0.3;
+        for (let i = -offset * 2; i < this.CANVAS_WIDTH + 40; i += 60) {
+            this.ctx.fillRect(i, this.ground.y + 8, 3, 1);
+            this.ctx.fillRect(i + 30, this.ground.y + 9, 2, 1);
+        }
+        this.ctx.globalAlpha = 1;
     }
     
     drawGameOver() {
