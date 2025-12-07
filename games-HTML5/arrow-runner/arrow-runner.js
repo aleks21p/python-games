@@ -18,10 +18,10 @@
   let running = false;
 
   // Player (arrow) visual geometry (scaled and rotated)
-  // Spec: base 40px, height 52px, isosceles triangle pointing right
+  // Spec: base 40px, height 52px for display, but 20x26 for hitbox (2x smaller)
   function makeArrowPoly(x, y, angle){
-    const baseW = Math.round(40 * scale);
-    const height = Math.round(52 * scale);
+    const baseW = Math.round(20 * scale); // Hitbox: 2x smaller
+    const height = Math.round(26 * scale); // Hitbox: 2x smaller
     const halfH = height / 2;
     
     // Triangle points relative to center (before rotation)
@@ -54,9 +54,9 @@
     angle: 0 // rotation angle in radians
   };
 
-  // Trail system
+  // Trail system - lasts 10 seconds at 60fps
   const trail = [];
-  const MAX_TRAIL_LENGTH = 30;
+  const MAX_TRAIL_LENGTH = 600;
   
   // Level state
   let levelWidth = 2500; // Will be set per level
