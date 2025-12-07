@@ -1680,6 +1680,10 @@ class Game {
             equippedPet: this.equippedPet,
             petCrates: this.petCrates
         });
+        
+        // Crate info panel visibility
+        this.showCommonCrateInfo = false;
+        this.showRareCrateInfo = false;
     }
 
     setupInputHandlers() {
@@ -2357,10 +2361,21 @@ class Game {
                     }
                     
                     // Common crate button
-                    const crateX = SCREEN_WIDTH/2 - 270;
-                    const crateY = SCREEN_HEIGHT/2 - 80;
+                    const crateX = SCREEN_WIDTH/2 - 320;
+                    const crateY = SCREEN_HEIGHT/2 - 120;
                     const crateWidth = 160;
                     const crateHeight = 160;
+                    
+                    // Check question mark button click for common crate (bottom right corner)
+                    const commonInfoButtonX = crateX + crateWidth - 25;
+                    const commonInfoButtonY = crateY + crateHeight - 25;
+                    const infoButtonSize = 20;
+                    
+                    if (clickX >= commonInfoButtonX && clickX <= commonInfoButtonX + infoButtonSize &&
+                        clickY >= commonInfoButtonY && clickY <= commonInfoButtonY + infoButtonSize) {
+                        this.showCommonCrateInfo = !this.showCommonCrateInfo;
+                        return;
+                    }
                     
                     if (clickX >= crateX && clickX <= crateX + crateWidth &&
                         clickY >= crateY && clickY <= crateY + crateHeight) {
@@ -2410,8 +2425,18 @@ class Game {
                     }
 
                     // Rare crate button
-                    const rareCrateX = SCREEN_WIDTH/2 - 80;
-                    const rareCrateY = SCREEN_HEIGHT/2 - 80;
+                    const rareCrateX = SCREEN_WIDTH/2 - 120;
+                    const rareCrateY = SCREEN_HEIGHT/2 - 120;
+                    
+                    // Check question mark button click for rare crate (bottom right corner)
+                    const rareInfoButtonX = rareCrateX + crateWidth - 25;
+                    const rareInfoButtonY = rareCrateY + crateHeight - 25;
+                    
+                    if (clickX >= rareInfoButtonX && clickX <= rareInfoButtonX + infoButtonSize &&
+                        clickY >= rareInfoButtonY && clickY <= rareInfoButtonY + infoButtonSize) {
+                        this.showRareCrateInfo = !this.showRareCrateInfo;
+                        return;
+                    }
                     
                     if (clickX >= rareCrateX && clickX <= rareCrateX + crateWidth &&
                         clickY >= rareCrateY && clickY <= rareCrateY + crateHeight) {
@@ -5597,8 +5622,8 @@ class Game {
         ctx.fillText('Back', backButtonX + backButtonWidth/2, backButtonY + 20);
 
         // Common crate (left side) - Enhanced
-        const crateX = SCREEN_WIDTH/2 - 270;
-        const crateY = SCREEN_HEIGHT/2 - 80;
+        const crateX = SCREEN_WIDTH/2 - 320;
+        const crateY = SCREEN_HEIGHT/2 - 120;
         const crateWidth = 160;
         const crateHeight = 160;
         
@@ -5679,24 +5704,48 @@ class Game {
         ctx.font = '16px Arial';
         ctx.fillText(`${this.petCrates.common.cost} Coins`, crateX + crateWidth/2, crateY + 130);
         
-        // Reset text alignment for next section
-        ctx.textAlign = 'center';
-        
         // Reset text alignment
         ctx.textAlign = 'center';
         
-        // Possible pets preview (updated)
+        // Question mark button for common crate info (bottom right corner)
+        const commonInfoButtonX = crateX + crateWidth - 25;
+        const commonInfoButtonY = crateY + crateHeight - 25;
+        const infoButtonSize = 20;
+        
+        ctx.fillStyle = '#4488FF';
+        ctx.beginPath();
+        ctx.arc(commonInfoButtonX + infoButtonSize/2, commonInfoButtonY + infoButtonSize/2, infoButtonSize/2, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.strokeStyle = WHITE;
+        ctx.lineWidth = 2;
+        ctx.stroke();
+        
         ctx.fillStyle = WHITE;
-        ctx.font = '12px Arial';
-        ctx.fillText('Contains:', crateX + crateWidth/2, crateY + 155);
-        ctx.fillText('Cat (2x Coins) - Common', crateX + crateWidth/2, crateY + 170);
-        ctx.fillText('Dog (1.5x Speed) - Common', crateX + crateWidth/2, crateY + 185);
-        ctx.fillStyle = '#4169E1';
-        ctx.fillText('Turtle (2x Health, 1.2x Damage) - Rare', crateX + crateWidth/2, crateY + 200);
+        ctx.font = 'bold 14px Arial';
+        ctx.fillText('?', commonInfoButtonX + infoButtonSize/2, commonInfoButtonY + infoButtonSize/2 + 5);
+        
+        // Show detailed info if toggled
+        if (this.showCommonCrateInfo) {
+            const infoY = crateY + 145;
+            ctx.fillStyle = 'rgba(0, 0, 0, 0.9)';
+            ctx.fillRect(crateX - 10, infoY, crateWidth + 20, 80);
+            ctx.strokeStyle = '#4488FF';
+            ctx.lineWidth = 2;
+            ctx.strokeRect(crateX - 10, infoY, crateWidth + 20, 80);
+            
+            ctx.fillStyle = WHITE;
+            ctx.font = 'bold 12px Arial';
+            ctx.fillText('Contains:', crateX + crateWidth/2, infoY + 15);
+            ctx.font = '11px Arial';
+            ctx.fillText('Cat (2x Coins)', crateX + crateWidth/2, infoY + 30);
+            ctx.fillText('Common - 45%', crateX + crateWidth/2, infoY + 43);
+            ctx.fillText('Dog (1.5x Speed)', crateX + crateWidth/2, infoY + 56);
+            ctx.fillText('Common - 45%', crateX + crateWidth/2, infoY + 69);
+        }
 
-        // Rare crate (center) - Enhanced
-        const rareCrateX = SCREEN_WIDTH/2 - 80;
-        const rareCrateY = SCREEN_HEIGHT/2 - 80;
+        // Rare crate (right of common crate) - Enhanced
+        const rareCrateX = SCREEN_WIDTH/2 - 120;
+        const rareCrateY = SCREEN_HEIGHT/2 - 120;
         
         // Rare crate background with epic glow effect
         const canAffordRare = this.coins >= this.petCrates.rare.cost;
@@ -5783,18 +5832,51 @@ class Game {
         ctx.font = '16px Arial';
         ctx.fillText(`${this.petCrates.rare.cost} Coins`, rareCrateX + crateWidth/2, rareCrateY + 130);
         
-        // Rare possible pets preview
+        // Question mark button for rare crate info (bottom right corner)
+        const rareInfoButtonX = rareCrateX + crateWidth - 25;
+        const rareInfoButtonY = rareCrateY + crateHeight - 25;
+        
+        ctx.fillStyle = '#9932CC';
+        ctx.beginPath();
+        ctx.arc(rareInfoButtonX + infoButtonSize/2, rareInfoButtonY + infoButtonSize/2, infoButtonSize/2, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.strokeStyle = WHITE;
+        ctx.lineWidth = 2;
+        ctx.stroke();
+        
         ctx.fillStyle = WHITE;
-        ctx.font = '12px Arial';
-        ctx.fillText('Contains:', rareCrateX + crateWidth/2, rareCrateY + 155);
-        ctx.fillStyle = '#4169E1';
-        ctx.fillText('Turtle (2x Health, 1.2x Damage) - 90%', rareCrateX + crateWidth/2, rareCrateY + 170);
-        ctx.fillStyle = '#FF6B35';
-        ctx.fillText('Parrot (2x Health, 2.5x Damage) - 9%', rareCrateX + crateWidth/2, rareCrateY + 185);
-        ctx.fillStyle = '#FFD700';
-        ctx.fillText('Capybarra (3x Health, 3x Damage) - 1%', rareCrateX + crateWidth/2, rareCrateY + 200);
-        ctx.fillStyle = '#FF00FF';
-        ctx.fillText('Dragon (10x HP, 5x DMG, -30% Speed) - 0.01%', rareCrateX + crateWidth/2, rareCrateY + 215);
+        ctx.font = 'bold 14px Arial';
+        ctx.fillText('?', rareInfoButtonX + infoButtonSize/2, rareInfoButtonY + infoButtonSize/2 + 5);
+        
+        // Show detailed info if toggled
+        if (this.showRareCrateInfo) {
+            const rareInfoY = rareCrateY + 145;
+            ctx.fillStyle = 'rgba(0, 0, 0, 0.9)';
+            ctx.fillRect(rareCrateX - 10, rareInfoY, crateWidth + 20, 110);
+            ctx.strokeStyle = '#9932CC';
+            ctx.lineWidth = 2;
+            ctx.strokeRect(rareCrateX - 10, rareInfoY, crateWidth + 20, 110);
+            
+            ctx.fillStyle = WHITE;
+            ctx.font = 'bold 12px Arial';
+            ctx.fillText('Contains:', rareCrateX + crateWidth/2, rareInfoY + 15);
+            ctx.font = '10px Arial';
+            
+            ctx.fillStyle = '#4169E1';
+            ctx.fillText('Turtle (2x HP, 1.2x DMG)', rareCrateX + crateWidth/2, rareInfoY + 30);
+            ctx.fillText('Rare - 90%', rareCrateX + crateWidth/2, rareInfoY + 42);
+            
+            ctx.fillStyle = '#FF6B35';
+            ctx.fillText('Parrot (2x HP, 2.5x DMG)', rareCrateX + crateWidth/2, rareInfoY + 56);
+            ctx.fillText('Epic - 9%', rareCrateX + crateWidth/2, rareInfoY + 68);
+            
+            ctx.fillStyle = '#FFD700';
+            ctx.fillText('Capybarra (3x HP/DMG)', rareCrateX + crateWidth/2, rareInfoY + 82);
+            ctx.fillText('Legendary - 1%', rareCrateX + crateWidth/2, rareInfoY + 94);
+            
+            ctx.fillStyle = '#FF00FF';
+            ctx.fillText('Dragon (10x HP, 5x DMG)', rareCrateX + crateWidth/2, rareInfoY + 108);
+        }
 
         // Owned pets section (right side)
         const petListX = SCREEN_WIDTH/2 + 120;
