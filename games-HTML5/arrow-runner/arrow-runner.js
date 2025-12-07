@@ -18,10 +18,10 @@
   let running = false;
 
   // Player (arrow) visual geometry (scaled and rotated)
-  // Spec: base 48px, height 64px, isosceles triangle pointing right
+  // Spec: base 24px, height 32px (50% smaller), isosceles triangle pointing right
   function makeArrowPoly(x, y, angle){
-    const baseW = Math.round(48 * scale);
-    const height = Math.round(64 * scale);
+    const baseW = Math.round(24 * scale);
+    const height = Math.round(32 * scale);
     const halfH = height / 2;
     
     // Triangle points relative to center (before rotation)
@@ -276,587 +276,349 @@
       
       addGoal(levelWidth - 200);
     }
-    // LEVEL 2 – BITE CORRIDOR (340 px/s) - NO CAMPING
+    // LEVEL 2 – BITE CORRIDOR (340 px/s) - NO CAMPING, NO OVERLAPS
     else if(n===2){
       player.vx = 340;
       player.baseVx = 340;
       levelWidth = 6500;
       
-      // Opening gauntlet - alternating spikes
+      // Section 1: Opening gauntlet
       addSpikeRowCeil(400, 3);
-      addSpikeRowFloor(450, 4);
-      addBigSpikeCeil(550);
-      addBigSpikeFloor(570);
-      addSpikeRowCeil(650, 5);
-      addSpikeRowFloor(700, 3);
-      addBigSpikeCeil(800);
-      addBigSpikeFloor(820);
-      addBlock(500, H*0.4);
-      addBlock(620, H*0.6);
-      addBlock(750, H*0.35);
-      addBlock(850, H*0.65);
+      addBlock(530, H*0.25);
+      addSpikeRowFloor(650, 4);
+      addBigSpikeCeil(780);
+      addBlock(870, H*0.6);
+      addBigSpikeFloor(980);
+      addSpikeRowCeil(1060, 3);
+      addBlock(1190, H*0.35);
+      addSpikeRowFloor(1320, 2);
       
-      // Laser + spike combo
-      addLaser(1000, H*0.2, H*0.25, 150, true);
-      addSpikeRowFloor(1050, 4);
-      addSpikeRowCeil(1100, 3);
-      addBigSpikeCeil(1200);
-      addBigSpikeFloor(1220);
-      addBlock(1100, H*0.5);
-      addBlock(1250, H*0.38);
-      addMovingWall(1150, H*0.55, 45);
+      // Section 2: Laser combo
+      addLaser(1480, H*0.2, H*0.25, 150, true);
+      addSpikeRowFloor(1580, 4);
+      addBlock(1730, H*0.5);
+      addSpikeRowCeil(1860, 3);
+      addBigSpikeCeil(1990);
+      addBigSpikeFloor(2070);
+      addBlock(2200, H*0.38);
+      addMovingWall(2330, H*0.55, 45);
       
-      // Dense spike section
-      addSpikeRowCeil(1400, 6);
-      addSpikeRowFloor(1480, 5);
-      addBigSpikeCeil(1600);
-      addBigSpikeFloor(1620);
-      addSpikeRowCeil(1720, 4);
-      addSpikeRowFloor(1800, 6);
-      addBlock(1450, H*0.32);
-      addBlock(1570, H*0.68);
-      addBlock(1700, H*0.4);
-      addBlock(1850, H*0.6);
-      addBlinkingSpike(1550, 'ceiling', 2.0);
-      addBlinkingSpike(1750, 'floor', 1.8);
+      // Section 3: Dense spikes
+      addSpikeRowCeil(2500, 5);
+      addBlock(2660, H*0.32);
+      addSpikeRowFloor(2790, 4);
+      addBigSpikeCeil(2920);
+      addBlinkingSpike(3050, 'ceiling', 2.0);
+      addBlock(3180, H*0.68);
+      addSpikeRowFloor(3310, 5);
+      addBigSpikeFloor(3470);
+      addSpikeRowCeil(3550, 3);
+      addBlinkingSpike(3680, 'floor', 1.8);
       
-      // Moving walls + spikes
-      addMovingWall(2000, H*0.25, 60);
-      addSpikeRowFloor(2050, 5);
-      addSpikeRowCeil(2100, 4);
-      addBigSpikeCeil(2200);
-      addBigSpikeFloor(2220);
-      addMovingWall(2300, H*0.6, 55);
-      addSpikeRowCeil(2350, 3);
-      addSpikeRowFloor(2400, 4);
-      addBlock(2080, H*0.5);
-      addBlock(2250, H*0.35);
+      // Section 4: Moving walls
+      addMovingWall(3820, H*0.25, 60);
+      addSpikeRowFloor(3990, 4);
+      addBlock(4140, H*0.5);
+      addSpikeRowCeil(4270, 3);
+      addBigSpikeCeil(4390);
+      addBigSpikeFloor(4470);
+      addMovingWall(4600, H*0.6, 55);
+      addSpikeRowCeil(4770, 2);
+      addBlock(4890, H*0.35);
       
-      // Dash pad + spike gauntlet
-      addDashPad(2550, 'floor');
-      addSpikeRowCeil(2600, 7);
-      addSpikeRowFloor(2700, 6);
-      addBigSpikeCeil(2820);
-      addBigSpikeFloor(2840);
-      addSpikeRowCeil(2950, 4);
-      addSpikeRowFloor(3000, 5);
-      addBlock(2650, H*0.42);
-      addBlock(2780, H*0.58);
-      addBlock(2920, H*0.36);
-      
-      // Blinking spike maze
-      for(let i=0; i<8; i++){
-        addBlinkingSpike(3200 + i*100, i%2===0?'ceiling':'floor', 1.8 + (i%3)*0.3);
-        if(i%2===0) {
-          addSpikeRowFloor(3230 + i*100, 2);
-          addBigSpikeCeil(3280 + i*100);
-        } else {
-          addSpikeRowCeil(3230 + i*100, 2);
-          addBigSpikeFloor(3280 + i*100);
-        }
-        addBlock(3250 + i*100, H*0.5);
-      }
-      
-      // Laser grid + spikes
-      addLaser(4100, H*0.25, H*0.3, 180, true);
-      addLaser(4250, H*0.45, H*0.3, 160, true);
-      addSpikeRowCeil(4150, 5);
-      addSpikeRowFloor(4200, 4);
-      addBigSpikeCeil(4320);
-      addBigSpikeFloor(4340);
-      addSpikeRowCeil(4420, 3);
-      addSpikeRowFloor(4480, 5);
-      addBlock(4180, H*0.6);
-      addBlock(4300, H*0.35);
-      addBlock(4450, H*0.65);
-      
-      // Moving wall chaos
-      addMovingWall(4650, H*0.3, 65);
-      addMovingWall(4850, H*0.65, 70);
-      addSpikeRowCeil(4700, 6);
-      addSpikeRowFloor(4750, 5);
-      addBigSpikeCeil(4900);
-      addBigSpikeFloor(4920);
-      addSpikeRowCeil(5000, 4);
-      addSpikeRowFloor(5050, 6);
-      addBlock(4750, H*0.45);
-      addBlock(4950, H*0.55);
-      
-      // Final gauntlet
-      addSpikeRowCeil(5250, 8);
-      addSpikeRowFloor(5350, 7);
-      addBigSpikeCeil(5480);
-      addBigSpikeFloor(5500);
-      addSpikeRowCeil(5600, 6);
-      addSpikeRowFloor(5680, 8);
-      addBigSpikeCeil(5850);
-      addBigSpikeFloor(5870);
-      addBlock(5300, H*0.38);
-      addBlock(5420, H*0.62);
-      addBlock(5550, H*0.42);
-      addBlock(5750, H*0.58);
-      addBlinkingSpike(5400, 'ceiling', 2.5);
-      addBlinkingSpike(5700, 'floor', 2.3);
-      addLaser(5650, H*0.5, H*0.25, 200, true);
-      addMovingWall(5950, H*0.4, 75);
+      // Section 5: Dash gauntlet
+      addDashPad(5030, 'floor');
+      addSpikeRowCeil(5150, 6);
+      addBlock(5340, H*0.42);
+      addSpikeRowFloor(5470, 5);
+      addBigSpikeCeil(5630);
+      addBigSpikeFloor(5710);
+      addBlock(5840, H*0.58);
+      addSpikeRowCeil(5970, 3);
+      addSpikeRowFloor(6090, 4);
+      addBlock(6240, H*0.36);
       
       addGoal(levelWidth - 200);
     }
-    // LEVEL 3 – FLOATING GEOMETRY (380 px/s) - NO CAMPING
+    // LEVEL 3 – FLOATING GEOMETRY (380 px/s) - NO CAMPING, NO OVERLAPS
     else if(n===3){
       player.vx = 380;
       player.baseVx = 380;
       levelWidth = 7000;
       
-      // Opening dense section
+      // Section 1: Opening
       addBlock(500, H*0.3);
-      addSpikeRowFloor(550, 4);
-      addSpikeRowCeil(600, 3);
-      addBigSpikeCeil(700);
-      addBigSpikeFloor(720);
-      addBlock(650, H*0.65);
-      addBlock(770, H*0.38);
-      addSpikeRowCeil(850, 5);
-      addSpikeRowFloor(900, 4);
-      addBlock(950, H*0.55);
+      addSpikeRowFloor(630, 4);
+      addSpikeRowCeil(780, 3);
+      addBigSpikeCeil(910);
+      addBlock(1020, H*0.65);
+      addBigSpikeFloor(1150);
+      addBlock(1230, H*0.38);
+      addSpikeRowCeil(1360, 4);
+      addSpikeRowFloor(1510, 3);
+      addBlock(1640, H*0.55);
       
-      // Laser + spike section
-      addLaser(1100, H*0.2, H*0.28, 120, true);
-      addSpikeRowFloor(1150, 6);
-      addBigSpikeCeil(1250);
-      addBigSpikeFloor(1270);
-      addSpikeRowCeil(1350, 4);
-      addBlock(1200, H*0.45);
-      addBlock(1320, H*0.62);
-      addMovingWall(1400, H*0.35, 50);
+      // Section 2: Laser section
+      addLaser(1780, H*0.2, H*0.28, 120, true);
+      addSpikeRowFloor(1900, 5);
+      addBigSpikeCeil(2060);
+      addBlock(2170, H*0.45);
+      addBigSpikeFloor(2300);
+      addSpikeRowCeil(2380, 3);
+      addBlock(2510, H*0.62);
+      addMovingWall(2650, H*0.35, 50);
       
-      // Bounce pad + obstacles
-      addBouncePad(1600);
-      addSpikeRowCeil(1650, 7);
-      addBigSpikeCeil(1780);
-      addSpikeRowFloor(1830, 5);
-      addBigSpikeFloor(1950);
-      addBlock(1720, H*0.28);
-      addBlock(1880, H*0.72);
-      addBlock(2000, H*0.42);
-      addBlinkingSpike(1800, 'ceiling', 1.9);
-      addBlinkingSpike(1950, 'floor', 2.1);
+      // Section 3: Bounce section
+      addBouncePad(2820);
+      addSpikeRowCeil(2940, 6);
+      addBigSpikeCeil(3130);
+      addBlock(3240, H*0.28);
+      addSpikeRowFloor(3370, 4);
+      addBigSpikeFloor(3520);
+      addBlock(3630, H*0.72);
+      addBlinkingSpike(3760, 'ceiling', 1.9);
+      addBlock(3890, H*0.42);
+      addBlinkingSpike(4020, 'floor', 2.1);
       
-      // Dense laser grid
-      addLaser(2150, H*0.25, H*0.3, 140, true);
-      addLaser(2300, H*0.45, H*0.3, 130, true);
-      addSpikeRowCeil(2200, 6);
-      addSpikeRowFloor(2250, 5);
-      addBigSpikeCeil(2380);
-      addBigSpikeFloor(2400);
-      addSpikeRowCeil(2480, 4);
-      addSpikeRowFloor(2530, 6);
-      addBlock(2230, H*0.58);
-      addBlock(2350, H*0.35);
-      addBlock(2500, H*0.68);
+      // Section 4: Laser grid
+      addLaser(4160, H*0.25, H*0.3, 140, true);
+      addSpikeRowCeil(4280, 5);
+      addBlock(4440, H*0.58);
+      addSpikeRowFloor(4570, 4);
+      addLaser(4700, H*0.45, H*0.3, 130, true);
+      addBigSpikeCeil(4820);
+      addBigSpikeFloor(4900);
+      addBlock(5030, H*0.35);
+      addSpikeRowCeil(5160, 3);
+      addSpikeRowFloor(5290, 5);
+      addBlock(5450, H*0.68);
       
-      // Dash + spike combo
-      addDashPad(2700, 'floor');
-      addSpikeRowCeil(2750, 8);
-      addSpikeRowFloor(2850, 7);
-      addBigSpikeCeil(2980);
-      addBigSpikeFloor(3000);
-      addSpikeRowCeil(3100, 5);
-      addSpikeRowFloor(3150, 6);
-      addBlock(2800, H*0.38);
-      addBlock(2950, H*0.62);
-      addBlock(3080, H*0.45);
-      addMovingWall(2900, H*0.25, 60);
-      
-      // Blinking spike maze
-      for(let i=0; i<10; i++){
-        addBlinkingSpike(3350 + i*90, i%2===0?'floor':'ceiling', 1.7 + (i%4)*0.2);
-        if(i%2===0){
-          addSpikeRowCeil(3380 + i*90, 3);
-          addBigSpikeFloor(3430 + i*90);
-        } else {
-          addSpikeRowFloor(3380 + i*90, 3);
-          addBigSpikeCeil(3430 + i*90);
-        }
-        addBlock(3400 + i*90, H*0.5);
-      }
-      
-      // Moving wall chaos
-      addMovingWall(4400, H*0.28, 70);
-      addMovingWall(4600, H*0.62, 65);
-      addSpikeRowCeil(4450, 7);
-      addSpikeRowFloor(4520, 6);
-      addBigSpikeCeil(4650);
-      addBigSpikeFloor(4670);
-      addSpikeRowCeil(4750, 5);
-      addSpikeRowFloor(4800, 7);
-      addBlock(4500, H*0.42);
-      addBlock(4630, H*0.58);
-      addBlock(4750, H*0.35);
-      addLaser(4550, H*0.5, H*0.25, 150, true);
-      
-      // Platform section
-      addBouncePad(5000);
-      addBlock(5100, H*0.25);
-      addSpikeRowFloor(5150, 8);
-      addBigSpikeCeil(5280);
-      addBlock(5220, H*0.68);
-      addSpikeRowCeil(5350, 6);
-      addBigSpikeFloor(5450);
-      addBlock(5400, H*0.42);
-      addSpikeRowFloor(5520, 5);
-      addMovingWall(5550, H*0.55, 55);
-      
-      // Final gauntlet
-      addLaser(5750, H*0.3, H*0.35, 180, true);
-      addSpikeRowCeil(5800, 9);
-      addSpikeRowFloor(5900, 8);
-      addBigSpikeCeil(6050);
-      addBigSpikeFloor(6070);
-      addSpikeRowCeil(6180, 7);
-      addSpikeRowFloor(6260, 9);
-      addBigSpikeCeil(6420);
-      addBigSpikeFloor(6440);
-      addBlock(5850, H*0.48);
-      addBlock(6020, H*0.52);
-      addBlock(6200, H*0.38);
+      // Section 5: Dash section
+      addDashPad(5590, 'floor');
+      addSpikeRowCeil(5710, 7);
+      addBlock(5900, H*0.38);
+      addSpikeRowFloor(6030, 6);
+      addBigSpikeCeil(6190);
+      addBigSpikeFloor(6270);
       addBlock(6400, H*0.62);
-      addBlinkingSpike(6100, 'ceiling', 2.5);
-      addBlinkingSpike(6300, 'floor', 2.3);
-      addMovingWall(6500, H*0.4, 80);
+      addSpikeRowCeil(6530, 4);
+      addMovingWall(6650, H*0.25, 60);
       
       addGoal(levelWidth - 200);
     }
-    // LEVEL 4 – THE TEETH (430 px/s) - NO CAMPING
+    // LEVEL 4 – THE TEETH (430 px/s) - NO CAMPING, NO OVERLAPS
     else if(n===4){
       player.vx = 430;
       player.baseVx = 430;
       levelWidth = 7500;
       
-      // Every section has both ceiling AND floor spikes to prevent camping
+      // Section 1
       addSpikeRowCeil(500, 5);
-      addSpikeRowFloor(550, 6);
-      addBigSpikeCeil(650);
-      addBigSpikeFloor(670);
-      addSpikeRowCeil(750, 7);
-      addSpikeRowFloor(820, 8);
-      addBlock(600, H*0.42);
-      addBlock(720, H*0.58);
-      addBlock(880, H*0.38);
+      addBlock(660, H*0.42);
+      addSpikeRowFloor(790, 6);
+      addBigSpikeCeil(950);
+      addBigSpikeFloor(1030);
+      addBlock(1140, H*0.58);
+      addSpikeRowCeil(1270, 5);
+      addBlock(1420, H*0.38);
       
-      addSpikeRowFloor(1000, 9);
-      addSpikeRowCeil(1100, 8);
-      addBigSpikeFloor(1220);
-      addBigSpikeCeil(1240);
-      addSpikeRowFloor(1340, 7);
-      addSpikeRowCeil(1420, 9);
-      addBlock(1050, H*0.62);
-      addBlock(1200, H*0.45);
-      addBlock(1380, H*0.55);
-      addMovingWall(1150, H*0.3, 55);
-      addMovingWall(1300, H*0.65, 50);
+      // Section 2
+      addSpikeRowFloor(1570, 7);
+      addBlock(1750, H*0.62);
+      addSpikeRowCeil(1880, 6);
+      addBigSpikeFloor(2010);
+      addBigSpikeCeil(2090);
+      addBlock(2210, H*0.45);
+      addMovingWall(2350, H*0.3, 55);
+      addSpikeRowFloor(2520, 5);
+      addBlock(2670, H*0.55);
       
-      addLaser(1550, H*0.25, H*0.3, 170, true);
-      addSpikeRowCeil(1600, 10);
-      addSpikeRowFloor(1700, 9);
-      addBigSpikeCeil(1830);
-      addBigSpikeFloor(1850);
-      addSpikeRowCeil(1950, 8);
-      addSpikeRowFloor(2030, 10);
-      addBlock(1650, H*0.48);
-      addBlock(1800, H*0.52);
-      addBlock(2000, H*0.38);
+      // Section 3
+      addLaser(2810, H*0.25, H*0.3, 170, true);
+      addSpikeRowCeil(2930, 8);
+      addBlock(3110, H*0.48);
+      addSpikeRowFloor(3240, 7);
+      addBigSpikeCeil(3400);
+      addBigSpikeFloor(3480);
+      addBlock(3600, H*0.52);
+      addSpikeRowCeil(3730, 6);
+      addBlock(3880, H*0.38);
       
-      addDashPad(2200, 'floor');
-      addSpikeRowCeil(2250, 12);
-      addSpikeRowFloor(2380, 11);
-      addBigSpikeCeil(2530);
-      addBigSpikeFloor(2550);
-      addSpikeRowCeil(2650, 9);
-      addSpikeRowFloor(2730, 12);
-      addBlock(2300, H*0.42);
-      addBlock(2500, H*0.58);
-      addBlock(2700, H*0.45);
+      // Section 4
+      addDashPad(4020, 'floor');
+      addSpikeRowCeil(4140, 10);
+      addBlock(4350, H*0.42);
+      addSpikeRowFloor(4480, 9);
+      addBigSpikeCeil(4660);
+      addBigSpikeFloor(4740);
+      addBlock(4870, H*0.58);
+      addSpikeRowCeil(5000, 7);
+      addBlock(5160, H*0.45);
       
-      for(let i=0; i<10; i++){
-        addBlinkingSpike(3000 + i*90, i%2===0?'ceiling':'floor', 2.2 + (i%3)*0.3);
-        if(i%2===0){
-          addSpikeRowFloor(3030 + i*90, 4);
-          addBigSpikeCeil(3080 + i*90);
-        } else {
-          addSpikeRowCeil(3030 + i*90, 4);
-          addBigSpikeFloor(3080 + i*90);
-        }
-        addBlock(3050 + i*90, H*0.5);
-      }
+      // Section 5
+      addBouncePad(5310);
+      addSpikeRowCeil(5440, 11);
+      addBlock(5650, H*0.32);
+      addSpikeRowFloor(5780, 10);
+      addBigSpikeCeil(5980);
+      addBigSpikeFloor(6060);
+      addBlock(6190, H*0.68);
+      addSpikeRowCeil(6320, 8);
+      addBlock(6480, H*0.42);
       
-      addMovingWall(4000, H*0.28, 70);
-      addMovingWall(4200, H*0.62, 65);
-      addSpikeRowCeil(4050, 11);
-      addSpikeRowFloor(4150, 10);
-      addBigSpikeCeil(4280);
-      addBigSpikeFloor(4300);
-      addSpikeRowCeil(4400, 9);
-      addSpikeRowFloor(4480, 11);
-      addBlock(4100, H*0.45);
-      addBlock(4270, H*0.55);
-      addBlock(4450, H*0.38);
-      
-      addBouncePad(4700);
-      addSpikeRowCeil(4750, 13);
-      addSpikeRowFloor(4900, 12);
-      addBigSpikeCeil(5050);
-      addBigSpikeFloor(5070);
-      addSpikeRowCeil(5180, 10);
-      addSpikeRowFloor(5280, 13);
-      addBlock(4800, H*0.32);
-      addBlock(5020, H*0.68);
-      addBlock(5230, H*0.42);
-      
-      addLaser(5450, H*0.25, H*0.35, 200, true);
-      addLaser(5650, H*0.4, H*0.35, 190, true);
-      addSpikeRowFloor(5500, 14);
-      addSpikeRowCeil(5620, 13);
-      addBigSpikeFloor(5780);
-      addBigSpikeCeil(5800);
-      addSpikeRowFloor(5920, 12);
-      addSpikeRowCeil(6030, 14);
-      addBlock(5550, H*0.52);
-      addBlock(5750, H*0.48);
-      addBlock(6000, H*0.38);
-      
-      addSpikeRowCeil(6250, 16);
-      addSpikeRowFloor(6400, 15);
-      addBigSpikeCeil(6580);
-      addBigSpikeFloor(6600);
-      addSpikeRowCeil(6750, 14);
-      addSpikeRowFloor(6880, 16);
-      addBlock(6320, H*0.42);
-      addBlock(6550, H*0.58);
-      addBlock(6830, H*0.45);
-      addBlinkingSpike(6500, 'ceiling', 2.8);
-      addBlinkingSpike(6700, 'floor', 2.6);
-      addMovingWall(6650, H*0.35, 80);
+      // Section 6
+      addLaser(6620, H*0.25, H*0.35, 200, true);
+      addSpikeRowFloor(6740, 12);
+      addBlock(6960, H*0.52);
+      addSpikeRowCeil(7090, 11);
+      addBigSpikeFloor(7310);
+      addBlinkingSpike(7440, 'ceiling', 2.8);
+      addBlock(7570, H*0.48);
       
       addGoal(levelWidth - 200);
     }
-    // LEVEL 5 – CRUSH CORRIDOR (510 px/s) - NO CAMPING
+    // LEVEL 5 – CRUSH CORRIDOR (510 px/s) - NO CAMPING, NO OVERLAPS
     else if(n===5){
       player.vx = 510;
       player.baseVx = 510;
       levelWidth = 8000;
       
-      // Maximum density - no camping possible
+      // Section 1
       addLaser(500, H*0.22, H*0.3, 200, true);
-      addSpikeRowCeil(550, 8);
-      addSpikeRowFloor(630, 9);
-      addBigSpikeCeil(770);
-      addBigSpikeFloor(790);
-      addSpikeRowCeil(880, 10);
-      addSpikeRowFloor(980, 8);
-      addBlock(600, H*0.45);
-      addBlock(740, H*0.55);
-      addBlock(930, H*0.42);
+      addSpikeRowCeil(620, 8);
+      addBlock(820, H*0.45);
+      addSpikeRowFloor(950, 7);
+      addBigSpikeCeil(1120);
+      addBigSpikeFloor(1200);
+      addBlock(1330, H*0.55);
+      addSpikeRowCeil(1460, 6);
+      addBlock(1610, H*0.42);
       
-      for(let i=0; i<8; i++){
-        addSpikeRowCeil(1200 + i*180, 5);
-        addSpikeRowFloor(1260 + i*180, 6);
-        addBigSpikeCeil(1350 + i*180);
-        addBigSpikeFloor(1370 + i*180);
-        addBlock(1250 + i*180, H*0.5);
-        if(i%2===0) addMovingWall(1300 + i*180, H*0.3, 50 + i*5);
-        else addMovingWall(1300 + i*180, H*0.65, 50 + i*5);
-      }
+      // Section 2
+      addSpikeRowFloor(1750, 9);
+      addMovingWall(1930, H*0.3, 50);
+      addBlock(2090, H*0.5);
+      addSpikeRowCeil(2220, 8);
+      addBigSpikeCeil(2400);
+      addBigSpikeFloor(2480);
+      addBlock(2610, H*0.65);
+      addSpikeRowFloor(2740, 7);
+      addBlock(2900, H*0.35);
       
-      addDashPad(2700, 'floor');
-      addSpikeRowCeil(2750, 14);
-      addSpikeRowFloor(2900, 13);
-      addBigSpikeCeil(3070);
-      addBigSpikeFloor(3090);
-      addSpikeRowCeil(3200, 12);
-      addSpikeRowFloor(3310, 14);
-      addBlock(2800, H*0.42);
-      addBlock(3050, H*0.58);
-      addBlock(3270, H*0.45);
+      // Section 3
+      addDashPad(3050, 'floor');
+      addSpikeRowCeil(3170, 12);
+      addBlock(3420, H*0.42);
+      addSpikeRowFloor(3550, 11);
+      addBigSpikeCeil(3750);
+      addBigSpikeFloor(3830);
+      addBlock(3960, H*0.58);
+      addSpikeRowCeil(4090, 9);
+      addBlock(4270, H*0.45);
       
-      addDashPad(3500, 'ceiling');
-      addSpikeRowFloor(3550, 15);
-      addSpikeRowCeil(3700, 14);
-      addBigSpikeFloor(3880);
-      addBigSpikeCeil(3900);
-      addSpikeRowFloor(4020, 13);
-      addSpikeRowCeil(4130, 15);
-      addBlock(3600, H*0.62);
-      addBlock(3850, H*0.38);
-      addBlock(4100, H*0.55);
+      // Section 4
+      addDashPad(4420, 'ceiling');
+      addSpikeRowFloor(4540, 13);
+      addBlock(4780, H*0.62);
+      addSpikeRowCeil(4910, 12);
+      addBigSpikeFloor(5110);
+      addBigSpikeCeil(5190);
+      addBlock(5320, H*0.38);
+      addSpikeRowFloor(5450, 10);
+      addBlock(5630, H*0.55);
       
-      for(let i=0; i<12; i++){
-        addBlinkingSpike(4350 + i*85, i%2===0?'floor':'ceiling', 2.5 + (i%4)*0.3);
-        if(i%2===0){
-          addSpikeRowCeil(4380 + i*85, 5);
-          addBigSpikeFloor(4430 + i*85);
-        } else {
-          addSpikeRowFloor(4380 + i*85, 5);
-          addBigSpikeCeil(4430 + i*85);
-        }
-        addBlock(4400 + i*85, H*0.5);
-      }
-      
-      addMovingWall(5450, H*0.25, 75);
-      addMovingWall(5650, H*0.6, 70);
-      addSpikeRowCeil(5500, 16);
-      addSpikeRowFloor(5620, 15);
-      addBigSpikeCeil(5800);
-      addBigSpikeFloor(5820);
+      // Section 5
+      addMovingWall(5780, H*0.25, 75);
       addSpikeRowCeil(5950, 14);
-      addSpikeRowFloor(6060, 16);
-      addBlock(5550, H*0.48);
-      addBlock(5780, H*0.52);
-      addBlock(6020, H*0.38);
+      addBlock(6200, H*0.48);
+      addSpikeRowFloor(6330, 13);
+      addBigSpikeCeil(6540);
+      addBigSpikeFloor(6620);
+      addBlock(6750, H*0.52);
+      addSpikeRowCeil(6880, 11);
+      addBlock(7050, H*0.38);
       
-      addLaser(6250, H*0.25, H*0.35, 210, true);
-      addLaser(6450, H*0.4, H*0.35, 200, true);
-      addSpikeRowFloor(6300, 17);
-      addSpikeRowCeil(6420, 16);
-      addBigSpikeFloor(6600);
-      addBigSpikeCeil(6620);
-      addSpikeRowFloor(6750, 15);
-      addSpikeRowCeil(6870, 17);
-      addBlock(6350, H*0.52);
-      addBlock(6580, H*0.48);
-      addBlock(6830, H*0.42);
-      
-      addBouncePad(7050);
-      addSpikeRowCeil(7100, 18);
-      addSpikeRowFloor(7260, 17);
-      addBigSpikeCeil(7450);
-      addBigSpikeFloor(7470);
-      addSpikeRowCeil(7600, 16);
-      addSpikeRowFloor(7730, 18);
-      addBlock(7150, H*0.28);
-      addBlock(7420, H*0.72);
-      addBlock(7680, H*0.45);
-      addBlinkingSpike(7300, 'ceiling', 3.0);
-      addBlinkingSpike(7550, 'floor', 2.8);
-      addMovingWall(7500, H*0.5, 85);
+      // Section 6
+      addLaser(7200, H*0.25, H*0.35, 210, true);
+      addSpikeRowFloor(7330, 15);
+      addBlock(7600, H*0.52);
+      addSpikeRowCeil(7730, 14);
+      addBlinkingSpike(7900, 'ceiling', 3.0);
+      addBlock(8030, H*0.48);
       
       addGoal(levelWidth - 200);
     }
-    // LEVEL 6 – FINAL GAUNTLET (560 px/s) - NO CAMPING
+    // LEVEL 6 – FINAL GAUNTLET (560 px/s) - NO CAMPING, NO OVERLAPS
     else if(n===6){
       player.vx = 560;
       player.baseVx = 560;
       levelWidth = 9000;
       
-      addGoal(levelWidth - 200);
-    }
-    // LEVEL 6 – FINAL GAUNTLET (560 px/s) - NO CAMPING
-    else if(n===6){
-      player.vx = 560;
-      player.baseVx = 560;
-      levelWidth = 9000;
+      // Section 1
+      addSpikeRowCeil(500, 7);
+      addBlock(710, H*0.42);
+      addSpikeRowFloor(840, 8);
+      addBigSpikeCeil(1040);
+      addBlock(1150, H*0.58);
+      addBigSpikeFloor(1280);
+      addSpikeRowCeil(1360, 6);
+      addBlock(1510, H*0.38);
+      addMovingWall(1660, H*0.3, 55);
       
-      // Ultimate difficulty - every inch is deadly
-      for(let i=0; i<15; i++){
-        if(i%2===0){
-          addSpikeRowCeil(500 + i*120, 7);
-          addSpikeRowFloor(550 + i*120, 8);
-          addBigSpikeCeil(680 + i*120);
-          addBlock(600 + i*120, H*0.42);
-        } else {
-          addSpikeRowFloor(500 + i*120, 8);
-          addSpikeRowCeil(550 + i*120, 7);
-          addBigSpikeFloor(680 + i*120);
-          addBlock(600 + i*120, H*0.58);
-        }
-        if(i%3===0) addMovingWall(620 + i*120, i%2===0 ? H*0.3 : H*0.65, 55 + i*3);
-      }
+      // Section 2
+      addLaser(1840, H*0.25, H*0.35, 190, true);
+      addSpikeRowFloor(1960, 9);
+      addBlock(2170, H*0.48);
+      addSpikeRowCeil(2300, 8);
+      addBigSpikeFloor(2500);
+      addBigSpikeCeil(2580);
+      addBlock(2710, H*0.52);
+      addSpikeRowFloor(2840, 7);
+      addBlock(3010, H*0.42);
       
-      addLaser(2300, H*0.25, H*0.35, 190, true);
-      addLaser(2500, H*0.4, H*0.35, 200, true);
-      addSpikeRowCeil(2350, 12);
-      addSpikeRowFloor(2470, 13);
-      addBigSpikeCeil(2650);
-      addBigSpikeFloor(2670);
-      addSpikeRowCeil(2800, 11);
-      addSpikeRowFloor(2920, 12);
-      addBlock(2400, H*0.48);
-      addBlock(2620, H*0.52);
-      addBlock(2880, H*0.42);
+      // Section 3
+      addDashPad(3160, 'floor');
+      addSpikeRowCeil(3280, 14);
+      addBlock(3570, H*0.38);
+      addSpikeRowFloor(3700, 13);
+      addBigSpikeCeil(3940);
+      addBigSpikeFloor(4020);
+      addBlock(4150, H*0.62);
+      addSpikeRowCeil(4280, 11);
+      addBlock(4470, H*0.45);
       
-      addDashPad(3100, 'floor');
-      addSpikeRowCeil(3150, 18);
-      addSpikeRowFloor(3320, 17);
-      addBigSpikeCeil(3520);
-      addBigSpikeFloor(3540);
-      addSpikeRowCeil(3680, 16);
-      addSpikeRowFloor(3820, 18);
-      addBlock(3200, H*0.38);
-      addBlock(3500, H*0.62);
-      addBlock(3780, H*0.45);
+      // Section 4
+      addDashPad(4620, 'ceiling');
+      addSpikeRowFloor(4740, 15);
+      addBlock(5010, H*0.68);
+      addSpikeRowCeil(5140, 14);
+      addBigSpikeFloor(5380);
+      addBigSpikeCeil(5460);
+      addBlock(5590, H*0.32);
+      addSpikeRowFloor(5720, 12);
+      addBlock(5920, H*0.55);
       
-      addDashPad(4000, 'ceiling');
-      addSpikeRowFloor(4050, 19);
-      addSpikeRowCeil(4240, 18);
-      addBigSpikeFloor(4450);
-      addBigSpikeCeil(4470);
-      addSpikeRowFloor(4620, 17);
-      addSpikeRowCeil(4770, 19);
-      addBlock(4100, H*0.68);
-      addBlock(4420, H*0.32);
-      addBlock(4730, H*0.55);
+      // Section 5
+      addMovingWall(6080, H*0.25, 80);
+      addSpikeRowCeil(6250, 16);
+      addBlock(6530, H*0.42);
+      addSpikeRowFloor(6660, 15);
+      addBigSpikeCeil(6910);
+      addMovingWall(7040, H*0.6, 75);
+      addBigSpikeFloor(7170);
+      addBlock(7300, H*0.58);
+      addSpikeRowCeil(7430, 13);
+      addBlock(7640, H*0.38);
       
-      for(let i=0; i<14; i++){
-        addBlinkingSpike(5000 + i*80, i%2===0?'ceiling':'floor', 2.8 + (i%4)*0.3);
-        if(i%2===0){
-          addSpikeRowFloor(5030 + i*80, 6);
-          addBigSpikeCeil(5080 + i*80);
-        } else {
-          addSpikeRowCeil(5030 + i*80, 6);
-          addBigSpikeFloor(5080 + i*80);
-        }
-        addBlock(5050 + i*80, H*0.5);
-      }
-      
-      addMovingWall(6200, H*0.25, 80);
-      addMovingWall(6400, H*0.6, 75);
-      addMovingWall(6600, H*0.35, 70);
-      addSpikeRowCeil(6250, 20);
-      addSpikeRowFloor(6400, 19);
-      addBigSpikeCeil(6620);
-      addBigSpikeFloor(6640);
-      addSpikeRowCeil(6780, 18);
-      addSpikeRowFloor(6920, 20);
-      addBlock(6300, H*0.42);
-      addBlock(6600, H*0.58);
-      addBlock(6880, H*0.38);
-      
-      addBouncePad(7150);
-      addLaser(7200, H*0.25, H*0.4, 220, true);
-      addSpikeRowCeil(7250, 22);
-      addSpikeRowFloor(7430, 21);
-      addBigSpikeCeil(7650);
-      addBigSpikeFloor(7670);
-      addLaser(7750, H*0.35, H*0.4, 210, true);
-      addSpikeRowCeil(7820, 20);
-      addSpikeRowFloor(7980, 22);
-      addBlock(7300, H*0.32);
-      addBlock(7620, H*0.68);
-      addBlock(7940, H*0.45);
-      
-      addSpikeRowCeil(8200, 25);
-      addSpikeRowFloor(8400, 24);
-      addBigSpikeCeil(8650);
-      addBigSpikeFloor(8670);
-      addSpikeRowCeil(8820, 23);
-      addSpikeRowFloor(9000, 25);
-      addBlock(8280, H*0.48);
-      addBlock(8620, H*0.52);
-      addBlock(8900, H*0.42);
-      addBlinkingSpike(8450, 'ceiling', 3.5);
-      addBlinkingSpike(8700, 'floor', 3.3);
-      addMovingWall(8500, H*0.38, 90);
-      addMovingWall(8750, H*0.62, 85);
+      // Section 6
+      addBouncePad(7790);
+      addLaser(7910, H*0.25, H*0.4, 220, true);
+      addSpikeRowCeil(8030, 18);
+      addBlock(8370, H*0.32);
+      addSpikeRowFloor(8500, 17);
+      addBigSpikeCeil(8780);
+      addBlinkingSpike(8910, 'ceiling', 3.5);
+      addBlock(9040, H*0.68);
       
       addGoal(levelWidth - 200);
     }
@@ -925,12 +687,12 @@
         // Moving upward at constant speed
         // Screen coords: negative Y = up
         player.y -= physics.verticalSpeed * dt;
-        player.angle = -Math.PI / 8; // Tilt up (about -22.5 degrees)
+        player.angle = -Math.PI / 4; // Tilt up 45 degrees
       } else {
         // Moving downward at constant speed
         // Screen coords: positive Y = down
         player.y += physics.verticalSpeed * dt;
-        player.angle = Math.PI / 8; // Tilt down (about +22.5 degrees)
+        player.angle = Math.PI / 4; // Tilt down 45 degrees
       }
 
       // Add position to trail
