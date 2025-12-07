@@ -30,13 +30,17 @@
     /* LEVEL SELECT */
     #levelSelect{flex-direction:column;align-items:center;justify-content:center;transform:translateY(150%);transition:transform 0.35s cubic-bezier(0.22,1,0.36,1)}
     #levelSelect.show{transform:translateY(0)}
-    .level-title{position:absolute;top:15%;font-size:clamp(1.8rem,5vw,3rem);font-weight:700;letter-spacing:0.1em;color:#FFFFFF;text-transform:uppercase}
-    .level-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:clamp(20px,4vw,40px);padding:20px}
-    .level-button{width:clamp(120px,18vw,180px);height:clamp(120px,18vw,180px);background:#C8C8C8;border:3px solid #888;border-radius:8px;font-size:clamp(3rem,8vw,5rem);font-weight:700;color:#000;cursor:pointer;transition:all 0.15s ease;display:flex;align-items:center;justify-content:center}
-    .level-button:hover{transform:scale(1.05);background:#E0E0E0}
-    .level-button:active{transform:scale(0.92)}
-    .level-button.locked{opacity:0.4;cursor:not-allowed;position:relative}
-    .level-button.locked::after{content:'🔒';position:absolute;bottom:10px;right:10px;font-size:1.5rem}
+    .level-title{position:absolute;top:8%;font-size:clamp(1.8rem,5vw,3rem);font-weight:700;letter-spacing:0.1em;color:#FFFFFF;text-transform:uppercase}
+    #previewCanvas{width:600px;height:200px;border:3px solid #00F5FF;border-radius:8px;box-shadow:0 0 20px rgba(0,245,255,0.4);margin-bottom:20px;background:#030306}
+    .level-selector{display:flex;align-items:center;justify-content:center;gap:40px;margin-bottom:20px}
+    .arrow-btn{background:#00F5FF;color:#000;border:3px solid #00a8b8;padding:20px 30px;font-size:3rem;font-weight:700;border-radius:8px;cursor:pointer;transition:all 0.15s ease;box-shadow:0 0 20px rgba(0,245,255,0.4);width:80px;height:80px;display:flex;align-items:center;justify-content:center}
+    .arrow-btn:hover{background:#00d4e0;transform:scale(1.1)}
+    .arrow-btn:active{transform:scale(0.95)}
+    .arrow-btn:disabled{opacity:0.3;cursor:not-allowed}
+    .level-display{font-size:clamp(2.5rem,6vw,4rem);font-weight:700;letter-spacing:0.15em;color:#00F5FF;text-transform:uppercase;min-width:250px;text-align:center;text-shadow:0 0 20px rgba(0,245,255,0.6)}
+    .select-level-btn{background:#00F5FF;color:#000;border:3px solid #00a8b8;padding:16px 60px;font-size:1.5rem;font-weight:700;border-radius:8px;cursor:pointer;text-transform:uppercase;transition:all 0.15s ease;box-shadow:0 0 20px rgba(0,245,255,0.4);margin-bottom:20px}
+    .select-level-btn:hover{background:#00d4e0;transform:scale(1.08)}
+    .select-level-btn:active{transform:scale(0.95)}
     .back-btn{position:absolute;bottom:8%;background:#555;color:#fff;border:2px solid #888;padding:12px 32px;font-size:1.2rem;font-weight:600;border-radius:6px;cursor:pointer;text-transform:uppercase;transition:all 0.15s ease}
     .back-btn:hover{background:#666;transform:scale(1.05)}
     
@@ -80,7 +84,13 @@
     <!-- LEVEL SELECT -->
     <div id="levelSelect" class="menu">
       <div class="level-title">SELECT LEVEL</div>
-      <div class="level-grid" id="levelGrid"></div>
+      <canvas id="previewCanvas" width="600" height="200"></canvas>
+      <div class="level-selector">
+        <button class="arrow-btn" id="prevLevel">&lt;</button>
+        <div class="level-display" id="levelDisplay">LVL 1</div>
+        <button class="arrow-btn" id="nextLevel">&gt;</button>
+      </div>
+      <button class="select-level-btn" id="startLevel">START</button>
       <button class="back-btn" id="backToMain">Back</button>
     </div>
     

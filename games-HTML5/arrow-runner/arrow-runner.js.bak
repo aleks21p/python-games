@@ -276,6 +276,277 @@
       
       addGoal(levelWidth - 200);
     }
+      
+      // Section 2: Mid-lower corridor - HARDER
+      addSpikeRowFloor(1600, 3);
+      addSpikeRowCeil(1640, 2);
+      addBigSpikeFloor(1700);
+      addBigSpikeCeil(1720);
+      addSpikeRowFloor(1850, 2);
+      addSpikeRowCeil(1890, 3);
+      addSpikeRowFloor(2000, 3);
+      addBigSpikeFloor(2100);
+      addSpikeRowCeil(2120, 2);
+      addSpikeRowFloor(2250, 2);
+      addSpikeRowCeil(2280, 3);
+      addSpikeRowFloor(2450, 3);
+      addBigSpikeCeil(2470);
+      addBlock(1650, H*0.65);
+      addBlock(1800, H*0.68);
+      addBlock(1950, H*0.63);
+      addBlock(2050, H*0.67);
+      addBlock(2200, H*0.65);
+      addBlock(2350, H*0.66);
+      addBlinkingSpike(1750, 'floor', 1.8);
+      addBlinkingSpike(2150, 'floor', 2.0);
+      addLaser(1900, H*0.35, H*0.25, 100, true);
+      addMovingWall(2300, H*0.15, 35);
+      
+      // Section 3: Lower corridor - HARDER
+      addSpikeRowCeil(2700, 2);
+      addSpikeRowFloor(2720, 3);
+      addBigSpikeCeil(2780);
+      addBigSpikeFloor(2800);
+      addSpikeRowCeil(2920, 3);
+      addSpikeRowFloor(2950, 2);
+      addSpikeRowCeil(3100, 2);
+      addSpikeRowFloor(3130, 3);
+      addBigSpikeCeil(3180);
+      addSpikeRowCeil(3300, 2);
+      addBigSpikeFloor(3320);
+      addBlock(2750, H*0.75);
+      addBlock(2900, H*0.73);
+      addBlock(3000, H*0.76);
+      addBlock(3150, H*0.74);
+      addBlock(3250, H*0.77);
+      addBlock(3350, H*0.75);
+      addBlinkingSpike(2850, 'ceiling', 2.1);
+      addBlinkingSpike(3200, 'floor', 2.0);
+      addMovingWall(3050, H*0.5, 40);
+      
+      // Section 4: Mid corridor - HARDER
+      addSpikeRowFloor(3500, 3);
+      addSpikeRowCeil(3530, 2);
+      addBigSpikeFloor(3600);
+      addBigSpikeCeil(3620);
+      addSpikeRowFloor(3720, 2);
+      addSpikeRowCeil(3750, 3);
+      addSpikeRowFloor(3900, 3);
+      addSpikeRowCeil(3930, 2);
+      addBigSpikeFloor(4000);
+      addBigSpikeCeil(4020);
+      addSpikeRowFloor(4120, 2);
+      addSpikeRowCeil(4150, 3);
+      addBlock(3550, H*0.55);
+      addBlock(3680, H*0.53);
+      addBlock(3800, H*0.57);
+      addBlock(3950, H*0.54);
+      addBlock(4070, H*0.56);
+      addBlock(4150, H*0.55);
+      addDashPad(3650, 'floor');
+      addBlinkingSpike(3850, 'floor', 1.9);
+      addMovingWall(3850, H*0.15, 40);
+      
+      // Section 5: Upper-mid corridor - HARDER
+      addSpikeRowCeil(4300, 3);
+      addSpikeRowFloor(4330, 2);
+      addBigSpikeCeil(4400);
+      addBigSpikeFloor(4420);
+      addSpikeRowCeil(4550, 4);
+      addSpikeRowFloor(4590, 3);
+      addBigSpikeCeil(4720);
+      addSpikeRowFloor(4750, 2);
+      addSpikeRowCeil(4850, 3);
+      addSpikeRowFloor(4880, 3);
+      addSpikeRowCeil(5050, 4);
+      addBigSpikeCeil(5220);
+      addBigSpikeFloor(5240);
+      addBlock(4350, H*0.35);
+      addBlock(4480, H*0.33);
+      addBlock(4620, H*0.37);
+      addBlock(4760, H*0.34);
+      addBlock(4900, H*0.36);
+      addBlock(5050, H*0.35);
+      addBlock(5180, H*0.38);
+      addLaser(4500, H*0.55, H*0.2, 120, true);
+      addBlinkingSpike(4950, 'ceiling', 2.0);
+      addMovingWall(4650, H*0.65, 45);
+      
+      // Section 6: Mid-lower corridor - HARDER
+      addSpikeRowFloor(5400, 4);
+      addSpikeRowCeil(5440, 3);
+      addBigSpikeFloor(5530);
+      addBigSpikeCeil(5550);
+      addSpikeRowFloor(5650, 3);
+      addSpikeRowCeil(5680, 2);
+      addSpikeRowFloor(5850, 4);
+      addSpikeRowCeil(5890, 3);
+      addBigSpikeFloor(5980);
+      addBigSpikeCeil(6000);
+      addBlock(5450, H*0.6);
+      addBlock(5580, H*0.62);
+      addBlock(5710, H*0.58);
+      addBlock(5820, H*0.61);
+      addBlock(5950, H*0.59);
+      addBlock(6050, H*0.6);
+      addMovingWall(5700, H*0.35, 50);
+      addMovingWall(5900, H*0.15, 45);
+      addBlinkingSpike(5750, 'floor', 1.7);
+      
+      // Section 7: Lower corridor - HARDER
+      addSpikeRowCeil(6100, 3);
+      addSpikeRowFloor(6130, 2);
+      addBigSpikeCeil(6200);
+      addBigSpikeFloor(6220);
+      addSpikeRowCeil(6320, 2);
+      addSpikeRowFloor(6350, 3);
+      addSpikeRowCeil(6500, 3);
+      addSpikeRowFloor(6540, 2);
+      addBigSpikeCeil(6610);
+      addBigSpikeFloor(6630);
+      addSpikeRowCeil(6730, 2);
+      addSpikeRowFloor(6760, 3);
+      addSpikeRowCeil(6900, 3);
+      addSpikeRowFloor(6930, 2);
+      addBlock(6150, H*0.72);
+      addBlock(6270, H*0.74);
+      addBlock(6390, H*0.71);
+      addBlock(6520, H*0.73);
+      addBlock(6650, H*0.75);
+      addBlock(6770, H*0.72);
+      addBlock(6880, H*0.74);
+      addLaser(6400, H*0.4, H*0.25, 140, true);
+      addBlinkingSpike(6550, 'ceiling', 1.8);
+      addBlinkingSpike(6800, 'floor', 2.0);
+      
+      // Section 8: Mid corridor - HARDER
+      addSpikeRowFloor(7050, 4);
+      addSpikeRowCeil(7090, 3);
+      addBigSpikeFloor(7190);
+      addBigSpikeCeil(7210);
+      addSpikeRowFloor(7310, 3);
+      addSpikeRowCeil(7350, 2);
+      addSpikeRowFloor(7520, 4);
+      addSpikeRowCeil(7560, 3);
+      addBigSpikeFloor(7660);
+      addBigSpikeCeil(7680);
+      addBlock(7100, H*0.52);
+      addBlock(7230, H*0.54);
+      addBlock(7360, H*0.51);
+      addBlock(7480, H*0.53);
+      addBlock(7610, H*0.52);
+      addBlock(7720, H*0.55);
+      addMovingWall(7300, H*0.28, 45);
+      addMovingWall(7550, H*0.72, 40);
+      addDashPad(7450, 'floor');
+      
+      // Section 9: Upper corridor - HARDER
+      addSpikeRowCeil(7800, 4);
+      addSpikeRowFloor(7840, 3);
+      addBigSpikeCeil(7940);
+      addBigSpikeFloor(7960);
+      addSpikeRowCeil(8060, 5);
+      addSpikeRowFloor(8100, 2);
+      addBigSpikeCeil(8230);
+      addBigSpikeFloor(8250);
+      addSpikeRowCeil(8350, 4);
+      addSpikeRowFloor(8390, 3);
+      addBigSpikeCeil(8490);
+      addBigSpikeFloor(8510);
+      addSpikeRowCeil(8600, 3);
+      addSpikeRowFloor(8640, 2);
+      addBlock(7850, H*0.28);
+      addBlock(7980, H*0.26);
+      addBlock(8110, H*0.29);
+      addBlock(8240, H*0.27);
+      addBlock(8380, H*0.28);
+      addBlock(8520, H*0.3);
+      addBlock(8650, H*0.28);
+      addBlinkingSpike(8000, 'ceiling', 2.2);
+      addBlinkingSpike(8400, 'ceiling', 1.9);
+      addLaser(8200, H*0.5, H*0.2, 130, true);
+      addMovingWall(8450, H*0.65, 50);
+      
+      // Section 10: Mid-upper corridor - HARDER
+      addSpikeRowFloor(8750, 3);
+      addSpikeRowCeil(8790, 2);
+      addBigSpikeFloor(8850);
+      addBigSpikeCeil(8870);
+      addSpikeRowFloor(8970, 4);
+      addSpikeRowCeil(9010, 3);
+      addBigSpikeFloor(9110);
+      addBigSpikeCeil(9130);
+      addSpikeRowFloor(9230, 3);
+      addSpikeRowCeil(9270, 2);
+      addBlock(8800, H*0.62);
+      addBlock(8920, H*0.64);
+      addBlock(9040, H*0.61);
+      addBlock(9160, H*0.63);
+      addBlock(9280, H*0.62);
+      addMovingWall(9000, H*0.38, 55);
+      addMovingWall(9200, H*0.15, 45);
+      addBlinkingSpike(9050, 'floor', 2.0);
+      
+      // Section 11: Upper corridor - HARDER
+      addSpikeRowCeil(9350, 3);
+      addSpikeRowFloor(9390, 2);
+      addBigSpikeCeil(9450);
+      addBigSpikeFloor(9470);
+      addSpikeRowCeil(9570, 4);
+      addSpikeRowFloor(9610, 3);
+      addBigSpikeCeil(9710);
+      addBigSpikeFloor(9730);
+      addSpikeRowCeil(9830, 3);
+      addSpikeRowFloor(9870, 2);
+      addBlock(9400, H*0.3);
+      addBlock(9520, H*0.32);
+      addBlock(9640, H*0.29);
+      addBlock(9760, H*0.31);
+      addBlock(9880, H*0.3);
+      addLaser(9600, H*0.55, H*0.22, 150, true);
+      addBlinkingSpike(9750, 'ceiling', 1.8);
+      addMovingWall(9550, H*0.68, 50);
+      
+      // Section 12: Mid corridor - HARDER
+      addSpikeRowFloor(10050, 4);
+      addSpikeRowCeil(10090, 3);
+      addBigSpikeFloor(10190);
+      addBigSpikeCeil(10210);
+      addSpikeRowFloor(10310, 3);
+      addSpikeRowCeil(10350, 2);
+      addSpikeRowFloor(10500, 4);
+      addSpikeRowCeil(10540, 3);
+      addBigSpikeFloor(10640);
+      addBigSpikeCeil(10660);
+      addBlock(10100, H*0.58);
+      addBlock(10230, H*0.56);
+      addBlock(10360, H*0.59);
+      addBlock(10480, H*0.57);
+      addBlock(10610, H*0.58);
+      addBlock(10720, H*0.6);
+      addMovingWall(10400, H*0.32, 60);
+      addMovingWall(10550, H*0.68, 50);
+      addDashPad(10250, 'floor');
+      
+      // Section 13: Final stretch - HARDER
+      addSpikeRowCeil(10800, 5);
+      addBigSpikeCeil(10970);
+      addSpikeRowCeil(11090, 4);
+      addSpikeRowFloor(10850, 3);
+      addBigSpikeFloor(10970);
+      addSpikeRowFloor(11120, 3);
+      addBlock(10850, H*0.35);
+      addBlock(10970, H*0.65);
+      addBlock(11090, H*0.37);
+      addBlock(11200, H*0.33);
+      addBlock(11320, H*0.35);
+      addLaser(11000, H*0.5, H*0.3, 160, true);
+      addBlinkingSpike(11150, 'ceiling', 2.5);
+      addBlinkingSpike(11150, 'floor', 2.5);
+      addMovingWall(11250, H*0.35, 70);
+      
+      addGoal(levelWidth - 200);
+    }
     // LEVEL 2 – BITE CORRIDOR (340 px/s) - NO CAMPING
     else if(n===2){
       player.vx = 340;
