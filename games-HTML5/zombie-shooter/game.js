@@ -1750,41 +1750,27 @@ class Game {
         document.addEventListener('keydown', (e) => {
             this.keys[e.key] = true;
             
-            // Cheat codes: T+number (press T then number key)
-            // Track T key state
+            // Track lowercase keys as well for cheat codes
             if (e.key === 't' || e.key === 'T') {
                 this.keys['t'] = true;
             }
-            
-            // Activate cheat codes when pressing number keys while T is held
             if (e.key === '1' || e.key === '!') {
-                this.cheatActive = true;
-                this.cheatStartTime = Date.now();
+                this.keys['1'] = true;
             }
-            
             if (e.key === '2' || e.key === '@') {
-                this.cheat2Active = true;
-                this.cheat2StartTime = Date.now();
+                this.keys['2'] = true;
             }
-            
             if (e.key === '3' || e.key === '#') {
-                this.cheat3Active = true;
-                this.cheat3StartTime = Date.now();
+                this.keys['3'] = true;
             }
-            
             if (e.key === '4' || e.key === '$') {
-                this.cheat4Active = true;
-                this.cheat4StartTime = Date.now();
+                this.keys['4'] = true;
             }
-            
             if (e.key === '5' || e.key === '%') {
-                this.cheat5Active = true;
-                this.cheat5StartTime = Date.now();
+                this.keys['5'] = true;
             }
-            
             if (e.key === '9' || e.key === '(') {
-                this.cheat9Active = true;
-                this.cheat9StartTime = Date.now();
+                this.keys['9'] = true;
             }
 
             if (!this.inMenu && e.key === 'p' || e.key === 'P') {
@@ -1823,6 +1809,41 @@ class Game {
 
         document.addEventListener('keyup', (e) => {
             this.keys[e.key] = false;
+            
+            // Reset cheat states when keys are released
+            if (e.key === 't' || e.key === 'T') {
+                this.keys['t'] = false;
+                this.cheatActive = false;
+                this.cheat2Active = false;
+                this.cheat3Active = false;
+                this.cheat4Active = false;
+                this.cheat5Active = false;
+                this.cheat9Active = false;
+            }
+            if (e.key === '1' || e.key === '!') {
+                this.keys['1'] = false;
+                this.cheatActive = false;
+            }
+            if (e.key === '2' || e.key === '@') {
+                this.keys['2'] = false;
+                this.cheat2Active = false;
+            }
+            if (e.key === '3' || e.key === '#') {
+                this.keys['3'] = false;
+                this.cheat3Active = false;
+            }
+            if (e.key === '4' || e.key === '$') {
+                this.keys['4'] = false;
+                this.cheat4Active = false;
+            }
+            if (e.key === '5' || e.key === '%') {
+                this.keys['5'] = false;
+                this.cheat5Active = false;
+            }
+            if (e.key === '9' || e.key === '(') {
+                this.keys['9'] = false;
+                this.cheat9Active = false;
+            }
         });
 
         // Mouse events
@@ -3569,8 +3590,13 @@ class Game {
                 this.orbsCollected = 0;
                 this.orbsNeeded = this.level * 10;
                 this.player.updateShootSpeed(this.level);
+                this.zombies = [];
+                this.bullets = [];
+                this.orbs = [];
                 this.cheat5Active = false;
             }
+        } else if (this.cheat5Active && !this.keys['5']) {
+            this.cheat5Active = false;
         }
 
         // T + 1 cheat code (skip to level 15)
@@ -3584,8 +3610,13 @@ class Game {
                 this.orbsCollected = 0;
                 this.orbsNeeded = 150;
                 this.player.updateShootSpeed(this.level);
+                this.zombies = [];
+                this.bullets = [];
+                this.orbs = [];
                 this.cheatActive = false;
             }
+        } else if (this.cheatActive && !this.keys['1']) {
+            this.cheatActive = false;
         }
 
         // T + 2 cheat code (skip to level 25/final boss)
@@ -3599,10 +3630,13 @@ class Game {
                 this.orbsCollected = 0;
                 this.orbsNeeded = 250;
                 this.player.updateShootSpeed(this.level);
-                // Clear all enemies
                 this.zombies = [];
+                this.bullets = [];
+                this.orbs = [];
                 this.cheat2Active = false;
             }
+        } else if (this.cheat2Active && !this.keys['2']) {
+            this.cheat2Active = false;
         }
 
         // T + 3 cheat code (set coins to 100 quintillion)
@@ -3615,6 +3649,8 @@ class Game {
                 this.saveCoins();
                 this.cheat3Active = false;
             }
+        } else if (this.cheat3Active && !this.keys['3']) {
+            this.cheat3Active = false;
         }
 
         // T + 4 cheat code (clear all progress)
@@ -3655,6 +3691,25 @@ class Game {
                 this.reset();
                 this.cheat4Active = false;
             }
+        } else if (this.cheat4Active && !this.keys['4']) {
+            this.cheat4Active = false;
+        }
+
+        // T + 9 cheat code (unlock dragon pet)
+        if (this.keys['t'] && this.keys['9']) {
+            if (!this.cheat9Active) {
+                this.cheat9StartTime = currentTime;
+                this.cheat9Active = true;
+            } else if (currentTime - this.cheat9StartTime >= 5000) { // 5 seconds for mythic pet
+                if (!this.ownedPets.includes('dragon')) {
+                    this.ownedPets.push('dragon');
+                    this.saveOwnedPets();
+                    console.log('Secret unlocked: Mythic Dragon pet obtained!');
+                }
+                this.cheat9Active = false;
+            }
+        } else if (this.cheat9Active && !this.keys['9']) {
+            this.cheat9Active = false;
         }
     }
 
@@ -3950,104 +4005,24 @@ class Game {
             if (this.cheatActive) {
                 progress = (currentTime - this.cheatStartTime) / 2000;
                 text = `Skip to Level 15: ${Math.min(100, progress * 100).toFixed(0)}%`;
-                // Complete T+1 cheat: Skip to Level 15
-                if (progress >= 1) {
-                    this.level = 15;
-                    this.orbsCollected = 0;
-                    this.orbsNeeded = this.level * 10;
-                    this.player.updateShootSpeed(this.level);
-                    this.cheatActive = false;
-                    console.log('Cheat T+1 activated: Skipped to Level 15');
-                }
             } else if (this.cheat2Active) {
                 progress = (currentTime - this.cheat2StartTime) / 2000;
-                text = `Skip to Final Boss: ${Math.min(100, progress * 100).toFixed(0)}%`;
-                // Complete T+2 cheat: Skip to Final Boss (Level 50)
-                if (progress >= 1) {
-                    this.level = 50;
-                    this.orbsCollected = 0;
-                    this.orbsNeeded = this.level * 10;
-                    this.player.updateShootSpeed(this.level);
-                    this.cheat2Active = false;
-                    console.log('Cheat T+2 activated: Skipped to Final Boss Level 50');
-                }
+                text = `Skip to Level 25: ${Math.min(100, progress * 100).toFixed(0)}%`;
             } else if (this.cheat3Active) {
                 progress = (currentTime - this.cheat3StartTime) / 2000;
                 text = `Set Coins to 100 QUINTILLION: ${Math.min(100, progress * 100).toFixed(0)}%`;
-                // Complete T+3 cheat: Give 100 quintillion coins
-                if (progress >= 1) {
-                    this.coins = 100000000000000000000; // 100 quintillion
-                    this.saveCoins();
-                    this.cheat3Active = false;
-                    console.log('Cheat T+3 activated: Given 100 quintillion coins');
-                }
             } else if (this.cheat4Active) {
                 progress = (currentTime - this.cheat4StartTime) / 2000;
                 text = `Clear All Progress: ${Math.min(100, progress * 100).toFixed(0)}%`;
-                // Complete T+4 cheat: Reset all progress
-                if (progress >= 1) {
-                    // Clear all progress
-                    this.coins = 0;
-                    this.level = 1;
-                    this.orbsCollected = 0;
-                    this.orbsNeeded = 10;
-                    this.ownedSkins = [];
-                    this.activeSkin = null;
-                    this.ownedPets = [];
-                    this.activePet = null;
-                    this.gunLevel = 1;
-                    this.healthLevel = 1;
-                    this.speedLevel = 1;
-                    this.player.updateShootSpeed(this.level);
-                    // Save all the reset values
-                    this.saveCoins();
-                    this.saveOwnedSkins();
-                    this.saveActiveSkin();
-                    this.saveOwnedPets();
-                    this.saveActivePet();
-                    this.saveUpgrades();
-                    this.cheat4Active = false;
-                    console.log('Cheat T+4 activated: All progress reset');
-                }
+            } else if (this.cheat5Active) {
+                progress = (currentTime - this.cheat5StartTime) / 3000;
+                text = `Skip to Level 35: ${Math.min(100, progress * 100).toFixed(0)}%`;
+            } else if (this.cheat9Active) {
+                progress = (currentTime - this.cheat9StartTime) / 5000;
+                text = `Unlocking Mythic Dragon: ${Math.min(100, progress * 100).toFixed(0)}%`;
             }
 
-            // T+5 cheat progress
-            if (this.cheat5Active) {
-                const now = Date.now();
-                const cheat5Progress = (now - this.cheat5StartTime) / 3000; // 3 seconds
-                if (cheat5Progress >= 1) {
-                    this.level = 35;
-                    this.orbsCollected = 0;
-                    this.orbsNeeded = this.level * 10;
-                    this.player.updateShootSpeed(this.level);
-                    this.cheat5Active = false;
-                }
-                // If no other text is set, show this progress
-                if (!text) {
-                    progress = cheat5Progress;
-                    text = `Skip to Level 35: ${Math.min(100, progress * 100).toFixed(0)}%`;
-                }
-            }
-
-            // T+9 cheat progress - unlock dragon pet
-            if (this.cheat9Active) {
-                const now = Date.now();
-                const cheat9Progress = (now - this.cheat9StartTime) / 5000; // 5 seconds for mythic pet
-                if (cheat9Progress >= 1) {
-                    if (!this.ownedPets.includes('dragon')) {
-                        this.ownedPets.push('dragon');
-                        this.saveOwnedPets();
-                        console.log('Secret unlocked: Mythic Dragon pet obtained!');
-                    }
-                    this.cheat9Active = false;
-                }
-                // If no other text is set, show this progress
-                if (!text) {
-                    progress = cheat9Progress;
-                    text = `Unlocking Mythic Dragon: ${Math.min(100, progress * 100).toFixed(0)}%`;
-                }
-            }
-
+            // Draw progress bar
             ctx.font = '32px Arial';
             ctx.fillStyle = YELLOW;
             ctx.fillText(text, SCREEN_WIDTH/2 - 120, 100);
@@ -4055,8 +4030,8 @@ class Game {
     }
 
     drawMenu() {
-        // Clear canvas with gray background
-        ctx.fillStyle = '#808080';  // Gray background
+        // Clear canvas with green-gray background
+        ctx.fillStyle = '#6b7d6b';  // More green but still gray background
         ctx.fillRect(0, 0, SCREEN_WIDTH, SCREEN_HEIGHT);
 
         // Draw coins in top-right corner
@@ -4165,19 +4140,36 @@ class Game {
             ctx.textAlign = 'start';
         } catch (e) {}
 
-    // Draw neon-styled title using Orbitron-like look
+    // Draw bright green title with shine effect
     ctx.save();
-    ctx.fillStyle = '#ffffff';
     ctx.font = 'bold 64px "Orbitron", Arial, sans-serif';
     ctx.textAlign = 'center';
     const title = this.translations[this.selectedLanguage].gameTitle;
     const titleWidth = ctx.measureText(title).width;
-    // neon shadow layers
-    ctx.shadowColor = '#4ecdc4';
-    ctx.shadowBlur = 30;
-    ctx.fillStyle = 'white';
-    ctx.fillText(title, SCREEN_WIDTH/2, SCREEN_HEIGHT / 4);
+    const titleX = SCREEN_WIDTH/2;
+    const titleY = SCREEN_HEIGHT / 4;
+    
+    // Outer glow (green shadow)
+    ctx.shadowColor = '#00ff00';
+    ctx.shadowBlur = 40;
+    ctx.fillStyle = '#7fff00';
+    ctx.fillText(title, titleX, titleY);
+    
+    // Main bright green text
+    ctx.shadowBlur = 20;
+    ctx.shadowColor = '#7fff00';
+    ctx.fillStyle = '#00ff00';
+    ctx.fillText(title, titleX, titleY);
+    
+    // Inner shine/highlight (lighter green on top half)
     ctx.shadowBlur = 0;
+    const shineGrad = ctx.createLinearGradient(titleX - titleWidth/2, titleY - 50, titleX + titleWidth/2, titleY);
+    shineGrad.addColorStop(0, 'rgba(200, 255, 200, 0.8)');
+    shineGrad.addColorStop(0.5, 'rgba(144, 238, 144, 0.4)');
+    shineGrad.addColorStop(1, 'rgba(0, 255, 0, 0)');
+    ctx.fillStyle = shineGrad;
+    ctx.fillText(title, titleX, titleY);
+    
     ctx.restore();
 
         // Draw Start button - rounded gradient
@@ -4210,7 +4202,7 @@ class Game {
             ctx.textAlign = 'center';
             ctx.fillText(text, btn.x + btn.width/2, btn.y + 36);
             ctx.textAlign = 'left';
-        })(startBtn, ['#ff6b6b', '#4ecdc4'], this.translations[this.selectedLanguage].start);
+        })(startBtn, ['#90ee90', '#228b22'], this.translations[this.selectedLanguage].start);
 
         // Draw Options button - rounded gradient
         const optionsBtn = this.menuButtons.options;
@@ -4240,15 +4232,15 @@ class Game {
             ctx.textAlign = 'center';
             ctx.fillText(text, btn.x + btn.width/2, btn.y + 36);
             ctx.textAlign = 'left';
-        })(optionsBtn, ['#ff7a7a', '#d94a4a'], this.translations[this.selectedLanguage].options);
+        })(optionsBtn, ['#4caf50', '#2e7d32'], this.translations[this.selectedLanguage].options);
 
         // Draw Shop button (gold gradient)
         const shopBtn = this.menuButtons.shop;
         (function(btn){
             const r = 14;
             const grad = ctx.createLinearGradient(btn.x, btn.y, btn.x + btn.width, btn.y + btn.height);
-            grad.addColorStop(0, '#ffd54a');
-            grad.addColorStop(1, '#ffb74d');
+            grad.addColorStop(0, '#2d5016');
+            grad.addColorStop(1, '#1a3409');
             ctx.fillStyle = grad;
             ctx.beginPath();
             ctx.moveTo(btn.x + r, btn.y);
