@@ -1,0 +1,110 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Geometry Arrow — Minimal Precision Runner</title>
+  <style>
+    *{margin:0;padding:0;box-sizing:border-box}
+    html,body{height:100%;overflow:hidden}
+    body{background:#0E0E11;color:#fff;font-family:'Montserrat',sans-serif;display:flex;align-items:center;justify-content:center}
+    #game{width:100%;max-width:900px;height:600px;background:#080A12;position:relative;overflow:hidden}
+    canvas{display:block;width:100%;height:100%;position:absolute;top:0;left:0;z-index:1}
+    
+    /* Flash overlay for death */
+    #flash{position:absolute;left:0;top:0;right:0;bottom:0;background:#fff;opacity:0;pointer-events:none;z-index:100}
+    
+    /* Menu Container */
+    .menu{position:absolute;top:0;left:0;width:100%;height:100%;z-index:10;display:none;opacity:0;transition:opacity 0.3s ease}
+    .menu.active{display:flex;opacity:1}
+    
+    /* MAIN MENU */
+    #mainMenu{flex-direction:column;align-items:center;justify-content:center}
+    .main-title{position:absolute;top:20%;font-size:clamp(2.5rem,8vw,4.5rem);font-weight:700;letter-spacing:0.15em;color:#FFFFFF;text-transform:uppercase}
+    .start-arrow{position:absolute;top:55%;left:50%;transform:translate(-50%,-50%);cursor:pointer;transition:transform 0.15s ease;animation:pulse 1.5s ease-in-out infinite}
+    .start-arrow svg{filter:drop-shadow(0 0 12px rgba(0,245,255,0.6))}
+    .start-arrow:hover{transform:translate(-50%,-50%) scale(1.05)}
+    .start-arrow:active{transform:translate(-50%,-50%) scale(0.95)}
+    @keyframes pulse{0%,100%{transform:translate(-50%,-50%) scale(1)}50%{transform:translate(-50%,-50%) scale(1.05)}}
+    
+    /* LEVEL SELECT */
+    #levelSelect{flex-direction:column;align-items:center;justify-content:center;transform:translateY(150%);transition:transform 0.35s cubic-bezier(0.22,1,0.36,1)}
+    #levelSelect.show{transform:translateY(0)}
+    .level-title{position:absolute;top:15%;font-size:clamp(1.8rem,5vw,3rem);font-weight:700;letter-spacing:0.1em;color:#FFFFFF;text-transform:uppercase}
+    .level-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:clamp(20px,4vw,40px);padding:20px}
+    .level-button{width:clamp(120px,18vw,180px);height:clamp(120px,18vw,180px);background:#C8C8C8;border:3px solid #888;border-radius:8px;font-size:clamp(3rem,8vw,5rem);font-weight:700;color:#000;cursor:pointer;transition:all 0.15s ease;display:flex;align-items:center;justify-content:center}
+    .level-button:hover{transform:scale(1.05);background:#E0E0E0}
+    .level-button:active{transform:scale(0.92)}
+    .level-button.locked{opacity:0.4;cursor:not-allowed;position:relative}
+    .level-button.locked::after{content:'🔒';position:absolute;bottom:10px;right:10px;font-size:1.5rem}
+    .back-btn{position:absolute;bottom:8%;background:#555;color:#fff;border:2px solid #888;padding:12px 32px;font-size:1.2rem;font-weight:600;border-radius:6px;cursor:pointer;text-transform:uppercase;transition:all 0.15s ease}
+    .back-btn:hover{background:#666;transform:scale(1.05)}
+    
+    /* PAUSE MENU */
+    #pauseMenu{flex-direction:column;align-items:center;justify-content:center;background:rgba(0,0,0,0.7)}
+    .pause-title{font-size:clamp(2rem,6vw,3.5rem);font-weight:700;margin-bottom:40px;letter-spacing:0.1em;text-transform:uppercase}
+    .pause-buttons{display:flex;flex-direction:column;gap:16px}
+    .pause-btn{background:#333;color:#fff;border:2px solid #666;padding:14px 48px;font-size:1.3rem;font-weight:600;border-radius:6px;cursor:pointer;text-transform:uppercase;transition:all 0.15s ease;min-width:220px;text-align:center}
+    .pause-btn:hover{background:#444;transform:scale(1.05)}
+    .pause-btn:active{transform:scale(0.95)}
+    
+    /* HUD (in-game) */
+    .hud{position:absolute;top:12px;left:12px;z-index:5;display:none}
+    .hud.active{display:block}
+    .pause-icon{background:rgba(15,23,36,0.8);color:#9ae6b4;border:1px solid rgba(255,255,255,0.1);padding:8px 12px;border-radius:6px;cursor:pointer;font-size:1rem;font-weight:600}
+    
+    /* Restart Button (appears on death) */
+    #restartOverlay{position:absolute;top:0;left:0;width:100%;height:100%;z-index:50;display:none;opacity:0;background:rgba(0,0,0,0.6);flex-direction:column;align-items:center;justify-content:center;transition:opacity 0.3s ease}
+    #restartOverlay.active{display:flex;opacity:1}
+    .restart-title{font-size:clamp(2rem,6vw,3rem);font-weight:700;margin-bottom:30px;letter-spacing:0.1em;text-transform:uppercase;color:#ff5343}
+    .restart-btn{background:#00F5FF;color:#000;border:3px solid #00a8b8;padding:16px 52px;font-size:1.5rem;font-weight:700;border-radius:8px;cursor:pointer;text-transform:uppercase;transition:all 0.15s ease;box-shadow:0 0 20px rgba(0,245,255,0.4)}
+    .restart-btn:hover{background:#00d4e0;transform:scale(1.08)}
+    .restart-btn:active{transform:scale(0.95)}
+  </style>
+</head>
+<body>
+  <div id="game">
+    <canvas id="c"></canvas>
+    <div id="flash"></div>
+    
+    <!-- MAIN MENU -->
+    <div id="mainMenu" class="menu active">
+      <div class="main-title">GEOMETRY ARROW</div>
+      <div class="start-arrow" id="startArrow">
+        <svg width="160" height="200" viewBox="0 0 160 200" xmlns="http://www.w3.org/2000/svg">
+          <polygon points="160,100 0,0 0,200" fill="#00F5FF" stroke="#000" stroke-width="2"/>
+        </svg>
+      </div>
+    </div>
+    
+    <!-- LEVEL SELECT -->
+    <div id="levelSelect" class="menu">
+      <div class="level-title">SELECT LEVEL</div>
+      <div class="level-grid" id="levelGrid"></div>
+      <button class="back-btn" id="backToMain">Back</button>
+    </div>
+    
+    <!-- PAUSE MENU -->
+    <div id="pauseMenu" class="menu">
+      <div class="pause-title">— PAUSED —</div>
+      <div class="pause-buttons">
+        <button class="pause-btn" id="resumeBtn">Resume</button>
+        <button class="pause-btn" id="restartBtn">Restart</button>
+        <button class="pause-btn" id="exitBtn">Exit to Menu</button>
+      </div>
+    </div>
+    
+    <!-- HUD (in-game) -->
+    <div class="hud" id="hud">
+      <button class="pause-icon" id="pauseIcon">⏸ Pause</button>
+    </div>
+    
+    <!-- Restart Overlay (appears on death) -->
+    <div id="restartOverlay">
+      <div class="restart-title">YOU DIED</div>
+      <button class="restart-btn" id="restartDeath">Restart</button>
+    </div>
+  </div>
+  <script src="arrow-runner.js"></script>
+</body>
+</html>
