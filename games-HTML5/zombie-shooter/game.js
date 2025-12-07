@@ -3593,6 +3593,16 @@ class Game {
                 this.zombies = [];
                 this.bullets = [];
                 this.orbs = [];
+                // Reset all boss flags - all previous bosses defeated, level 35 is regular gameplay
+                this.bossSpawned = true;
+                this.bossDefeated = true;
+                this.boss = null;
+                this.finalBossSpawned = true;
+                this.finalBossDefeated = true;
+                this.finalBoss = null;
+                this.superBossSpawned = false;
+                this.superBossDefeated = false;
+                this.superBoss = null;
                 this.cheat5Active = false;
             }
         } else if (this.cheat5Active && !this.keys['5']) {
@@ -3613,6 +3623,10 @@ class Game {
                 this.zombies = [];
                 this.bullets = [];
                 this.orbs = [];
+                // Reset boss flags so boss can spawn
+                this.bossSpawned = false;
+                this.bossDefeated = false;
+                this.boss = null;
                 this.cheatActive = false;
             }
         } else if (this.cheatActive && !this.keys['1']) {
@@ -3633,6 +3647,13 @@ class Game {
                 this.zombies = [];
                 this.bullets = [];
                 this.orbs = [];
+                // Reset boss flags - mark first boss as defeated, allow final boss to spawn
+                this.bossSpawned = true;
+                this.bossDefeated = true;
+                this.boss = null;
+                this.finalBossSpawned = false;
+                this.finalBossDefeated = false;
+                this.finalBoss = null;
                 this.cheat2Active = false;
             }
         } else if (this.cheat2Active && !this.keys['2']) {
