@@ -159,25 +159,39 @@
       addSpikeRowFloor(900, 4);
       addSpikeRowCeil(1300, 2);
       
+      // Force movement - middle spikes
+      addBlock(1200, H*0.45, '#FF1744');
+      addBlock(1250, H*0.52, '#FF1744');
+      
       // First dash pad
       addDashPad(1600, 'floor');
+      
+      // Middle blocking spikes - force up/down
+      addSpikeRowFloor(1750, 3);
+      addBlock(1850, H*0.5, '#FF1744');
+      addSpikeRowCeil(1950, 3);
       
       // Rhythm pattern: 3 spike groups
       for(let i=0; i<3; i++){
         addSpikeRowCeil(2000 + i*400, 2);
         addSpikeRowFloor(2100 + i*400, 2);
+        // Middle obstacles
+        addBlock(2150 + i*400, H*0.48, '#FF1744');
       }
       
-      // Floating blocks
+      // Floating blocks with middle forced movement
       addBlock(2800, H*0.4);
+      addBlock(2900, H*0.48, '#FF1744');
       addBlock(3000, H*0.6);
       
-      // Blinking section
+      // Blinking section with middle block
       addBlinkingSpike(3300, 'floor', 1.5);
+      addBlock(3350, H*0.5, '#FF1744');
       addBlinkingSpike(3350, 'ceiling', 1.5);
       
-      // Final dash to goal
+      // Final dash to goal - force movement
       addDashPad(3700, 'floor');
+      addBlock(3800, H*0.45, '#FF1744');
       addSpikeRowFloor(3900, 5);
       
       addGoal(levelWidth - 200);
@@ -187,34 +201,45 @@
       player.vx = 340;
       levelWidth = 5000;
       
-      // Alternating spike waves
+      // Alternating spike waves with middle blocks
       for(let i=0;i<8;i++){
         if(i%2===0) addSpikeRowCeil(700+i*spikeBase*4, 2);
         else addSpikeRowFloor(700+i*spikeBase*4, 2);
+        // Force vertical movement
+        if(i%3===0) addBlock(720+i*spikeBase*4, H*0.5, '#FF1744');
       }
       
-      // Moving laser section
+      // Moving laser section with middle obstacles
       addLaser(1400, H*0.3, H*0.4, 150, true);
+      addBlock(1450, H*0.48, '#FF1744');
       
-      // Block maze
+      // Block maze - now forces movement
       addBlock(1800, H*0.25);
+      addBlock(1900, H*0.5, '#FF1744');
       addBlock(2000, H*0.55);
+      addBlock(2100, H*0.48, '#FF1744');
       addBlock(2200, H*0.35);
+      addBlock(2300, H*0.52, '#FF1744');
       addBlock(2400, H*0.65);
       
       // Dash pad boost
       addDashPad(2700, 'floor');
+      addBlock(2750, H*0.5, '#FF1744');
       
-      // Blinking rhythm section
+      // Blinking rhythm section with middle hazards
       for(let i=0; i<4; i++){
         addBlinkingSpike(3000 + i*150, i%2===0?'ceiling':'floor', 2.0);
+        addBlock(3050 + i*150, H*0.5, '#FF1744');
       }
       
-      // Moving walls
+      // Moving walls with middle spikes
       addMovingWall(3600, H/2-movingWallSize/2, 70);
+      addSpikeRowCeil(3700, 2);
+      addSpikeRowFloor(3750, 2);
       
-      // Final spike gauntlet
+      // Final spike gauntlet with middle blocks
       addSpikeRowCeil(4000, 6);
+      addBlock(4100, H*0.5, '#FF1744');
       addSpikeRowFloor(4100, 6);
       
       addGoal(levelWidth - 200);
@@ -224,35 +249,47 @@
       player.vx = 380;
       levelWidth = 5500;
       
-      // Opening blocks
+      // Opening blocks with middle forced path
       addBlock(600, H*0.3);
+      addBlock(700, H*0.5, '#FF1744');
       addBlock(900, H*0.5);
+      addBlock(1000, H*0.48, '#FF1744');
       addBlock(1200, H*0.4);
       
       // Bounce pad section
       addBouncePad(1500);
+      addBlock(1600, H*0.5, '#FF1744');
       addBlock(1650, H*0.2);
       
-      // Laser maze
+      // Laser maze with middle barriers
       addLaser(1900, H*0.2, H*0.3, 120, true);
+      addBlock(1950, H*0.48, '#FF1744');
       addLaser(2100, H*0.5, H*0.3, 140, true);
+      addBlock(2150, H*0.5, '#FF1744');
       
       // Dash and spike combo
       addDashPad(2400, 'floor');
+      addBlock(2500, H*0.5, '#FF1744');
       addSpikeRowCeil(2600, 4);
+      addBlock(2650, H*0.48, '#FF1744');
       addSpikeRowFloor(2700, 4);
       
-      // Blinking corridor
+      // Blinking corridor with middle hazards
       for(let i=0; i<6; i++){
         addBlinkingSpike(3000 + i*100, i%2===0?'floor':'ceiling', 1.8);
+        if(i%2===0) addBlock(3050 + i*100, H*0.5, '#FF1744');
       }
       
-      // Moving walls sequence
+      // Moving walls sequence with forced movement
       addMovingWall(3700, H/2-movingWallSize/2, 80);
+      addSpikeRowCeil(3800, 3);
+      addSpikeRowFloor(3850, 3);
       addMovingWall(4000, H/2-movingWallSize/2, 90);
+      addBlock(4100, H*0.5, '#FF1744');
       
       // Final blocks
       addBlock(4400, H*0.35);
+      addBlock(4500, H*0.5, '#FF1744');
       addBlock(4600, H*0.65);
       
       addGoal(levelWidth - 200);
@@ -262,41 +299,56 @@
       player.vx = 430;
       levelWidth = 6000;
       
-      // Dense spike opening
+      // Dense spike opening with middle barriers
       addSpikeRowCeil(600, 5);
+      addBlock(650, H*0.5, '#FF1744');
       addSpikeRowFloor(700, 6);
+      addBlock(800, H*0.48, '#FF1744');
       addSpikeRowCeil(900, 8);
+      addBlock(950, H*0.52, '#FF1744');
       addSpikeRowFloor(1000, 7);
       
       // First dash escape
       addDashPad(1400, 'floor');
+      addBlock(1500, H*0.5, '#FF1744');
       
-      // Laser grid
+      // Laser grid with middle obstacles
       addLaser(1700, H*0.2, H*0.25, 180, true);
+      addBlock(1750, H*0.5, '#FF1744');
       addLaser(1900, H*0.55, H*0.25, 160, true);
+      addBlock(1950, H*0.48, '#FF1744');
       addLaser(2100, H*0.3, H*0.3, 200, true);
+      addBlock(2150, H*0.5, '#FF1744');
       
-      // Block obstacles
+      // Block obstacles with forced path
       addBlock(2400, H*0.3);
+      addBlock(2500, H*0.5, '#FF1744');
       addBlock(2600, H*0.6);
+      addBlock(2700, H*0.48, '#FF1744');
       addBlock(2800, H*0.4);
       
-      // Bounce section
+      // Bounce section with middle spikes
       addBouncePad(3100);
+      addBlock(3200, H*0.5, '#FF1744');
       addSpikeRowCeil(3250, 8);
       
-      // Blinking spike rhythm
+      // Blinking spike rhythm with barriers
       for(let i=0; i<8; i++){
         addBlinkingSpike(3600 + i*80, i%3===0?'ceiling':'floor', 2.5);
+        if(i%2===0) addBlock(3640 + i*80, H*0.5, '#FF1744');
       }
       
-      // Moving wall corridor
+      // Moving wall corridor with spikes
       addMovingWall(4200, H/2-movingWallSize/2, 75);
+      addSpikeRowFloor(4300, 4);
+      addSpikeRowCeil(4350, 4);
       addMovingWall(4500, H/2-movingWallSize/2, 85);
+      addBlock(4600, H*0.5, '#FF1744');
       addMovingWall(4800, H/2-movingWallSize/2, 65);
       
-      // Final spike teeth
+      // Final spike teeth with middle hazards
       addSpikeRowCeil(5200, 10);
+      addBlock(5250, H*0.5, '#FF1744');
       addSpikeRowFloor(5300, 10);
       
       addGoal(levelWidth - 200);
@@ -306,39 +358,54 @@
       player.vx = 510;
       levelWidth = 6500;
       
-      // Opening laser sequence
+      // Opening laser sequence with middle blocks
       addLaser(600, H*0.2, H*0.3, 200, true);
+      addBlock(650, H*0.5, '#FF1744');
       addLaser(800, H*0.5, H*0.3, 220, true);
+      addBlock(850, H*0.48, '#FF1744');
       addLaser(1000, H*0.25, H*0.35, 190, true);
+      addBlock(1050, H*0.5, '#FF1744');
       
-      // Spike rhythm patterns
+      // Spike rhythm patterns with middle obstacles
       for(let i=0; i<5; i++){
         addSpikeRowCeil(1400 + i*200, 3);
+        addBlock(1450 + i*200, H*0.5, '#FF1744');
         addSpikeRowFloor(1500 + i*200, 3);
       }
       
       // Dash boost chain
       addDashPad(2500, 'floor');
+      addBlock(2600, H*0.5, '#FF1744');
       addDashPad(2800, 'ceiling');
+      addBlock(2900, H*0.5, '#FF1744');
       
-      // Moving wall gauntlet
+      // Moving wall gauntlet with forced vertical movement
       addMovingWall(3100, H/2-movingWallSize/2, 80);
+      addSpikeRowCeil(3200, 4);
+      addSpikeRowFloor(3250, 4);
       addMovingWall(3400, H/2-movingWallSize/2, 90);
+      addBlock(3500, H*0.5, '#FF1744');
       addMovingWall(3700, H/2-movingWallSize/2, 70);
+      addSpikeRowCeil(3800, 3);
+      addSpikeRowFloor(3850, 3);
       addMovingWall(4000, H/2-movingWallSize/2, 95);
       
-      // Blinking spike maze
+      // Blinking spike maze with barriers
       for(let i=0; i<10; i++){
         addBlinkingSpike(4400 + i*100, i%2===0?'floor':'ceiling', 3.0);
+        if(i%3===0) addBlock(4440 + i*100, H*0.5, '#FF1744');
       }
       
-      // Block platforms
+      // Block platforms with middle hazards
       addBlock(5200, H*0.3);
+      addBlock(5300, H*0.5, '#FF1744');
       addBlock(5400, H*0.6);
       addBouncePad(5600);
+      addBlock(5700, H*0.5, '#FF1744');
       
       // Final laser + spike combo
       addLaser(5800, H*0.4, H*0.2, 250, true);
+      addBlock(5850, H*0.48, '#FF1744');
       addSpikeRowFloor(6000, 8);
       
       addGoal(levelWidth - 200);
@@ -348,48 +415,66 @@
       player.vx = 560;
       levelWidth = 7500;
       
-      // Massive spike opening
+      // Massive spike opening with middle barriers
       for(let i=0;i<10;i++){
         if(i%2===0) { 
           addSpikeRowCeil(600+i*blockW*0.8, 4); 
           addBlock(650+i*blockW*0.8, H*0.35); 
+          addBlock(700+i*blockW*0.8, H*0.5, '#FF1744');
         } else { 
           addSpikeRowFloor(600+i*blockW*0.8, 4); 
           addBlock(650+i*blockW*0.8, H*0.65); 
+          addBlock(700+i*blockW*0.8, H*0.5, '#FF1744');
         }
       }
       
-      // Laser grid section
+      // Laser grid section with middle obstacles
       for(let i=0; i<5; i++){
         addLaser(2000 + i*250, H*0.2 + (i%3)*H*0.2, H*0.25, 180 + i*20, true);
+        addBlock(2050 + i*250, H*0.5, '#FF1744');
       }
       
-      // Dash pad sequence
+      // Dash pad sequence with barriers
       addDashPad(3200, 'floor');
+      addBlock(3300, H*0.5, '#FF1744');
       addDashPad(3500, 'ceiling');
+      addBlock(3600, H*0.5, '#FF1744');
       addDashPad(3800, 'floor');
+      addBlock(3900, H*0.5, '#FF1744');
       
-      // Moving wall chaos
+      // Moving wall chaos with forced movement
       addMovingWall(4000, H/2-movingWallSize/2, 64);
+      addSpikeRowCeil(4100, 5);
+      addSpikeRowFloor(4150, 5);
       addMovingWall(4300, H/2-movingWallSize/2, 96);
+      addBlock(4400, H*0.5, '#FF1744');
       addMovingWall(4600, H/2-movingWallSize/2, 78);
+      addSpikeRowCeil(4700, 4);
+      addSpikeRowFloor(4750, 4);
       addMovingWall(4900, H/2-movingWallSize/2, 88);
+      addBlock(5000, H*0.5, '#FF1744');
       
-      // Blinking spike rhythm finale
+      // Blinking spike rhythm finale with barriers
       for(let i=0; i<12; i++){
         addBlinkingSpike(5300 + i*80, i%3===0?'ceiling':(i%3===1?'floor':'ceiling'), 2.0 + (i%3)*0.5);
+        if(i%2===0) addBlock(5340 + i*80, H*0.5, '#FF1744');
       }
       
-      // Bounce pad platforming
+      // Bounce pad platforming with middle hazards
       addBouncePad(6000);
+      addBlock(6100, H*0.5, '#FF1744');
       addBlock(6150, H*0.2);
       addBouncePad(6300);
+      addBlock(6400, H*0.5, '#FF1744');
       addSpikeRowCeil(6400, 10);
       
-      // Final laser + spike gauntlet
+      // Final laser + spike gauntlet with middle blocks
       addLaser(6600, H*0.3, H*0.4, 280, true);
+      addBlock(6650, H*0.5, '#FF1744');
       addLaser(6800, H*0.2, H*0.3, 260, true);
+      addBlock(6850, H*0.48, '#FF1744');
       addSpikeRowFloor(7000, 12);
+      addBlock(7050, H*0.5, '#FF1744');
       addSpikeRowCeil(7100, 12);
       
       addGoal(levelWidth - 200);
