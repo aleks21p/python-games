@@ -18,10 +18,10 @@
   let running = false;
 
   // Player (arrow) visual geometry (scaled and rotated)
-  // Spec: base 40px, height 52px for display, but 20x26 for hitbox (2x smaller)
+  // Spec: base 40px, height 52px for display, but 14x18 for hitbox (30% smaller than 20x26)
   function makeArrowPoly(x, y, angle){
-    const baseW = Math.round(20 * scale); // Hitbox: 2x smaller
-    const height = Math.round(26 * scale); // Hitbox: 2x smaller
+    const baseW = Math.round(14 * scale); // Hitbox: 30% smaller
+    const height = Math.round(18 * scale); // Hitbox: 30% smaller
     const halfH = height / 2;
     
     // Triangle points relative to center (before rotation)
@@ -1081,37 +1081,6 @@
           }
         }
       }
-    }
-    
-    // Draw trail BEHIND the arrow - white glowing shadow
-    for(let i = 0; i < trail.length; i++){
-      const t = trail[i];
-      const opacity = (i / trail.length) * 0.8; // Fade from 0 to 0.8
-      const size = (i / trail.length); // Grow from 0 to 1
-      
-      // Offset position to come from behind (left side of arrow)
-      const offsetDistance = (1 - size) * 30 * scale; // Earlier trail positions offset more
-      
-      ctx.save();
-      ctx.translate(t.x, t.y);
-      ctx.rotate(t.angle);
-      
-      // Strong white glow
-      ctx.shadowColor = `rgba(255,255,255,${opacity})`;
-      ctx.shadowBlur = Math.round(25 * scale * size);
-      ctx.fillStyle = `rgba(255,255,255,${opacity * 0.7})`;
-      
-      // Triangle for trail - proportional to arrow size, offset behind
-      const trailBase = 40 * scale * size * 0.8;
-      const trailHeight = 52 * scale * size * 0.8;
-      ctx.beginPath();
-      ctx.moveTo(trailHeight/2 - offsetDistance, 0);
-      ctx.lineTo(-trailHeight/2 - offsetDistance, -trailBase/2);
-      ctx.lineTo(-trailHeight/2 - offsetDistance, trailBase/2);
-      ctx.closePath();
-      ctx.fill();
-      
-      ctx.restore();
     }
     
     // Draw player arrow (spec: base 40px, height 52px, neon cyan with glow)
