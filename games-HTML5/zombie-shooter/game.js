@@ -229,6 +229,9 @@ class Player {
     }
 
     updatePetBonuses() {
+        // Store old maxHealth to check if it changed
+        const oldMaxHealth = this.maxHealth;
+        
         // Apply pet health bonuses - only for pets that should have them
         if (this.equippedPet === 'turtle') {
             this.maxHealth = this.baseHealth * 2; // 2x health
@@ -243,10 +246,16 @@ class Player {
             this.maxHealth = this.baseHealth;
         }
         
-        // Scale current health appropriately
-        if (this.health < this.maxHealth) {
-            this.health = Math.min(this.health * (this.maxHealth / this.baseHealth), this.maxHealth);
-        } else if (this.health > this.maxHealth) {
+        // Only scale health if maxHealth actually changed (e.g., pet equipped/unequipped)
+        // This prevents health from being constantly restored every frame
+        if (oldMaxHealth !== this.maxHealth) {
+            // Scale current health proportionally when maxHealth changes
+            const healthRatio = this.health / oldMaxHealth;
+            this.health = Math.min(healthRatio * this.maxHealth, this.maxHealth);
+        }
+        
+        // Cap health at maxHealth (in case it's somehow higher)
+        if (this.health > this.maxHealth) {
             this.health = this.maxHealth;
         }
     }
@@ -3118,6 +3127,9 @@ class Game {
             this.player.maxHealth = this.player.baseHealth;
         }
         
+        // Apply equipped pet to new player instance
+        this.player.equippedPet = this.equippedPet;
+        
         // Apply pet bonuses
         this.player.updatePetBonuses();
         
@@ -5778,11 +5790,11 @@ class Game {
         ctx.fillStyle = '#4169E1';
         ctx.fillText('Turtle (2x Health, 1.2x Damage) - 90%', rareCrateX + crateWidth/2, rareCrateY + 170);
         ctx.fillStyle = '#FF6B35';
-        ctx.fillText('Parrot (2x Health, 3x Damage) - 9%', rareCrateX + crateWidth/2, rareCrateY + 185);
+        ctx.fillText('Parrot (2x Health, 2.5x Damage) - 9%', rareCrateX + crateWidth/2, rareCrateY + 185);
         ctx.fillStyle = '#FFD700';
-        ctx.fillText('Capybarra (5x Health, 5x Damage) - 1%', rareCrateX + crateWidth/2, rareCrateY + 200);
+        ctx.fillText('Capybarra (3x Health, 3x Damage) - 1%', rareCrateX + crateWidth/2, rareCrateY + 200);
         ctx.fillStyle = '#FF00FF';
-        ctx.fillText('Dragon (1000x HP/DMG, -30% Speed) - 0.01%', rareCrateX + crateWidth/2, rareCrateY + 215);
+        ctx.fillText('Dragon (10x HP, 5x DMG, -30% Speed) - 0.01%', rareCrateX + crateWidth/2, rareCrateY + 215);
 
         // Owned pets section (right side)
         const petListX = SCREEN_WIDTH/2 + 120;
