@@ -5852,10 +5852,10 @@ class Game {
         if (this.showRareCrateInfo) {
             const rareInfoY = rareCrateY + 145;
             ctx.fillStyle = 'rgba(0, 0, 0, 0.9)';
-            ctx.fillRect(rareCrateX - 10, rareInfoY, crateWidth + 20, 110);
+            ctx.fillRect(rareCrateX - 10, rareInfoY, crateWidth + 20, 125);
             ctx.strokeStyle = '#9932CC';
             ctx.lineWidth = 2;
-            ctx.strokeRect(rareCrateX - 10, rareInfoY, crateWidth + 20, 110);
+            ctx.strokeRect(rareCrateX - 10, rareInfoY, crateWidth + 20, 125);
             
             ctx.fillStyle = WHITE;
             ctx.font = 'bold 12px Arial';
@@ -5876,6 +5876,7 @@ class Game {
             
             ctx.fillStyle = '#FF00FF';
             ctx.fillText('Dragon (10x HP, 5x DMG)', rareCrateX + crateWidth/2, rareInfoY + 108);
+            ctx.fillText('Mythic - 0.01%', rareCrateX + crateWidth/2, rareInfoY + 120);
         }
 
         // Owned pets section (right side)
