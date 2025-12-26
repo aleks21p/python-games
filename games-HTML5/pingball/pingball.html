@@ -558,6 +558,14 @@
         <button class="restart-btn" onclick="restartGame()">Play Again</button>
     </div>
 
+    <script>
+        // Configure auto-update for pingball
+        window.gameConfig = {
+            gameName: 'pingball',
+            versionKey: 'pingball'
+        };
+    </script>
+    <script src="../auto-update.js"></script>
     <script src="pingball.js"></script>
 </body>
 </html>
