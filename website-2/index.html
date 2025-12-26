@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MathPractice - Learn Math Through Practice</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <header>
+        <div class="container">
+            <h1>🦆 MathPractice</h1>
+            <p class="tagline">Master Math Through Practice</p>
+        </div>
+    </header>
+
+    <main class="container">
+        <div id="home-screen" class="screen active">
+            <div class="welcome-section">
+                <h2>Welcome to MathPractice!</h2>
+                <p>Choose your practice mode and start improving your math skills</p>
+            </div>
+
+            <div class="mode-grid">
+                <div class="mode-card" onclick="selectMode('addition')">
+                    <div class="mode-icon">➕</div>
+                    <h3>Addition</h3>
+                    <p>Practice adding numbers</p>
+                </div>
+
+                <div class="mode-card" onclick="selectMode('subtraction')">
+                    <div class="mode-icon">➖</div>
+                    <h3>Subtraction</h3>
+                    <p>Practice subtracting numbers</p>
+                </div>
+
+                <div class="mode-card" onclick="selectMode('multiplication')">
+                    <div class="mode-icon">✖️</div>
+                    <h3>Multiplication</h3>
+                    <p>Practice multiplication tables</p>
+                </div>
+
+                <div class="mode-card" onclick="selectMode('division')">
+                    <div class="mode-icon">➗</div>
+                    <h3>Division</h3>
+                    <p>Practice division problems</p>
+                </div>
+
+                <div class="mode-card" onclick="selectMode('mixed')">
+                    <div class="mode-icon">🎯</div>
+                    <h3>Mixed Practice</h3>
+                    <p>All operations combined</p>
+                </div>
+
+                <div class="mode-card" onclick="selectMode('timed')">
+                    <div class="mode-icon">⏱️</div>
+                    <h3>Timed Challenge</h3>
+                    <p>Beat the clock!</p>
+                </div>
+            </div>
+
+            <div class="stats-section">
+                <h3>Your Stats</h3>
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <div class="stat-value" id="total-solved">0</div>
+                        <div class="stat-label">Problems Solved</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-value" id="accuracy">0%</div>
+                        <div class="stat-label">Accuracy</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-value" id="streak">0</div>
+                        <div class="stat-label">Current Streak</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div id="difficulty-screen" class="screen">
+            <h2>Select Difficulty</h2>
+            <div class="difficulty-grid">
+                <button class="difficulty-btn" onclick="startPractice('easy')">
+                    <span class="difficulty-icon">🟢</span>
+                    <span>Easy</span>
+                    <small>Numbers 1-10</small>
+                </button>
+                <button class="difficulty-btn" onclick="startPractice('medium')">
+                    <span class="difficulty-icon">🟡</span>
+                    <span>Medium</span>
+                    <small>Numbers 1-50</small>
+                </button>
+                <button class="difficulty-btn" onclick="startPractice('hard')">
+                    <span class="difficulty-icon">🔴</span>
+                    <span>Hard</span>
+                    <small>Numbers 1-100</small>
+                </button>
+            </div>
+            <button class="back-btn" onclick="showScreen('home-screen')">← Back</button>
+        </div>
+
+        <div id="practice-screen" class="screen">
+            <div class="practice-header">
+                <button class="back-btn" onclick="endPractice()">← End Practice</button>
+                <div class="practice-info">
+                    <span id="timer" class="timer"></span>
+                    <span id="score" class="score">Score: 0</span>
+                </div>
+            </div>
+
+            <div class="question-container">
+                <div class="progress-bar">
+                    <div id="progress-fill" class="progress-fill"></div>
+                </div>
+                
+                <div class="question-card">
+                    <div class="question-text" id="question">5 + 3 = ?</div>
+                    <input type="number" id="answer-input" class="answer-input" placeholder="Your answer">
+                    <div class="feedback" id="feedback"></div>
+                    <button class="submit-btn" onclick="checkAnswer()">Submit Answer</button>
+                </div>
+
+                <div class="streak-display" id="streak-display">
+                    🔥 Streak: <span id="current-streak">0</span>
+                </div>
+            </div>
+        </div>
+
+        <div id="results-screen" class="screen">
+            <div class="results-container">
+                <h2>Practice Complete! 🎉</h2>
+                
+                <div class="results-stats">
+                    <div class="result-card">
+                        <div class="result-value" id="final-score">0</div>
+                        <div class="result-label">Final Score</div>
+                    </div>
+                    <div class="result-card">
+                        <div class="result-value" id="final-accuracy">0%</div>
+                        <div class="result-label">Accuracy</div>
+                    </div>
+                    <div class="result-card">
+                        <div class="result-value" id="final-time">0s</div>
+                        <div class="result-label">Time Taken</div>
+                    </div>
+                </div>
+
+                <div class="results-message" id="results-message"></div>
+
+                <div class="results-actions">
+                    <button class="primary-btn" onclick="restartPractice()">Practice Again</button>
+                    <button class="secondary-btn" onclick="showScreen('home-screen')">Back to Home</button>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <footer>
+        <div class="container">
+            <p>&copy; 2025 MathPractice - Educational Tool for Personal Use</p>
+        </div>
+    </footer>
+
+    <script src="app.js"></script>
+</body>
+</html>
