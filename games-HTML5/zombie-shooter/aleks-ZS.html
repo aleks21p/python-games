@@ -190,10 +190,21 @@
     <script>
         (function() {
             let refreshTimeout;
+            const ONE_DAY_MS = 24 * 60 * 60 * 1000;
             
             // Check for version updates
             async function checkForUpdates() {
                 try {
+                    // Check if we should skip (checked within last 24 hours)
+                    const lastCheck = localStorage.getItem('zombie-shooter-last-check');
+                    if (lastCheck) {
+                        const timeSinceCheck = Date.now() - parseInt(lastCheck);
+                        if (timeSinceCheck < ONE_DAY_MS) {
+                            console.log('Skipping zombie-shooter auto-update check (last checked', Math.round(timeSinceCheck / 1000 / 60), 'minutes ago)');
+                            return;
+                        }
+                    }
+                    
                     const response = await fetch('../version.json', {
                         cache: 'no-cache',
                         headers: {
@@ -206,6 +217,9 @@
                         const versionData = await response.json();
                         const serverVersion = versionData.games['zombie-shooter'] || versionData.version;
                         const currentVersion = localStorage.getItem('zombie-shooter-version') || '1.0.0';
+                        
+                        // Update last check timestamp
+                        localStorage.setItem('zombie-shooter-last-check', Date.now().toString());
                         
                         if (serverVersion !== currentVersion) {
                             console.log('Zombie Shooter version mismatch:', currentVersion, '->', serverVersion);
@@ -282,11 +296,8 @@
             
             // Start version checking
             function startVersionChecking() {
-                // Check immediately after 5 seconds
+                // Check once after 5 seconds (will be skipped if checked within last 24 hours)
                 setTimeout(checkForUpdates, 5000);
-                
-                // Then check every 60 seconds
-                setInterval(checkForUpdates, 60000);
             }
             
             // Initialize when page loads

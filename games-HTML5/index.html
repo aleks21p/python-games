@@ -967,7 +967,7 @@
     </script>
     
     <!-- Discord community footer -->
-    <footer style="width:100%;display:flex;justify-content:center;align-items:center;padding:20px 10px;background:linear-gradient(135deg,#0f1724,rgba(0,0,0,0.0));position:fixed;left:0;bottom:0;z-index:9999;">
+    <footer style="width:100%;display:flex;flex-direction:column;justify-content:center;align-items:center;padding:20px 10px;background:linear-gradient(135deg,#0f1724,rgba(0,0,0,0.0));position:fixed;left:0;bottom:0;z-index:9999;gap:12px;">
         <div style="max-width:1100px;width:100%;display:flex;gap:16px;align-items:center;justify-content:center;flex-wrap:wrap;">
             <div style="display:flex;align-items:center;gap:14px;">
                 <img src="/games-HTML5/assets/discord-mark-white.png" alt="Discord" style="width:44px;height:44px;border-radius:8px;box-shadow:0 6px 18px rgba(0,0,0,.45);" onerror="this.style.display='none'"/>
@@ -979,6 +979,9 @@
             <div style="margin-left:8px;">
                 <a href="https://discord.gg/Zbk7CcF8Tb" target="_blank" rel="noopener noreferrer" style="display:inline-block;background:linear-gradient(90deg,#5865F2,#6C7CFF);color:white;padding:12px 18px;border-radius:14px;font-weight:700;text-decoration:none;box-shadow:0 8px 30px rgba(88,101,242,0.22);">Join Discord</a>
             </div>
+        </div>
+        <div style="width:100%;display:flex;justify-content:center;">
+            <button id="force-update-btn" onclick="window.forceCheckForUpdates && window.forceCheckForUpdates()" style="background:linear-gradient(90deg,#ff6b6b,#ee5a52);color:white;padding:8px 16px;border:none;border-radius:10px;font-weight:600;cursor:pointer;box-shadow:0 4px 12px rgba(255,107,107,0.3);font-size:0.85rem;transition:all 0.3s ease;" onmouseover="this.style.transform='scale(1.05)';this.style.boxShadow='0 6px 16px rgba(255,107,107,0.4)'" onmouseout="this.style.transform='scale(1)';this.style.boxShadow='0 4px 12px rgba(255,107,107,0.3)'">🔄 Force Pull Latest Version</button>
         </div>
     </footer>
     <script>
@@ -1018,10 +1021,23 @@
     <script>
         (function() {
             let refreshTimeout;
+            const ONE_DAY_MS = 24 * 60 * 60 * 1000;
             
             // Check for version updates
-            async function checkForUpdates() {
+            async function checkForUpdates(force = false) {
                 try {
+                    // Check if we should skip (only if not forced and checked within last 24 hours)
+                    if (!force) {
+                        const lastCheck = localStorage.getItem('javasnake-last-check');
+                        if (lastCheck) {
+                            const timeSinceCheck = Date.now() - parseInt(lastCheck);
+                            if (timeSinceCheck < ONE_DAY_MS) {
+                                console.log('Skipping auto-update check (last checked', Math.round(timeSinceCheck / 1000 / 60), 'minutes ago)');
+                                return;
+                            }
+                        }
+                    }
+                    
                     const response = await fetch('./version.json', {
                         cache: 'no-cache',
                         headers: {
@@ -1035,25 +1051,33 @@
                         const serverVersion = versionData.version;
                         const currentVersion = localStorage.getItem('javasnake-version') || '1.0.0';
                         
+                        // Update last check timestamp
+                        localStorage.setItem('javasnake-last-check', Date.now().toString());
+                        
                         if (serverVersion !== currentVersion) {
                             console.log('JavaSnake site version mismatch:', currentVersion, '->', serverVersion);
                             localStorage.setItem('javasnake-version', serverVersion);
                             
-                            showUpdateNotification('Site updated! Refreshing to get the latest version...');
+                            showUpdateNotification(force ? 'Pulling latest version...' : 'Site updated! Refreshing to get the latest version...');
                             
                             // Auto-refresh after 2 seconds
                             refreshTimeout = setTimeout(() => {
                                 window.location.reload(true);
                             }, 2000);
+                        } else if (force) {
+                            showUpdateNotification('✅ You already have the latest version!', false);
                         }
                     }
                 } catch (error) {
                     console.error('Site version check failed:', error);
+                    if (force) {
+                        showUpdateNotification('❌ Failed to check for updates. Please try again.', false);
+                    }
                 }
             }
             
             // Show update notification
-            function showUpdateNotification(message) {
+            function showUpdateNotification(message, willRefresh = true) {
                 if (refreshTimeout) {
                     clearTimeout(refreshTimeout);
                 }
@@ -1101,21 +1125,34 @@
                 notification.textContent = message;
                 notification.style.display = 'block';
                 
-                // Click to refresh immediately
-                notification.onclick = () => {
-                    window.location.reload(true);
-                };
-                notification.style.cursor = 'pointer';
-                notification.title = 'Click to refresh now';
+                if (willRefresh) {
+                    // Click to refresh immediately
+                    notification.onclick = () => {
+                        window.location.reload(true);
+                    };
+                    notification.style.cursor = 'pointer';
+                    notification.title = 'Click to refresh now';
+                } else {
+                    // Auto-hide after 3 seconds for informational messages
+                    notification.style.cursor = 'default';
+                    notification.onclick = null;
+                    notification.title = '';
+                    setTimeout(() => {
+                        notification.style.display = 'none';
+                    }, 3000);
+                }
+            }
+            
+            // Expose force update function globally
+            window.forceCheckForUpdates = function() {
+                console.log('Force checking for updates...');
+                checkForUpdates(true);
             }
             
             // Start version checking
             function startVersionChecking() {
-                // Check immediately after 3 seconds
-                setTimeout(checkForUpdates, 3000);
-                
-                // Then check every 2 minutes
-                setInterval(checkForUpdates, 120000);
+                // Check once after 3 seconds (will be skipped if checked within last 24 hours)
+                setTimeout(() => checkForUpdates(false), 3000);
             }
             
             // Initialize when page loads

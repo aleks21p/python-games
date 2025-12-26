@@ -392,12 +392,7 @@
             
             // Periodic version checking
             function startVersionChecking(registration) {
-                // Check for updates every 60 seconds
-                setInterval(() => {
-                    checkForUpdates();
-                }, 60000);
-                
-                // Initial check after 10 seconds
+                // Check once after 10 seconds (will be skipped if checked within last 24 hours)
                 setTimeout(() => {
                     checkForUpdates();
                 }, 10000);
@@ -406,6 +401,17 @@
             // Manual version check
             async function checkForUpdates() {
                 try {
+                    // Check if we should skip (checked within last 24 hours)
+                    const ONE_DAY_MS = 24 * 60 * 60 * 1000;
+                    const lastCheck = localStorage.getItem('soundboard-last-check');
+                    if (lastCheck) {
+                        const timeSinceCheck = Date.now() - parseInt(lastCheck);
+                        if (timeSinceCheck < ONE_DAY_MS) {
+                            console.log('Skipping soundboard auto-update check (last checked', Math.round(timeSinceCheck / 1000 / 60), 'minutes ago)');
+                            return;
+                        }
+                    }
+                    
                     const response = await fetch('../version.json', {
                         cache: 'no-cache',
                         headers: {
@@ -418,6 +424,9 @@
                         const versionData = await response.json();
                         const serverVersion = versionData.games.soundboard || versionData.version;
                         const currentVersion = localStorage.getItem('soundboard-version') || '1.0.0';
+                        
+                        // Update last check timestamp
+                        localStorage.setItem('soundboard-last-check', Date.now().toString());
                         
                         if (serverVersion !== currentVersion) {
                             console.log('Version mismatch detected:', currentVersion, '->', serverVersion);
