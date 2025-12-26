@@ -491,5 +491,36 @@
         };
     </script>
     <script src="../auto-update.js"></script>
+    <script src="../touch-controls.js"></script>
+    <script>
+        // Initialize touch controls for Street Fighter
+        window.addEventListener('DOMContentLoaded', () => {
+            setTimeout(() => {
+                const canvas = document.getElementById('gameCanvas');
+                if (canvas && window.initTouchControls) {
+                    initTouchControls(canvas, {
+                        swipe: true,
+                        tap: true,
+                        onTap: (pos) => {
+                            // Tap to punch/kick
+                            const event = new KeyboardEvent('keydown', { key: ' ', code: 'Space', keyCode: 32, bubbles: true });
+                            document.dispatchEvent(event);
+                        }
+                    });
+                    
+                    // Show hints
+                    if ('ontouchstart' in window) {
+                        setTimeout(() => {
+                            showTouchHints([
+                                '\ud83e\udd4a Tap to attack',
+                                '\ud83d\udc48\ud83d\udc49 Swipe to move',
+                                '\ud83d\udc46 Swipe up to jump'
+                            ]);
+                        }, 1000);
+                    }
+                }
+            }, 500);
+        });
+    </script>
 </body>
 </html>

@@ -711,5 +711,21 @@
         };
     </script>
     <script src="../auto-update.js"></script>
+    <script src="../touch-controls.js"></script>
+    <script>
+        // Show touch hints for mobile users
+        if ('ontouchstart' in window || navigator.maxTouchPoints > 0) {
+            window.addEventListener('DOMContentLoaded', () => {
+                setTimeout(() => {
+                    if (window.showTouchHints) {
+                        showTouchHints([
+                            '\ud83d\udc46 Tap cells to play',
+                            '\ud83c\udfae Fully touch-optimized!'
+                        ]);
+                    }
+                }, 1500);
+            });
+        }
+    </script>
 </body>
 </html>

@@ -426,6 +426,37 @@
         };
     </script>
     <script src="../auto-update.js"></script>
+    <script src="../touch-controls.js"></script>
+    <script>
+        // Initialize touch controls for Tetris
+        window.addEventListener('DOMContentLoaded', () => {
+            setTimeout(() => {
+                const canvas = document.getElementById('tetris');
+                if (canvas && window.initTouchControls) {
+                    initTouchControls(canvas, {
+                        swipe: true,
+                        tap: true,
+                        onTap: () => {
+                            // Tap rotates piece
+                            const event = new KeyboardEvent('keydown', { keyCode: 38, which: 38, bubbles: true });
+                            document.dispatchEvent(event);
+                        }
+                    });
+                    
+                    // Show touch hints on mobile
+                    if ('ontouchstart' in window) {
+                        setTimeout(() => {
+                            showTouchHints([
+                                '\ud83d\udc46 Tap to rotate',
+                                '\ud83d\udc48\ud83d\udc49 Swipe left/right to move',
+                                '\ud83d\udc47 Swipe down to drop faster'
+                            ]);
+                        }, 1000);
+                    }
+                }
+            }, 500);
+        });
+    </script>
     <script src="tetris.js"></script>
 </body>
 </html>

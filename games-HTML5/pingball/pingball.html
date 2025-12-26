@@ -566,6 +566,35 @@
         };
     </script>
     <script src="../auto-update.js"></script>
+    <script src="../touch-controls.js"></script>
+    <script>
+        // Initialize touch controls for Pingball
+        window.addEventListener('DOMContentLoaded', () => {
+            setTimeout(() => {
+                const canvas = document.querySelector('canvas');
+                if (canvas && window.initTouchControls) {
+                    initTouchControls(canvas, {
+                        swipe: true,
+                        tap: true,
+                        onTap: () => {
+                            // Tap to start/pause
+                            const event = new KeyboardEvent('keydown', { key: ' ', code: 'Space', keyCode: 32, bubbles: true });
+                            document.dispatchEvent(event);
+                        }
+                    });
+                    
+                    if ('ontouchstart' in window) {
+                        setTimeout(() => {
+                            showTouchHints([
+                                '\ud83d\udc46 Tap to start',
+                                '\ud83d\udc48\ud83d\udc49 Swipe to move paddle'
+                            ]);
+                        }, 1000);
+                    }
+                }
+            }, 500);
+        });
+    </script>
     <script src="pingball.js"></script>
 </body>
 </html>

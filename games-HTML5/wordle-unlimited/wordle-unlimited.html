@@ -538,6 +538,22 @@
         };
     </script>
     <script src="../auto-update.js"></script>
+    <script src="../touch-controls.js"></script>
+    <script>
+        // Show touch hints for mobile users
+        if ('ontouchstart' in window || navigator.maxTouchPoints > 0) {
+            window.addEventListener('DOMContentLoaded', () => {
+                setTimeout(() => {
+                    if (window.showTouchHints) {
+                        showTouchHints([
+                            '\ud83d\udc46 Tap keyboard to type',
+                            '\u2328\ufe0f Fully mobile-optimized!'
+                        ]);
+                    }
+                }, 1500);
+            });
+        }
+    </script>
     <script src="wordle-game.js"></script>
 </body>
 </html>

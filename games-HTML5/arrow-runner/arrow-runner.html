@@ -123,6 +123,36 @@
     };
   </script>
   <script src="../auto-update.js"></script>
+  <script src="../touch-controls.js"></script>
+  <script>
+    // Initialize touch controls for Arrow Runner
+    window.addEventListener('load', () => {
+      setTimeout(() => {
+        const canvas = document.getElementById('c');
+        if (canvas && window.initTouchControls) {
+          initTouchControls(canvas, {
+            swipe: true,
+            tap: true,
+            onTap: () => {
+              // Tap to jump
+              const event = new KeyboardEvent('keydown', { key: ' ', code: 'Space', keyCode: 32, bubbles: true });
+              document.dispatchEvent(event);
+            }
+          });
+          
+          // Show hints on mobile
+          if ('ontouchstart' in window) {
+            setTimeout(() => {
+              showTouchHints([
+                '\ud83d\udc46 Tap to jump',
+                '\ud83d\udc49 Tap screen to start'
+              ]);
+            }, 1500);
+          }
+        }
+      }, 500);
+    });
+  </script>
   <script src="arrow-runner.js"></script>
 </body>
 </html>
