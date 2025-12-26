@@ -967,7 +967,8 @@
     </script>
     
     <!-- Discord community footer -->
-    <footer style="width:100%;display:flex;flex-direction:column;justify-content:center;align-items:center;padding:20px 10px;background:linear-gradient(135deg,#0f1724,rgba(0,0,0,0.0));position:fixed;left:0;bottom:0;z-index:9999;gap:12px;">
+    <footer id="main-footer" style="width:100%;display:flex;flex-direction:column;justify-content:center;align-items:center;padding:20px 10px;background:linear-gradient(135deg,#0f1724,rgba(0,0,0,0.0));position:fixed;left:0;bottom:0;z-index:9999;gap:12px;transition:transform 0.3s ease;">
+        <button id="footer-minimize-btn" onclick="toggleFooter()" style="position:absolute;top:8px;right:8px;background:rgba(255,255,255,0.1);color:white;border:1px solid rgba(255,255,255,0.2);padding:6px 12px;border-radius:8px;font-size:0.75rem;cursor:pointer;transition:all 0.2s ease;backdrop-filter:blur(10px);" onmouseover="this.style.background='rgba(255,255,255,0.2)'" onmouseout="this.style.background='rgba(255,255,255,0.1)'">▼ Hide</button>
         <div style="max-width:1100px;width:100%;display:flex;gap:16px;align-items:center;justify-content:center;flex-wrap:wrap;">
             <div style="display:flex;align-items:center;gap:14px;">
                 <img src="/games-HTML5/assets/discord-mark-white.png" alt="Discord" style="width:44px;height:44px;border-radius:8px;box-shadow:0 6px 18px rgba(0,0,0,.45);" onerror="this.style.display='none'"/>
@@ -980,11 +981,72 @@
                 <a href="https://discord.gg/Zbk7CcF8Tb" target="_blank" rel="noopener noreferrer" style="display:inline-block;background:linear-gradient(90deg,#5865F2,#6C7CFF);color:white;padding:12px 18px;border-radius:14px;font-weight:700;text-decoration:none;box-shadow:0 8px 30px rgba(88,101,242,0.22);">Join Discord</a>
             </div>
         </div>
-        <div style="width:100%;display:flex;justify-content:center;">
+        <div style="width:100%;display:flex;justify-content:center;gap:10px;flex-wrap:wrap;">
             <button id="force-update-btn" onclick="window.forceCheckForUpdates && window.forceCheckForUpdates()" style="background:linear-gradient(90deg,#ff6b6b,#ee5a52);color:white;padding:8px 16px;border:none;border-radius:10px;font-weight:600;cursor:pointer;box-shadow:0 4px 12px rgba(255,107,107,0.3);font-size:0.85rem;transition:all 0.3s ease;" onmouseover="this.style.transform='scale(1.05)';this.style.boxShadow='0 6px 16px rgba(255,107,107,0.4)'" onmouseout="this.style.transform='scale(1)';this.style.boxShadow='0 4px 12px rgba(255,107,107,0.3)'">🔄 Force Pull Latest Version</button>
         </div>
+        <div style="color:rgba(255,255,255,0.7);text-align:center;font-size:0.8rem;margin-top:8px;">
+            <span style="display:inline-flex;align-items:center;gap:6px;">📱 <strong>Bookmark this page</strong> — All games work offline after first visit!</span>
+        </div>
     </footer>
+    <div id="footer-restore-tab" onclick="toggleFooter()" style="display:none;position:fixed;bottom:0;left:50%;transform:translateX(-50%);background:linear-gradient(135deg,#0f1724,#1a2332);color:white;padding:8px 20px;border-radius:12px 12px 0 0;cursor:pointer;z-index:9999;box-shadow:0 -4px 12px rgba(0,0,0,0.3);transition:all 0.2s ease;" onmouseover="this.style.transform='translateX(-50%) translateY(-4px)'" onmouseout="this.style.transform='translateX(-50%) translateY(0)'">
+        <span style="font-size:0.85rem;font-weight:600;">▲ Show Footer</span>
+    </div>
     <script>
+        // Footer minimize/restore functionality with 24-hour expiration
+        (function() {
+            const ONE_DAY_MS = 24 * 60 * 60 * 1000;
+            const footer = document.getElementById('main-footer');
+            const restoreTab = document.getElementById('footer-restore-tab');
+            const minimizeBtn = document.getElementById('footer-minimize-btn');
+            
+            function checkFooterState() {
+                const hiddenTimestamp = localStorage.getItem('footer-hidden-time');
+                if (hiddenTimestamp) {
+                    const timeSinceHidden = Date.now() - parseInt(hiddenTimestamp);
+                    if (timeSinceHidden < ONE_DAY_MS) {
+                        // Still within 24 hours, keep hidden
+                        hideFooter(false);
+                    } else {
+                        // More than 24 hours, show footer again
+                        localStorage.removeItem('footer-hidden-time');
+                        showFooter(false);
+                    }
+                } else {
+                    showFooter(false);
+                }
+            }
+            
+            function hideFooter(saveState = true) {
+                footer.style.transform = 'translateY(100%)';
+                restoreTab.style.display = 'block';
+                if (saveState) {
+                    localStorage.setItem('footer-hidden-time', Date.now().toString());
+                }
+                updateFooterPadding();
+            }
+            
+            function showFooter(saveState = true) {
+                footer.style.transform = 'translateY(0)';
+                restoreTab.style.display = 'none';
+                if (saveState) {
+                    localStorage.removeItem('footer-hidden-time');
+                }
+                updateFooterPadding();
+            }
+            
+            window.toggleFooter = function() {
+                const isHidden = footer.style.transform === 'translateY(100%)';
+                if (isHidden) {
+                    showFooter(true);
+                } else {
+                    hideFooter(true);
+                }
+            };
+            
+            // Check initial state on page load
+            checkFooterState();
+        })();
+        
         // Ensure fixed footer doesn't cover clickable content at the bottom
         (function(){
             function updateFooterPadding(){
