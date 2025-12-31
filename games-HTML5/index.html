@@ -502,10 +502,10 @@
             display: flex;
             align-items: center;
             justify-content: center;
-            pointer-events: auto;
+            pointer-events: auto !important;
             -webkit-user-select: none;
             user-select: none;
-            z-index: 9998;
+            z-index: 99999;
             box-shadow: 0 4px 12px rgba(78, 205, 196, 0.4);
         }
 
@@ -1185,7 +1185,12 @@
             // Initialize minimize button
             const minimizeBtn = document.getElementById('footer-minimize-btn');
             if (minimizeBtn) {
-                minimizeBtn.addEventListener('click', function() {
+                console.log('Button element found:', minimizeBtn);
+                console.log('Button display:', window.getComputedStyle(minimizeBtn).display);
+                console.log('Button pointer-events:', window.getComputedStyle(minimizeBtn).pointerEvents);
+                
+                minimizeBtn.addEventListener('click', function(e) {
+                    console.log('CLICK EVENT RECEIVED on minimize button', e);
                     const footer = document.getElementById('main-footer');
                     if (footer) {
                         console.log('Hiding footer...');
