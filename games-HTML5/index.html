@@ -1182,34 +1182,6 @@
             // Apply saved theme setting
             applyTheme(window.THEME_MODE);
 
-            // Initialize minimize button
-            const minimizeBtn = document.getElementById('footer-minimize-btn');
-            if (minimizeBtn) {
-                console.log('Button element found:', minimizeBtn);
-                console.log('Button display:', window.getComputedStyle(minimizeBtn).display);
-                console.log('Button pointer-events:', window.getComputedStyle(minimizeBtn).pointerEvents);
-                
-                minimizeBtn.addEventListener('click', function(e) {
-                    console.log('CLICK EVENT RECEIVED on minimize button', e);
-                    const footer = document.getElementById('main-footer');
-                    if (footer) {
-                        console.log('Hiding footer...');
-                        footer.style.transform = 'translateY(100%)';
-                        const restoreTab = document.getElementById('footer-restore-tab');
-                        if (restoreTab) {
-                            restoreTab.style.display = 'block';
-                            console.log('Restore tab shown');
-                        }
-                        localStorage.setItem('footer-hidden-time', Date.now().toString());
-                        updateFooterPadding();
-                        console.log('Footer hidden successfully');
-                    } else {
-                        console.log('Error: main-footer element not found');
-                    }
-                });
-                console.log('Minimize button initialized');
-            }
-
             // Create particles only if low power is off
             if (!window.LOW_POWER_MODE) {
                 createParticles();
