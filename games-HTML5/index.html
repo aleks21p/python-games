@@ -647,7 +647,7 @@
 </head>
 <body>
     <!-- Deployment Info Display (top-left) -->
-    <div id="deployment-info" style="position:fixed;bottom:1rem;right:1rem;color:#4ecdc4;font-size:0.85rem;font-family:'Courier New',monospace;white-space:nowrap;background:rgba(0,0,0,0.5);padding:0.5rem 1rem;border-radius:4px;display:none;"></div>
+    <div id="deployment-info" style="position:fixed;bottom:1rem;right:1rem;color:#4ecdc4;font-size:0.85rem;font-family:'Courier New',monospace;white-space:nowrap;background:rgba(0,0,0,0.5);padding:0.5rem 1rem;border-radius:4px;display:block;opacity:0.8;"></div>
 
     <!-- Dark/Light Mode toggle (positioned top-right) -->
     <div class="low-power-toggle" role="region" aria-label="Theme Mode">
@@ -1240,7 +1240,8 @@
                     console.log('Deployment info unavailable:', e);
                     const infoEl = document.getElementById('deployment-info');
                     if (infoEl) {
-                        infoEl.style.display = 'none';
+                        infoEl.textContent = '🚀 Last deployment: (unavailable)';
+                        infoEl.style.opacity = '0.5';
                     }
                 });
         })();
