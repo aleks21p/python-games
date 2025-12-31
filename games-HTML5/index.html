@@ -485,31 +485,33 @@
 
         /* Minimize button in footer */
         #footer-minimize-btn {
-            position: absolute;
-            bottom: 1rem;
-            right: 1rem;
-            background: rgba(78, 205, 196, 0.4);
-            border: 1px solid rgba(78, 205, 196, 0.8);
-            color: rgba(78, 205, 196, 1);
-            padding: 0.3rem 0.4rem;
-            border-radius: 4px;
+            position: fixed;
+            bottom: 2rem;
+            right: 1.5rem;
+            background: linear-gradient(135deg, #4ecdc4, #45b7d1);
+            border: 2px solid #4ecdc4;
+            color: #fff;
+            padding: 0.8rem 1rem;
+            border-radius: 8px;
             cursor: pointer;
-            font-size: 0.8rem;
+            font-size: 1.5rem;
+            font-weight: bold;
             transition: all 0.3s ease;
-            min-width: 26px;
-            min-height: 26px;
+            min-width: 48px;
+            min-height: 48px;
             display: flex;
             align-items: center;
             justify-content: center;
             pointer-events: auto;
             -webkit-user-select: none;
             user-select: none;
+            z-index: 9998;
+            box-shadow: 0 4px 12px rgba(78, 205, 196, 0.4);
         }
 
         #footer-minimize-btn:hover {
-            background: rgba(78, 205, 196, 0.6);
-            color: #4ecdc4;
-            box-shadow: 0 0 10px rgba(78, 205, 196, 0.5);
+            background: linear-gradient(135deg, #5eddd4, #55c7e1);
+            box-shadow: 0 6px 16px rgba(78, 205, 196, 0.6);
             transform: scale(1.1);
         }
 
@@ -519,10 +521,11 @@
         
         @media (max-width: 768px) {
             #footer-minimize-btn {
-                padding: 0.25rem 0.3rem;
-                font-size: 0.65rem;
-                min-width: 22px;
-                min-height: 22px;
+                padding: 0.6rem 0.8rem;
+                font-size: 1.2rem;
+                min-width: 40px;
+                min-height: 40px;
+                bottom: 1rem;
             }
         }
 
