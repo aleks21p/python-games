@@ -555,7 +555,7 @@
 
         /* Discord Footer */
         #discord-footer {
-            transition: transform 0.3s ease;
+            transition: transform 0.3s ease !important;
         }
         @media (max-width: 768px) {
             .games-grid {
@@ -839,7 +839,7 @@
             
             function hideFooter(saveState = true) {
                 if (discordFooter) {
-                    discordFooter.style.transform = 'translateY(100%)';
+                    discordFooter.style.setProperty('transform', 'translateY(100%)', 'important');
                 }
                 restoreTab.style.display = 'block';
                 if (saveState) {
@@ -849,7 +849,7 @@
             
             function showFooter(saveState = true) {
                 if (discordFooter) {
-                    discordFooter.style.transform = 'translateY(0)';
+                    discordFooter.style.setProperty('transform', 'translateY(0)', 'important');
                 }
                 restoreTab.style.display = 'none';
                 if (saveState) {
@@ -858,7 +858,8 @@
             }
             
             window.toggleFooter = function() {
-                const isHidden = discordFooter && discordFooter.style.transform === 'translateY(100%)';
+                const currentTransform = discordFooter ? window.getComputedStyle(discordFooter).transform : '';
+                const isHidden = currentTransform === 'matrix(1, 0, 0, 1, 0, Infinity)' || discordFooter.style.transform === 'translateY(100%)';
                 if (isHidden) {
                     showFooter(true);
                 } else {
@@ -883,8 +884,9 @@
                         event.stopPropagation();
                         event.preventDefault();
                         console.log('MINIMIZE BUTTON CLICKED', event);
-                        console.log('Current discord footer transform:', discordFooter.style.transform);
-                        const isHidden = discordFooter && discordFooter.style.transform === 'translateY(100%)';
+                        const currentTransform = discordFooter ? window.getComputedStyle(discordFooter).transform : '';
+                        console.log('Current discord footer transform:', currentTransform);
+                        const isHidden = currentTransform === 'matrix(1, 0, 0, 1, 0, Infinity)' || discordFooter.style.transform === 'translateY(100%)';
                         console.log('Discord footer is hidden?', isHidden);
                         if (isHidden) {
                             console.log('Discord footer is hidden, showing it');
