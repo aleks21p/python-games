@@ -864,17 +864,21 @@
             // Add click handler to minimize button
             console.log('About to attach click listener - minimizeBtn exists?', !!minimizeBtn);
             if (minimizeBtn) {
-                minimizeBtn.addEventListener('click', function() {
-                    console.log('MINIMIZE BUTTON CLICKED');
-                    console.log('Current footer transform:', footer.style.transform);
-                    const isHidden = footer.style.transform === 'translateY(100%)';
-                    console.log('Footer is hidden?', isHidden);
-                    if (isHidden) {
-                        console.log('Footer is hidden, showing it');
-                        showFooter(true);
-                    } else {
-                        console.log('Footer is shown, hiding it');
-                        hideFooter(true);
+                minimizeBtn.addEventListener('click', function(event) {
+                    try {
+                        console.log('MINIMIZE BUTTON CLICKED', event);
+                        console.log('Current footer transform:', footer.style.transform);
+                        const isHidden = footer.style.transform === 'translateY(100%)';
+                        console.log('Footer is hidden?', isHidden);
+                        if (isHidden) {
+                            console.log('Footer is hidden, showing it');
+                            showFooter(true);
+                        } else {
+                            console.log('Footer is shown, hiding it');
+                            hideFooter(true);
+                        }
+                    } catch (err) {
+                        console.error('ERROR in click handler:', err);
                     }
                 });
                 console.log('Click listener attached to minimize button');
@@ -886,6 +890,16 @@
             console.log('About to check footer state');
             checkFooterState();
             console.log('=== FOOTER IIFE COMPLETE ===');
+            
+            // Test: Verify button still exists and try programmatic click
+            setTimeout(() => {
+                const btnTest = document.getElementById('footer-minimize-btn');
+                console.log('TEST: Button still exists after IIFE?', !!btnTest);
+                if (btnTest) {
+                    console.log('TEST: Button element:', btnTest);
+                    console.log('TEST: Button listeners count:', getEventListeners ? getEventListeners(btnTest).click : 'N/A');
+                }
+            }, 100);
         })();
         
         // Initialize footer padding and ResizeObserver
