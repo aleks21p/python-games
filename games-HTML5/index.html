@@ -486,19 +486,19 @@
         /* Minimize button in footer */
         #footer-minimize-btn {
             position: fixed;
-            bottom: 2rem;
+            bottom: 1.5rem;
             right: 1.5rem;
             background: linear-gradient(135deg, #4ecdc4, #45b7d1);
             border: 2px solid #4ecdc4;
             color: #fff;
-            padding: 0.8rem 1rem;
-            border-radius: 8px;
+            padding: 0.5rem 0.75rem;
+            border-radius: 6px;
             cursor: pointer;
-            font-size: 1.5rem;
+            font-size: 1.2rem;
             font-weight: bold;
             transition: all 0.3s ease;
-            min-width: 48px;
-            min-height: 48px;
+            min-width: 40px;
+            min-height: 40px;
             display: flex;
             align-items: center;
             justify-content: center;
@@ -521,11 +521,11 @@
         
         @media (max-width: 768px) {
             #footer-minimize-btn {
-                padding: 0.4rem 0.6rem;
+                padding: 0.35rem 0.5rem;
                 font-size: 1rem;
-                min-width: 36px;
-                min-height: 36px;
-                bottom: 0.5rem;
+                min-width: 32px;
+                min-height: 32px;
+                bottom: 1rem;
                 right: 1rem;
             }
         }
@@ -791,7 +791,7 @@
     </div>
 
     <!-- Footer Minimize Button (outside container so it stays visible) -->
-    <button id="footer-minimize-btn" title="Minimize footer for 24 hours">⌄</button>
+    <button id="footer-minimize-btn" title="Toggle footer visibility">⊞</button>
     
     <!-- Footer Restore Tab -->
     <div id="footer-restore-tab" title="Click to restore footer">↑ Show Footer</div>
