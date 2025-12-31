@@ -790,7 +790,7 @@
     <button id="footer-minimize-btn" title="Minimize footer for 24 hours">⌄</button>
     
     <!-- Footer Restore Tab -->
-    <div id="footer-restore-tab" onclick="window.toggleFooter()" title="Click to restore footer">↑ Show Footer</div>
+    <div id="footer-restore-tab" title="Click to restore footer">↑ Show Footer</div>
 
     <script>
         // Helper function to update footer padding
@@ -861,11 +861,22 @@
                 }
             };
             
+            // Add click handler to restore tab
+            if (restoreTab) {
+                restoreTab.addEventListener('click', function(event) {
+                    event.stopPropagation();
+                    event.preventDefault();
+                    window.toggleFooter();
+                });
+            }
+            
             // Add click handler to minimize button
             console.log('About to attach click listener - minimizeBtn exists?', !!minimizeBtn);
             if (minimizeBtn) {
                 minimizeBtn.addEventListener('click', function(event) {
                     try {
+                        event.stopPropagation();
+                        event.preventDefault();
                         console.log('MINIMIZE BUTTON CLICKED', event);
                         console.log('Current footer transform:', footer.style.transform);
                         const isHidden = footer.style.transform === 'translateY(100%)';
