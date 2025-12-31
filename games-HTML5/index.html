@@ -553,7 +553,10 @@
             box-shadow: 0 0 15px rgba(78, 205, 196, 0.6);
         }
 
-        /* Responsive design */
+        /* Discord Footer */
+        #discord-footer {
+            transition: transform 0.3s ease;
+        }
         @media (max-width: 768px) {
             .games-grid {
                 grid-template-columns: 1fr;
@@ -810,10 +813,12 @@
             console.log('=== FOOTER IIFE STARTING ===');
             const ONE_DAY_MS = 24 * 60 * 60 * 1000;
             const footer = document.getElementById('main-footer');
+            const discordFooter = document.getElementById('discord-footer');
             const restoreTab = document.getElementById('footer-restore-tab');
             const minimizeBtn = document.getElementById('footer-minimize-btn');
             
             console.log('Footer element:', footer);
+            console.log('Discord footer element:', discordFooter);
             console.log('Restore tab element:', restoreTab);
             console.log('Minimize btn element:', minimizeBtn);
             
@@ -836,6 +841,9 @@
             
             function hideFooter(saveState = true) {
                 footer.style.transform = 'translateY(100%)';
+                if (discordFooter) {
+                    discordFooter.style.transform = 'translateY(100%)';
+                }
                 restoreTab.style.display = 'block';
                 if (saveState) {
                     localStorage.setItem('footer-hidden-time', Date.now().toString());
@@ -845,6 +853,9 @@
             
             function showFooter(saveState = true) {
                 footer.style.transform = 'translateY(0)';
+                if (discordFooter) {
+                    discordFooter.style.transform = 'translateY(0)';
+                }
                 restoreTab.style.display = 'none';
                 if (saveState) {
                     localStorage.removeItem('footer-hidden-time');
@@ -1349,7 +1360,7 @@
     </script>
     
     <!-- Discord community footer -->
-    <footer style="width:100%;display:flex;flex-direction:column;justify-content:center;align-items:center;padding:20px 10px;background:linear-gradient(135deg,#0f1724,rgba(0,0,0,0.0));position:fixed;left:0;bottom:0;z-index:9999;gap:12px;">
+    <footer id="discord-footer" style="width:100%;display:flex;flex-direction:column;justify-content:center;align-items:center;padding:20px 10px;background:linear-gradient(135deg,#0f1724,rgba(0,0,0,0.0));position:fixed;left:0;bottom:0;z-index:9999;gap:12px;">
         <div style="max-width:1100px;width:100%;display:flex;gap:16px;align-items:center;justify-content:center;flex-wrap:wrap;">
             <div style="display:flex;align-items:center;gap:14px;">
                 <div style="color:#fff;text-align:left;">
