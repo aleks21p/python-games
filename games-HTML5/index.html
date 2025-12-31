@@ -413,6 +413,61 @@
             padding: 2rem;
             color: rgba(255, 255, 255, 0.5);
             font-size: 0.9rem;
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: linear-gradient(135deg, rgba(5, 21, 5, 0.95), rgba(6, 27, 6, 0.95));
+            border-top: 2px solid rgba(78, 205, 196, 0.3);
+            transition: transform 0.3s ease;
+            width: 100%;
+            box-sizing: border-box;
+            z-index: 1000;
+        }
+
+        /* Minimize button in footer */
+        #footer-minimize-btn {
+            position: absolute;
+            bottom: 1rem;
+            right: 1rem;
+            background: rgba(78, 205, 196, 0.3);
+            border: 1px solid rgba(78, 205, 196, 0.6);
+            color: rgba(78, 205, 196, 0.8);
+            padding: 0.5rem 0.75rem;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.3s ease;
+        }
+
+        #footer-minimize-btn:hover {
+            background: rgba(78, 205, 196, 0.5);
+            color: #4ecdc4;
+            box-shadow: 0 0 10px rgba(78, 205, 196, 0.4);
+        }
+
+        /* Restore tab */
+        #footer-restore-tab {
+            position: fixed;
+            bottom: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(78, 205, 196, 0.7);
+            border: 2px solid rgba(78, 205, 196, 1);
+            color: #000;
+            padding: 0.75rem 1.5rem;
+            border-radius: 4px 4px 0 0;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 0.9rem;
+            transition: all 0.3s ease;
+            display: none;
+            z-index: 999;
+        }
+
+        #footer-restore-tab:hover {
+            background: rgba(78, 205, 196, 0.9);
+            box-shadow: 0 0 15px rgba(78, 205, 196, 0.6);
         }
 
         /* Responsive design */
@@ -624,7 +679,7 @@
             </div>
         </div>
 
-        <footer class="footer">
+        <footer id="main-footer" class="footer">
             <p>&#169; 2025 JavaSnake.com - Premium HTML5 Gaming Platform</p>
             <p>By Notmanyleft aka Aleks P</p>
             <p style="font-size:0.75rem; opacity:0.85; margin-top:6px; display:flex; gap:12px; justify-content:center; align-items:center;">
@@ -634,10 +689,107 @@
                 <span style="opacity:0.6;">•</span>
                 <a href="/all-time-stats.html" style="color:inherit; text-decoration:underline; opacity:0.85;">All-time stats</a>
             </p>
+            <button id="footer-minimize-btn" title="Minimize footer for 24 hours">⌄ Minimize</button>
         </footer>
+        
+        <!-- Footer Restore Tab -->
+        <div id="footer-restore-tab" onclick="window.toggleFooter()" title="Click to restore footer">↑ Show Footer</div>
     </div>
 
     <script>
+        // Footer minimize/restore functionality with 24-hour expiration
+        (function() {
+            const ONE_DAY_MS = 24 * 60 * 60 * 1000;
+            const footer = document.getElementById('main-footer');
+            const restoreTab = document.getElementById('footer-restore-tab');
+            const minimizeBtn = document.getElementById('footer-minimize-btn');
+            
+            function checkFooterState() {
+                const hiddenTimestamp = localStorage.getItem('footer-hidden-time');
+                if (hiddenTimestamp) {
+                    const timeSinceHidden = Date.now() - parseInt(hiddenTimestamp);
+                    if (timeSinceHidden < ONE_DAY_MS) {
+                        // Still within 24 hours, keep hidden
+                        hideFooter(false);
+                    } else {
+                        // More than 24 hours, show footer again
+                        localStorage.removeItem('footer-hidden-time');
+                        showFooter(false);
+                    }
+                } else {
+                    showFooter(false);
+                }
+            }
+            
+            function hideFooter(saveState = true) {
+                footer.style.transform = 'translateY(100%)';
+                restoreTab.style.display = 'block';
+                if (saveState) {
+                    localStorage.setItem('footer-hidden-time', Date.now().toString());
+                }
+                updateFooterPadding();
+            }
+            
+            function showFooter(saveState = true) {
+                footer.style.transform = 'translateY(0)';
+                restoreTab.style.display = 'none';
+                if (saveState) {
+                    localStorage.removeItem('footer-hidden-time');
+                }
+                updateFooterPadding();
+            }
+            
+            window.toggleFooter = function() {
+                const isHidden = footer.style.transform === 'translateY(100%)';
+                if (isHidden) {
+                    showFooter(true);
+                } else {
+                    hideFooter(true);
+                }
+            };
+            
+            // Add click handler to minimize button
+            if (minimizeBtn) {
+                minimizeBtn.addEventListener('click', function() {
+                    hideFooter(true);
+                });
+            }
+            
+            // Check initial state on page load
+            checkFooterState();
+        })();
+        
+        // Ensure fixed footer doesn't cover clickable content at the bottom
+        (function(){
+            function updateFooterPadding(){
+                try {
+                    var f = document.querySelector('footer');
+                    if (!f) return;
+                    var h = f.offsetHeight || 100;
+                    document.body.style.paddingBottom = h + 'px';
+                } catch (e) {
+                    console.warn('updateFooterPadding error', e);
+                }
+            }
+
+            // Run on load and resize
+            if (document.readyState === 'loading') {
+                document.addEventListener('DOMContentLoaded', updateFooterPadding);
+            } else {
+                updateFooterPadding();
+            }
+            window.addEventListener('resize', updateFooterPadding);
+
+            // Use ResizeObserver when available for dynamic footer height changes
+            try {
+                if (window.ResizeObserver) {
+                    var ro = new ResizeObserver(updateFooterPadding);
+                    var fEl = document.querySelector('footer');
+                    if (fEl) ro.observe(fEl);
+                }
+            } catch (e) {}
+        })();
+        
         // Structured data: List of games for search engines (JSON-LD)
         // NOTE: uses relative URLs; update to absolute URLs if you have a canonical domain.
         (function(){
