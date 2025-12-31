@@ -810,123 +810,138 @@
 
         // Footer minimize/restore functionality with 24-hour expiration
         (function() {
-            console.log('=== FOOTER IIFE STARTING ===');
-            const ONE_DAY_MS = 24 * 60 * 60 * 1000;
-            const discordFooter = document.getElementById('discord-footer');
-            const restoreTab = document.getElementById('footer-restore-tab');
-            const minimizeBtn = document.getElementById('footer-minimize-btn');
-            
-            console.log('Discord footer element:', discordFooter);
-            console.log('Restore tab element:', restoreTab);
-            console.log('Minimize btn element:', minimizeBtn);
-            
-            function checkFooterState() {
-                const hiddenTimestamp = localStorage.getItem('discord-footer-hidden-time');
-                if (hiddenTimestamp) {
-                    const timeSinceHidden = Date.now() - parseInt(hiddenTimestamp);
-                    if (timeSinceHidden < ONE_DAY_MS) {
-                        // Still within 24 hours, keep hidden
-                        hideFooter(false);
+            // Wait for DOM to be ready
+            function initFooter() {
+                console.log('=== FOOTER IIFE STARTING ===');
+                const ONE_DAY_MS = 24 * 60 * 60 * 1000;
+                const discordFooter = document.getElementById('discord-footer');
+                const restoreTab = document.getElementById('footer-restore-tab');
+                const minimizeBtn = document.getElementById('footer-minimize-btn');
+                
+                console.log('Discord footer element:', discordFooter);
+                console.log('Restore tab element:', restoreTab);
+                console.log('Minimize btn element:', minimizeBtn);
+                
+                if (!discordFooter) {
+                    console.error('ERROR: discord-footer element not found!');
+                    return;
+                }
+                
+                function checkFooterState() {
+                    const hiddenTimestamp = localStorage.getItem('discord-footer-hidden-time');
+                    if (hiddenTimestamp) {
+                        const timeSinceHidden = Date.now() - parseInt(hiddenTimestamp);
+                        if (timeSinceHidden < ONE_DAY_MS) {
+                            // Still within 24 hours, keep hidden
+                            hideFooter(false);
+                        } else {
+                            // More than 24 hours, show footer again
+                            localStorage.removeItem('discord-footer-hidden-time');
+                            showFooter(false);
+                        }
                     } else {
-                        // More than 24 hours, show footer again
-                        localStorage.removeItem('discord-footer-hidden-time');
                         showFooter(false);
                     }
-                } else {
-                    showFooter(false);
                 }
-            }
-            
-            function hideFooter(saveState = true) {
-                if (discordFooter) {
-                    discordFooter.style.setProperty('transform', 'translateY(100%)', 'important');
+                
+                function hideFooter(saveState = true) {
+                    if (discordFooter) {
+                        discordFooter.style.setProperty('transform', 'translateY(100%)', 'important');
+                    }
+                    restoreTab.style.display = 'block';
+                    if (saveState) {
+                        localStorage.setItem('discord-footer-hidden-time', Date.now().toString());
+                    }
                 }
-                restoreTab.style.display = 'block';
-                if (saveState) {
-                    localStorage.setItem('discord-footer-hidden-time', Date.now().toString());
+                
+                function showFooter(saveState = true) {
+                    if (discordFooter) {
+                        discordFooter.style.setProperty('transform', 'translateY(0)', 'important');
+                    }
+                    restoreTab.style.display = 'none';
+                    if (saveState) {
+                        localStorage.removeItem('discord-footer-hidden-time');
+                    }
                 }
-            }
-            
-            function showFooter(saveState = true) {
-                if (discordFooter) {
-                    discordFooter.style.setProperty('transform', 'translateY(0)', 'important');
-                }
-                restoreTab.style.display = 'none';
-                if (saveState) {
-                    localStorage.removeItem('discord-footer-hidden-time');
-                }
-            }
-            
-            window.toggleFooter = function() {
-                const currentTransform = discordFooter ? window.getComputedStyle(discordFooter).transform : '';
-                const isHidden = currentTransform === 'matrix(1, 0, 0, 1, 0, Infinity)' || discordFooter.style.transform === 'translateY(100%)';
-                if (isHidden) {
-                    showFooter(true);
-                } else {
-                    hideFooter(true);
-                }
-            };
-            
-            // Add click handler to restore tab
-            if (restoreTab) {
-                restoreTab.addEventListener('click', function(event) {
-                    event.stopPropagation();
-                    event.preventDefault();
-                    window.toggleFooter();
-                });
-            }
-            
-            // Add click handler to minimize button
-            console.log('About to attach click listener - minimizeBtn exists?', !!minimizeBtn);
-            if (minimizeBtn) {
-                minimizeBtn.addEventListener('click', function(event) {
-                    try {
+                
+                window.toggleFooter = function() {
+                    const currentTransform = discordFooter ? window.getComputedStyle(discordFooter).transform : '';
+                    const isHidden = currentTransform === 'matrix(1, 0, 0, 1, 0, Infinity)' || discordFooter.style.transform === 'translateY(100%)';
+                    if (isHidden) {
+                        showFooter(true);
+                    } else {
+                        hideFooter(true);
+                    }
+                };
+                
+                // Add click handler to restore tab
+                if (restoreTab) {
+                    restoreTab.addEventListener('click', function(event) {
                         event.stopPropagation();
                         event.preventDefault();
-                        console.log('MINIMIZE BUTTON CLICKED', event);
-                        const currentTransform = discordFooter ? window.getComputedStyle(discordFooter).transform : '';
-                        console.log('Current discord footer transform:', currentTransform);
-                        const isHidden = currentTransform === 'matrix(1, 0, 0, 1, 0, Infinity)' || discordFooter.style.transform === 'translateY(100%)';
-                        console.log('Discord footer is hidden?', isHidden);
-                        if (isHidden) {
-                            console.log('Discord footer is hidden, showing it');
-                            showFooter(true);
-                        } else {
-                            console.log('Discord footer is shown, hiding it');
-                            hideFooter(true);
-                        }
-                    } catch (err) {
-                        console.error('ERROR in click handler:', err);
-                    }
-                });
-                console.log('Click listener attached to minimize button');
-            } else {
-                console.error('ERROR: minimizeBtn is null - cannot attach click listener');
-            }
-            
-            // Check initial state on page load
-            console.log('About to check footer state');
-            checkFooterState();
-            console.log('=== FOOTER IIFE COMPLETE ===');
-            
-            // Test: Verify button still exists and try programmatic click
-            setTimeout(() => {
-                const btnTest = document.getElementById('footer-minimize-btn');
-                console.log('TEST: Button still exists after IIFE?', !!btnTest);
-                if (btnTest) {
-                    console.log('TEST: Button element:', btnTest);
-                    console.log('TEST: Button computed pointer-events:', window.getComputedStyle(btnTest).pointerEvents);
-                    console.log('TEST: Button computed z-index:', window.getComputedStyle(btnTest).zIndex);
-                    
-                    // Add a document-wide click listener to detect if clicks reach the button area
-                    document.addEventListener('click', function(e) {
-                        if (e.target === btnTest || btnTest.contains(e.target)) {
-                            console.log('DOCUMENT LISTENER: Click detected on button!', e);
+                        window.toggleFooter();
+                    });
+                }
+                
+                // Add click handler to minimize button
+                console.log('About to attach click listener - minimizeBtn exists?', !!minimizeBtn);
+                if (minimizeBtn) {
+                    minimizeBtn.addEventListener('click', function(event) {
+                        try {
+                            event.stopPropagation();
+                            event.preventDefault();
+                            console.log('MINIMIZE BUTTON CLICKED', event);
+                            const currentTransform = discordFooter ? window.getComputedStyle(discordFooter).transform : '';
+                            console.log('Current discord footer transform:', currentTransform);
+                            const isHidden = currentTransform === 'matrix(1, 0, 0, 1, 0, Infinity)' || discordFooter.style.transform === 'translateY(100%)';
+                            console.log('Discord footer is hidden?', isHidden);
+                            if (isHidden) {
+                                console.log('Discord footer is hidden, showing it');
+                                showFooter(true);
+                            } else {
+                                console.log('Discord footer is shown, hiding it');
+                                hideFooter(true);
+                            }
+                        } catch (err) {
+                            console.error('ERROR in click handler:', err);
                         }
                     });
-                    console.log('Added document-wide click listener');
+                    console.log('Click listener attached to minimize button');
+                } else {
+                    console.error('ERROR: minimizeBtn is null - cannot attach click listener');
                 }
-            }, 100);
+                
+                // Check initial state on page load
+                console.log('About to check footer state');
+                checkFooterState();
+                console.log('=== FOOTER IIFE COMPLETE ===');
+                
+                // Test: Verify button still exists and try programmatic click
+                setTimeout(() => {
+                    const btnTest = document.getElementById('footer-minimize-btn');
+                    console.log('TEST: Button still exists after IIFE?', !!btnTest);
+                    if (btnTest) {
+                        console.log('TEST: Button element:', btnTest);
+                        console.log('TEST: Button computed pointer-events:', window.getComputedStyle(btnTest).pointerEvents);
+                        console.log('TEST: Button computed z-index:', window.getComputedStyle(btnTest).zIndex);
+                        
+                        // Add a document-wide click listener to detect if clicks reach the button area
+                        document.addEventListener('click', function(e) {
+                            if (e.target === btnTest || btnTest.contains(e.target)) {
+                                console.log('DOCUMENT LISTENER: Click detected on button!', e);
+                            }
+                        });
+                        console.log('Added document-wide click listener');
+                    }
+                }, 100);
+            }
+            
+            // Run when DOM is ready
+            if (document.readyState === 'loading') {
+                document.addEventListener('DOMContentLoaded', initFooter);
+            } else {
+                initFooter();
+            }
         })();
         
         // Initialize footer padding and ResizeObserver
