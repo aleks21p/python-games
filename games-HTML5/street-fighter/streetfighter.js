@@ -91,6 +91,12 @@ class StreetFighterGame {
         // Track key hold times for energy ball charging
         this.keyHoldTimes = {};
         
+        // Touch tracking
+        this.touchStartX = 0;
+        this.touchStartY = 0;
+        this.touchEndX = 0;
+        this.touchEndY = 0;
+        
         document.addEventListener('keydown', (e) => {
             this.keys[e.code] = true;
             this.addToInputBuffer(e.code);
@@ -113,6 +119,73 @@ class StreetFighterGame {
             // Reset hold time on key release
             this.keyHoldTimes[e.code] = 0;
         });
+
+        // Touch controls for mobile
+        const canvas = document.getElementById('gameCanvas');
+        if (canvas) {
+            canvas.addEventListener('touchstart', (e) => {
+                this.touchStartX = e.touches[0].clientX;
+                this.touchStartY = e.touches[0].clientY;
+                e.preventDefault();
+            }, { passive: false });
+
+            canvas.addEventListener('touchmove', (e) => {
+                if (!this.touchStartX || !this.touchStartY) return;
+                
+                this.touchEndX = e.touches[0].clientX;
+                this.touchEndY = e.touches[0].clientY;
+                
+                const deltaX = this.touchEndX - this.touchStartX;
+                const deltaY = this.touchEndY - this.touchStartY;
+                
+                // Swipe left for backward movement
+                if (deltaX < -30 && Math.abs(deltaY) < 30) {
+                    this.keys['ArrowLeft'] = true;
+                    this.keys['ArrowRight'] = false;
+                } 
+                // Swipe right for forward movement
+                else if (deltaX > 30 && Math.abs(deltaY) < 30) {
+                    this.keys['ArrowLeft'] = false;
+                    this.keys['ArrowRight'] = true;
+                }
+                
+                // Swipe up for jump
+                if (deltaY < -30 && Math.abs(deltaX) < 50) {
+                    this.keys['Space'] = true;
+                }
+                
+                e.preventDefault();
+            }, { passive: false });
+
+            canvas.addEventListener('touchend', (e) => {
+                const deltaX = this.touchEndX - this.touchStartX;
+                const deltaY = this.touchEndY - this.touchStartY;
+                
+                // Reset movement keys
+                this.keys['ArrowLeft'] = false;
+                this.keys['ArrowRight'] = false;
+                this.keys['Space'] = false;
+                
+                // Swipe down for punch attack
+                if (deltaY > 30 && Math.abs(deltaX) < 50) {
+                    this.keys['KeyZ'] = true;
+                    this.keys['KeyZ'] = false;
+                }
+                
+                // Double tap for special attack
+                if (Math.sqrt(deltaX * deltaX + deltaY * deltaY) < 30) {
+                    this.keys['KeyX'] = true;
+                    this.keys['KeyX'] = false;
+                }
+                
+                this.touchStartX = 0;
+                this.touchStartY = 0;
+                e.preventDefault();
+            }, { passive: false });
+
+            // Touch-action CSS
+            canvas.style.touchAction = 'none';
+        }
     }
     
     handleAttackInput(keyCode, player) {
