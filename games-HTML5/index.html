@@ -788,6 +788,18 @@
     </div>
 
     <script>
+        // Helper function to update footer padding
+        function updateFooterPadding(){
+            try {
+                var f = document.querySelector('footer');
+                if (!f) return;
+                var h = f.offsetHeight || 100;
+                document.body.style.paddingBottom = h + 'px';
+            } catch (e) {
+                console.warn('updateFooterPadding error', e);
+            }
+        }
+
         // Footer minimize/restore functionality with 24-hour expiration
         (function() {
             const ONE_DAY_MS = 24 * 60 * 60 * 1000;
@@ -850,36 +862,22 @@
             checkFooterState();
         })();
         
-        // Ensure fixed footer doesn't cover clickable content at the bottom
-        (function(){
-            function updateFooterPadding(){
-                try {
-                    var f = document.querySelector('footer');
-                    if (!f) return;
-                    var h = f.offsetHeight || 100;
-                    document.body.style.paddingBottom = h + 'px';
-                } catch (e) {
-                    console.warn('updateFooterPadding error', e);
-                }
-            }
+        // Initialize footer padding and ResizeObserver
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', updateFooterPadding);
+        } else {
+            updateFooterPadding();
+        }
+        window.addEventListener('resize', updateFooterPadding);
 
-            // Run on load and resize
-            if (document.readyState === 'loading') {
-                document.addEventListener('DOMContentLoaded', updateFooterPadding);
-            } else {
-                updateFooterPadding();
+        // Use ResizeObserver when available for dynamic footer height changes
+        try {
+            if (window.ResizeObserver) {
+                var ro = new ResizeObserver(updateFooterPadding);
+                var fEl = document.querySelector('footer');
+                if (fEl) ro.observe(fEl);
             }
-            window.addEventListener('resize', updateFooterPadding);
-
-            // Use ResizeObserver when available for dynamic footer height changes
-            try {
-                if (window.ResizeObserver) {
-                    var ro = new ResizeObserver(updateFooterPadding);
-                    var fEl = document.querySelector('footer');
-                    if (fEl) ro.observe(fEl);
-                }
-            } catch (e) {}
-        })();
+        } catch (e) {}
         
         // Structured data: List of games for search engines (JSON-LD)
         // NOTE: uses relative URLs; update to absolute URLs if you have a canonical domain.
