@@ -866,7 +866,16 @@
             if (minimizeBtn) {
                 minimizeBtn.addEventListener('click', function() {
                     console.log('MINIMIZE BUTTON CLICKED');
-                    hideFooter(true);
+                    console.log('Current footer transform:', footer.style.transform);
+                    const isHidden = footer.style.transform === 'translateY(100%)';
+                    console.log('Footer is hidden?', isHidden);
+                    if (isHidden) {
+                        console.log('Footer is hidden, showing it');
+                        showFooter(true);
+                    } else {
+                        console.log('Footer is shown, hiding it');
+                        hideFooter(true);
+                    }
                 });
                 console.log('Click listener attached to minimize button');
             } else {
