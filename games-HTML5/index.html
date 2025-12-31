@@ -807,10 +807,15 @@
 
         // Footer minimize/restore functionality with 24-hour expiration
         (function() {
+            console.log('=== FOOTER IIFE STARTING ===');
             const ONE_DAY_MS = 24 * 60 * 60 * 1000;
             const footer = document.getElementById('main-footer');
             const restoreTab = document.getElementById('footer-restore-tab');
             const minimizeBtn = document.getElementById('footer-minimize-btn');
+            
+            console.log('Footer element:', footer);
+            console.log('Restore tab element:', restoreTab);
+            console.log('Minimize btn element:', minimizeBtn);
             
             function checkFooterState() {
                 const hiddenTimestamp = localStorage.getItem('footer-hidden-time');
@@ -857,14 +862,21 @@
             };
             
             // Add click handler to minimize button
+            console.log('About to attach click listener - minimizeBtn exists?', !!minimizeBtn);
             if (minimizeBtn) {
                 minimizeBtn.addEventListener('click', function() {
+                    console.log('MINIMIZE BUTTON CLICKED');
                     hideFooter(true);
                 });
+                console.log('Click listener attached to minimize button');
+            } else {
+                console.error('ERROR: minimizeBtn is null - cannot attach click listener');
             }
             
             // Check initial state on page load
+            console.log('About to check footer state');
             checkFooterState();
+            console.log('=== FOOTER IIFE COMPLETE ===');
         })();
         
         // Initialize footer padding and ResizeObserver
