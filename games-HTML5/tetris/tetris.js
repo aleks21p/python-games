@@ -149,6 +149,12 @@ class TetrisGame {
     }
     
     setupInput() {
+        // Touch support variables
+        this.touchStartX = 0;
+        this.touchStartY = 0;
+        this.touchEndX = 0;
+        this.touchEndY = 0;
+        
         document.addEventListener('keydown', (e) => {
             // Cheat code: T key pressed
             if (e.key === 't' || e.key === 'T') {
@@ -206,6 +212,75 @@ class TetrisGame {
             if (e.key === '1' || e.key === '!') {
                 this.cheatActive = false;
             }
+        });
+
+        // Touch controls for mobile
+        this.canvas.addEventListener('touchstart', (e) => {
+            this.touchStartX = e.touches[0].clientX;
+            this.touchStartY = e.touches[0].clientY;
+            e.preventDefault();
+        }, { passive: false });
+
+        this.canvas.addEventListener('touchmove', (e) => {
+            if (!this.touchStartX || !this.touchStartY) return;
+            
+            this.touchEndX = e.touches[0].clientX;
+            this.touchEndY = e.touches[0].clientY;
+            
+            const deltaX = this.touchEndX - this.touchStartX;
+            const deltaY = this.touchEndY - this.touchStartY;
+            
+            // Horizontal swipe for left/right movement
+            if (Math.abs(deltaX) > Math.abs(deltaY) && Math.abs(deltaX) > 30) {
+                if (deltaX < 0) {
+                    // Swipe left
+                    this.movePiece(-1, 0);
+                } else {
+                    // Swipe right
+                    this.movePiece(1, 0);
+                }
+                // Reset to prevent multiple triggers
+                this.touchStartX = this.touchEndX;
+                this.touchStartY = this.touchEndY;
+            }
+            
+            e.preventDefault();
+        }, { passive: false });
+
+        this.canvas.addEventListener('touchend', (e) => {
+            if (!this.touchStartX || !this.touchStartY) return;
+            
+            this.touchEndX = e.changedTouches[0].clientX;
+            this.touchEndY = e.changedTouches[0].clientY;
+            
+            const deltaX = this.touchEndX - this.touchStartX;
+            const deltaY = this.touchEndY - this.touchStartY;
+            const distance = Math.sqrt(deltaX * deltaX + deltaY * deltaY);
+            
+            // Vertical swipe down for drop
+            if (deltaY > 50 && Math.abs(deltaX) < 50) {
+                this.movePiece(0, 1);
+            }
+            // Vertical swipe up for rotation
+            else if (deltaY < -50 && Math.abs(deltaX) < 50) {
+                this.rotatePiece();
+            }
+            // Tap for hard drop (short tap)
+            else if (distance < 30 && Date.now() - this.lastTouchTime < 300) {
+                this.hardDrop();
+            }
+            
+            this.lastTouchTime = Date.now();
+            this.touchStartX = 0;
+            this.touchStartY = 0;
+            e.preventDefault();
+        }, { passive: false });
+
+        // Double tap anywhere on canvas for hard drop
+        this.canvas.addEventListener('dblclick', (e) => {
+            if (this.gameOver || this.paused) return;
+            this.hardDrop();
+            e.preventDefault();
         });
     }
     
