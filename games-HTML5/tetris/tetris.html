@@ -354,8 +354,49 @@
         }
     }
     </style>
+    <style>
+        /* Return Home Button */
+        #return-home-btn {
+            position: fixed;
+            top: 1rem;
+            left: 1rem;
+            background: linear-gradient(135deg, #4ecdc4, #45b7d1);
+            color: white;
+            padding: 0.6rem 1rem;
+            border-radius: 6px;
+            text-decoration: none;
+            font-weight: 600;
+            font-size: 0.9rem;
+            box-shadow: 0 4px 12px rgba(78, 205, 196, 0.4);
+            z-index: 9999;
+            transition: all 0.3s ease;
+            cursor: pointer;
+            border: none;
+        }
+        
+        #return-home-btn:hover {
+            background: linear-gradient(135deg, #5eddd4, #55c7e1);
+            box-shadow: 0 6px 16px rgba(78, 205, 196, 0.6);
+            transform: translateY(-2px);
+        }
+        
+        #return-home-btn:active {
+            transform: translateY(0);
+        }
+        
+        @media (max-width: 768px) {
+            #return-home-btn {
+                padding: 0.5rem 0.8rem;
+                font-size: 0.8rem;
+                top: 0.7rem;
+                left: 0.7rem;
+            }
+        }
+    </style>
 </head>
 <body>
+    <!-- Return Home Button -->
+    <a href="../index.html" id="return-home-btn" title="Return to game menu">🏠 Home</a>
     <div class="game-container">
         <div class="game-board">
             <canvas id="gameCanvas" width="300" height="600"></canvas>
