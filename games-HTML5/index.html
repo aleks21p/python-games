@@ -1110,12 +1110,42 @@
             // set toggle UI state and listeners for theme switch
             const themeSwitch = document.getElementById('themeSwitch');
             if (themeSwitch) {
-                themeSwitch.addEventListener('click', () => applyTheme(window.THEME_MODE === 'dark' ? 'light' : 'dark'));
-                themeSwitch.addEventListener('keydown', (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); applyTheme(window.THEME_MODE === 'dark' ? 'light' : 'dark'); } });
+                const handleThemeClick = () => {
+                    applyTheme(window.THEME_MODE === 'dark' ? 'light' : 'dark');
+                };
+                themeSwitch.removeEventListener('click', handleThemeClick);
+                themeSwitch.addEventListener('click', handleThemeClick);
+                
+                const handleThemeKeydown = (e) => { 
+                    if (e.key === 'Enter' || e.key === ' ') { 
+                        e.preventDefault(); 
+                        applyTheme(window.THEME_MODE === 'dark' ? 'light' : 'dark'); 
+                    } 
+                };
+                themeSwitch.removeEventListener('keydown', handleThemeKeydown);
+                themeSwitch.addEventListener('keydown', handleThemeKeydown);
+                console.log('Theme switch initialized');
             }
             
             // Apply saved theme setting
             applyTheme(window.THEME_MODE);
+
+            // Initialize minimize button
+            const minimizeBtn = document.getElementById('footer-minimize-btn');
+            if (minimizeBtn) {
+                const handleMinimizeClick = function() {
+                    const footer = document.getElementById('main-footer');
+                    if (footer) {
+                        footer.style.transform = 'translateY(100%)';
+                        const restoreTab = document.getElementById('footer-restore-tab');
+                        if (restoreTab) restoreTab.style.display = 'block';
+                        localStorage.setItem('footer-hidden-time', Date.now().toString());
+                    }
+                };
+                minimizeBtn.removeEventListener('click', handleMinimizeClick);
+                minimizeBtn.addEventListener('click', handleMinimizeClick);
+                console.log('Minimize button initialized');
+            }
 
             // Create particles only if low power is off
             if (!window.LOW_POWER_MODE) {
