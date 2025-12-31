@@ -599,17 +599,12 @@
     </style>
 </head>
 <body>
-    <!-- Low Power Mode toggle (positioned top-right) -->
-    <div class="low-power-toggle" role="region" aria-label="Theme and Power Mode">
-        <div id="themeSwitch" class="toggle-switch" role="switch" aria-checked="true" aria-label="Dark/Light Mode" tabindex="0" title="Toggle Dark/Light Mode">
+    <!-- Dark/Light Mode toggle (positioned top-right) -->
+    <div class="low-power-toggle" role="region" aria-label="Theme Mode">
+        <button id="themeSwitch" class="toggle-switch" role="switch" aria-checked="true" aria-label="Dark/Light Mode" title="Toggle Dark/Light Mode">
             <div class="knob"></div>
-        </div>
+        </button>
         <span id="themeLabel">Dark</span>
-        <div id="lowPowerSwitch" class="toggle-switch" role="switch" aria-checked="false" tabindex="0" title="Toggle Low Power Mode">
-            <div class="knob"></div>
-        </div>
-        <span id="lowPowerLabel">Low Power</span>
-        <span id="lowPowerBadge" class="low-power-badge" style="display:none">Low</span>
     </div>
 
     <!-- Site-wide mute toggle (moved to top-left) -->
@@ -1079,7 +1074,7 @@
             }, 100);
         });
 
-        // Initialize particles and low-power UI when page loads
+        // Initialize particles when page loads
         document.addEventListener('DOMContentLoaded', () => {
             // set toggle UI state and listeners for theme switch
             const themeSwitch = document.getElementById('themeSwitch');
@@ -1090,16 +1085,8 @@
             
             // Apply saved theme setting
             applyTheme(window.THEME_MODE);
-            
-            // set toggle UI state and listeners for low power switch
-            const sw = document.getElementById('lowPowerSwitch');
-            if (sw) {
-                sw.addEventListener('click', () => applyLowPower(!window.LOW_POWER_MODE));
-                sw.addEventListener('keydown', (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); applyLowPower(!window.LOW_POWER_MODE); } });
-            }
 
-            // Apply saved low power setting first and create particles only if low power is off
-            applyLowPower(window.LOW_POWER_MODE);
+            // Create particles only if low power is off
             if (!window.LOW_POWER_MODE) {
                 createParticles();
                 createStars();
