@@ -521,11 +521,12 @@
         
         @media (max-width: 768px) {
             #footer-minimize-btn {
-                padding: 0.6rem 0.8rem;
-                font-size: 1.2rem;
-                min-width: 40px;
-                min-height: 40px;
-                bottom: 1rem;
+                padding: 0.4rem 0.6rem;
+                font-size: 1rem;
+                min-width: 36px;
+                min-height: 36px;
+                bottom: 0.5rem;
+                right: 1rem;
             }
         }
 
@@ -544,7 +545,7 @@
             font-weight: 600;
             font-size: 0.9rem;
             transition: all 0.3s ease;
-            display: none;
+            display: none !important;
             z-index: 999;
         }
 
@@ -848,7 +849,7 @@
                     if (discordFooter) {
                         discordFooter.style.setProperty('transform', 'translateY(100%)', 'important');
                     }
-                    restoreTab.style.display = 'block';
+                    // Don't show restore tab - use minimize button for toggle instead
                     if (saveState) {
                         localStorage.setItem('discord-footer-hidden-time', Date.now().toString());
                     }
@@ -858,7 +859,7 @@
                     if (discordFooter) {
                         discordFooter.style.setProperty('transform', 'translateY(0)', 'important');
                     }
-                    restoreTab.style.display = 'none';
+                    // Don't hide minimize button - keep it visible for toggle
                     if (saveState) {
                         localStorage.removeItem('discord-footer-hidden-time');
                     }
