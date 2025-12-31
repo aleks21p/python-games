@@ -784,13 +784,13 @@
                 <a href="/all-time-stats.html" style="color:inherit; text-decoration:underline; opacity:0.85;">All-time stats</a>
             </p>
         </footer>
-        
-        <!-- Footer Minimize Button (outside footer so it stays visible) -->
-        <button id="footer-minimize-btn" title="Minimize footer for 24 hours">⌄</button>
-        
-        <!-- Footer Restore Tab -->
-        <div id="footer-restore-tab" onclick="window.toggleFooter()" title="Click to restore footer">↑ Show Footer</div>
     </div>
+
+    <!-- Footer Minimize Button (outside container so it stays visible) -->
+    <button id="footer-minimize-btn" title="Minimize footer for 24 hours">⌄</button>
+    
+    <!-- Footer Restore Tab -->
+    <div id="footer-restore-tab" onclick="window.toggleFooter()" title="Click to restore footer">↑ Show Footer</div>
 
     <script>
         // Helper function to update footer padding
@@ -897,7 +897,16 @@
                 console.log('TEST: Button still exists after IIFE?', !!btnTest);
                 if (btnTest) {
                     console.log('TEST: Button element:', btnTest);
-                    console.log('TEST: Button listeners count:', getEventListeners ? getEventListeners(btnTest).click : 'N/A');
+                    console.log('TEST: Button computed pointer-events:', window.getComputedStyle(btnTest).pointerEvents);
+                    console.log('TEST: Button computed z-index:', window.getComputedStyle(btnTest).zIndex);
+                    
+                    // Add a document-wide click listener to detect if clicks reach the button area
+                    document.addEventListener('click', function(e) {
+                        if (e.target === btnTest || btnTest.contains(e.target)) {
+                            console.log('DOCUMENT LISTENER: Click detected on button!', e);
+                        }
+                    });
+                    console.log('Added document-wide click listener');
                 }
             }, 100);
         })();
