@@ -298,6 +298,14 @@
             cursor: pointer;
             transition: background 0.2s ease;
             border: 1px solid rgba(255,255,255,0.08);
+            padding: 0;
+            margin: 0;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            pointer-events: auto;
+            -webkit-user-select: none;
+            user-select: none;
         }
 
         .toggle-switch .knob {
@@ -310,6 +318,7 @@
             left: 3px;
             transition: left 0.2s ease, transform 0.2s ease;
             box-shadow: 0 2px 6px rgba(0,0,0,0.3);
+            pointer-events: none;
         }
 
         .toggle-switch.on { background: linear-gradient(90deg, #4ecdc4, #45b7d1); }
@@ -479,20 +488,42 @@
             position: absolute;
             bottom: 1rem;
             right: 1rem;
-            background: rgba(78, 205, 196, 0.3);
-            border: 1px solid rgba(78, 205, 196, 0.6);
-            color: rgba(78, 205, 196, 0.8);
-            padding: 0.5rem 0.75rem;
+            background: rgba(78, 205, 196, 0.4);
+            border: 1px solid rgba(78, 205, 196, 0.8);
+            color: rgba(78, 205, 196, 1);
+            padding: 0.3rem 0.4rem;
             border-radius: 4px;
             cursor: pointer;
-            font-size: 0.9rem;
+            font-size: 0.8rem;
             transition: all 0.3s ease;
+            min-width: 26px;
+            min-height: 26px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            pointer-events: auto;
+            -webkit-user-select: none;
+            user-select: none;
         }
 
         #footer-minimize-btn:hover {
-            background: rgba(78, 205, 196, 0.5);
+            background: rgba(78, 205, 196, 0.6);
             color: #4ecdc4;
-            box-shadow: 0 0 10px rgba(78, 205, 196, 0.4);
+            box-shadow: 0 0 10px rgba(78, 205, 196, 0.5);
+            transform: scale(1.1);
+        }
+
+        #footer-minimize-btn:active {
+            transform: scale(0.95);
+        }
+        
+        @media (max-width: 768px) {
+            #footer-minimize-btn {
+                padding: 0.25rem 0.3rem;
+                font-size: 0.65rem;
+                min-width: 22px;
+                min-height: 22px;
+            }
         }
 
         /* Restore tab */
@@ -737,7 +768,7 @@
                 <span style="opacity:0.6;">•</span>
                 <a href="/all-time-stats.html" style="color:inherit; text-decoration:underline; opacity:0.85;">All-time stats</a>
             </p>
-            <button id="footer-minimize-btn" title="Minimize footer for 24 hours">⌄ Minimize</button>
+            <button id="footer-minimize-btn" title="Minimize footer for 24 hours">⌄</button>
         </footer>
         
         <!-- Footer Restore Tab -->
