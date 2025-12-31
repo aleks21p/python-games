@@ -1180,17 +1180,23 @@
             // Initialize minimize button
             const minimizeBtn = document.getElementById('footer-minimize-btn');
             if (minimizeBtn) {
-                const handleMinimizeClick = function() {
+                minimizeBtn.addEventListener('click', function() {
                     const footer = document.getElementById('main-footer');
                     if (footer) {
+                        console.log('Hiding footer...');
                         footer.style.transform = 'translateY(100%)';
                         const restoreTab = document.getElementById('footer-restore-tab');
-                        if (restoreTab) restoreTab.style.display = 'block';
+                        if (restoreTab) {
+                            restoreTab.style.display = 'block';
+                            console.log('Restore tab shown');
+                        }
                         localStorage.setItem('footer-hidden-time', Date.now().toString());
+                        updateFooterPadding();
+                        console.log('Footer hidden successfully');
+                    } else {
+                        console.log('Error: main-footer element not found');
                     }
-                };
-                minimizeBtn.removeEventListener('click', handleMinimizeClick);
-                minimizeBtn.addEventListener('click', handleMinimizeClick);
+                });
                 console.log('Minimize button initialized');
             }
 
