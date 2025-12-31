@@ -812,18 +812,16 @@
         (function() {
             console.log('=== FOOTER IIFE STARTING ===');
             const ONE_DAY_MS = 24 * 60 * 60 * 1000;
-            const footer = document.getElementById('main-footer');
             const discordFooter = document.getElementById('discord-footer');
             const restoreTab = document.getElementById('footer-restore-tab');
             const minimizeBtn = document.getElementById('footer-minimize-btn');
             
-            console.log('Footer element:', footer);
             console.log('Discord footer element:', discordFooter);
             console.log('Restore tab element:', restoreTab);
             console.log('Minimize btn element:', minimizeBtn);
             
             function checkFooterState() {
-                const hiddenTimestamp = localStorage.getItem('footer-hidden-time');
+                const hiddenTimestamp = localStorage.getItem('discord-footer-hidden-time');
                 if (hiddenTimestamp) {
                     const timeSinceHidden = Date.now() - parseInt(hiddenTimestamp);
                     if (timeSinceHidden < ONE_DAY_MS) {
@@ -831,7 +829,7 @@
                         hideFooter(false);
                     } else {
                         // More than 24 hours, show footer again
-                        localStorage.removeItem('footer-hidden-time');
+                        localStorage.removeItem('discord-footer-hidden-time');
                         showFooter(false);
                     }
                 } else {
@@ -840,31 +838,27 @@
             }
             
             function hideFooter(saveState = true) {
-                footer.style.transform = 'translateY(100%)';
                 if (discordFooter) {
                     discordFooter.style.transform = 'translateY(100%)';
                 }
                 restoreTab.style.display = 'block';
                 if (saveState) {
-                    localStorage.setItem('footer-hidden-time', Date.now().toString());
+                    localStorage.setItem('discord-footer-hidden-time', Date.now().toString());
                 }
-                updateFooterPadding();
             }
             
             function showFooter(saveState = true) {
-                footer.style.transform = 'translateY(0)';
                 if (discordFooter) {
                     discordFooter.style.transform = 'translateY(0)';
                 }
                 restoreTab.style.display = 'none';
                 if (saveState) {
-                    localStorage.removeItem('footer-hidden-time');
+                    localStorage.removeItem('discord-footer-hidden-time');
                 }
-                updateFooterPadding();
             }
             
             window.toggleFooter = function() {
-                const isHidden = footer.style.transform === 'translateY(100%)';
+                const isHidden = discordFooter && discordFooter.style.transform === 'translateY(100%)';
                 if (isHidden) {
                     showFooter(true);
                 } else {
@@ -889,14 +883,14 @@
                         event.stopPropagation();
                         event.preventDefault();
                         console.log('MINIMIZE BUTTON CLICKED', event);
-                        console.log('Current footer transform:', footer.style.transform);
-                        const isHidden = footer.style.transform === 'translateY(100%)';
-                        console.log('Footer is hidden?', isHidden);
+                        console.log('Current discord footer transform:', discordFooter.style.transform);
+                        const isHidden = discordFooter && discordFooter.style.transform === 'translateY(100%)';
+                        console.log('Discord footer is hidden?', isHidden);
                         if (isHidden) {
-                            console.log('Footer is hidden, showing it');
+                            console.log('Discord footer is hidden, showing it');
                             showFooter(true);
                         } else {
-                            console.log('Footer is shown, hiding it');
+                            console.log('Discord footer is shown, hiding it');
                             hideFooter(true);
                         }
                     } catch (err) {
