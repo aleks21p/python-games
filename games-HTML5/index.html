@@ -646,8 +646,8 @@
     </script>
 </head>
 <body>
-    <!-- Deployment Info Display (top-left) -->
-    <div id="deployment-info" style="position:fixed;bottom:1rem;right:1rem;color:#4ecdc4;font-size:0.85rem;font-family:'Courier New',monospace;white-space:nowrap;background:rgba(0,0,0,0.5);padding:0.5rem 1rem;border-radius:4px;display:block;opacity:0.8;"></div>
+    <!-- Deployment Info Display (bottom-right) -->
+    <div id="deployment-info" style="position:fixed;bottom:1rem;right:1rem;color:#4ecdc4;font-size:0.85rem;font-family:'Courier New',monospace;white-space:nowrap;background:rgba(0,0,0,0.7);padding:0.75rem 1.2rem;border-radius:4px;border:1px solid rgba(78,205,196,0.3);display:block;opacity:1;z-index:9998;">🚀 Loading...</div>
 
     <!-- Dark/Light Mode toggle (positioned top-right) -->
     <div class="low-power-toggle" role="region" aria-label="Theme Mode">
@@ -1225,6 +1225,8 @@
                 if (infoEl) {
                     infoEl.textContent = `🚀 Last deployment: ${formatted} (~${timeAgo})`;
                     infoEl.style.display = 'block';
+                    infoEl.style.opacity = '1';
+                    console.log('Updated deployment info:', infoEl.textContent);
                 }
             }
             
