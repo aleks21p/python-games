@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Cat Clash: Golden Frontier</title>
+  <link rel="stylesheet" href="cat.css" />
+</head>
+<body>
+  <main class="game-shell">
+    <header class="topbar">
+      <div class="top-row">
+        <h1>Cat Clash: Golden Frontier</h1>
+        <div class="top-controls">
+          <button class="pause-btn" id="pause-toggle" aria-pressed="false">Pause</button>
+          <button class="settings-btn" id="settings-toggle" aria-expanded="false" aria-controls="quick-settings">Settings</button>
+          <button class="audio-btn" id="audio-toggle" aria-pressed="false">Sound Off</button>
+          <button class="reset-btn compact" id="reset">Restart Match</button>
+        </div>
+      </div>
+      <div class="stats">
+        <div class="pill">Money <span id="money">0</span></div>
+        <div class="pill">Cat Base <span id="player-base-hp">0</span></div>
+        <div class="pill">Enemy Base <span id="enemy-base-hp">0</span></div>
+        <div class="pill">Difficulty <span id="difficulty-name">Normal</span></div>
+        <div class="pill">Apply Mode <span id="difficulty-apply-name">Instant</span></div>
+        <div class="pill">Level <span id="level-name">-</span></div>
+        <div class="pill">Matches <span id="match-count">0</span></div>
+        <div class="pill">Time <span id="battle-time">0:00</span></div>
+        <div class="pill">Status <span id="status-text">Battle</span></div>
+      </div>
+
+      <section class="quick-settings" id="quick-settings" aria-hidden="true">
+        <div class="quick-row quick-difficulty">
+          <span class="quick-label">Difficulty Preset</span>
+          <div class="difficulty-pills" role="group" aria-label="Difficulty preset">
+            <button class="difficulty-btn" type="button" data-difficulty="easy" aria-pressed="false">Easy</button>
+            <button class="difficulty-btn" type="button" data-difficulty="normal" aria-pressed="true">Normal</button>
+            <button class="difficulty-btn" type="button" data-difficulty="hard" aria-pressed="false">Hard</button>
+          </div>
+        </div>
+
+        <div class="quick-row quick-difficulty">
+          <span class="quick-label">Difficulty Apply Mode</span>
+          <div class="apply-mode-pills" role="group" aria-label="Difficulty apply mode">
+            <button class="apply-mode-btn" type="button" data-apply-mode="instant" aria-pressed="true">Instant</button>
+            <button class="apply-mode-btn" type="button" data-apply-mode="next-match" aria-pressed="false">Next Match</button>
+          </div>
+          <p class="quick-note" id="pending-difficulty-note">Difficulty applies instantly to bases and all active units.</p>
+        </div>
+
+        <div class="quick-row quick-toggles">
+          <label class="inline-toggle"><input class="setting-toggle" type="checkbox" data-setting="difficulty-lock" /> Lock difficulty during active battle</label>
+          <label class="inline-toggle"><input class="setting-toggle" type="checkbox" data-setting="hard-confirm" checked /> Ask before switching to Hard mid-fight</label>
+        </div>
+
+        <div class="quick-row">
+          <label for="quick-music-volume">Music Volume <span id="quick-music-volume-value">72%</span></label>
+          <input type="range" id="quick-music-volume" min="0" max="100" step="1" value="72" />
+        </div>
+
+        <div class="quick-row">
+          <label for="quick-sfx-volume">SFX Volume <span id="quick-sfx-volume-value">88%</span></label>
+          <input type="range" id="quick-sfx-volume" min="0" max="100" step="1" value="88" />
+        </div>
+
+        <div class="quick-actions">
+          <button class="audio-btn compact" id="quick-audio-toggle" aria-pressed="false">Sound Off</button>
+          <button class="reset-btn compact" id="quick-restart">Restart Match</button>
+        </div>
+      </section>
+    </header>
+
+    <section class="arena-wrap">
+      <div class="lane theme-meadow" id="lane">
+        <div class="base enemy-base">
+          <span class="base-title">DOG FORT</span>
+          <div class="base-health">
+            <div class="base-health-fill enemy-fill" id="enemy-base-bar"></div>
+          </div>
+        </div>
+        <div class="base player-base">
+          <span class="base-title">CAT CASTLE</span>
+          <div class="base-health">
+            <div class="base-health-fill player-fill" id="player-base-bar"></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="battle-intel" aria-live="polite">
+      <article class="intel-card">
+        <h3>Wave Forecast</h3>
+        <p>Next Wave <strong id="forecast-next-wave">--</strong></p>
+        <p>Wave Type <strong id="forecast-wave-type">--</strong></p>
+        <p>Boss ETA <strong id="forecast-boss">--</strong></p>
+      </article>
+
+      <article class="intel-card">
+        <h3>Threat Meter</h3>
+        <div class="threat-meter" role="meter" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0" aria-label="Battle threat level" id="threat-meter">
+          <div class="threat-fill" id="threat-fill"></div>
+        </div>
+        <p class="threat-text" id="threat-text">Low pressure</p>
+      </article>
+    </section>
+
+    <section class="pause-overlay" id="pause-overlay" aria-hidden="true">
+      <div class="pause-card" role="dialog" aria-modal="false" aria-labelledby="pause-title">
+        <h2 id="pause-title">Battle Paused</h2>
+        <p class="pause-status" id="pause-status">Take a breath and adjust your audio mix.</p>
+
+        <div class="slider-group">
+          <label>Difficulty Preset</label>
+          <div class="difficulty-pills" role="group" aria-label="Difficulty preset in pause menu">
+            <button class="difficulty-btn" type="button" data-difficulty="easy" aria-pressed="false">Easy</button>
+            <button class="difficulty-btn" type="button" data-difficulty="normal" aria-pressed="true">Normal</button>
+            <button class="difficulty-btn" type="button" data-difficulty="hard" aria-pressed="false">Hard</button>
+          </div>
+        </div>
+
+        <div class="slider-group">
+          <label>Difficulty Apply Mode</label>
+          <div class="apply-mode-pills" role="group" aria-label="Difficulty apply mode in pause menu">
+            <button class="apply-mode-btn" type="button" data-apply-mode="instant" aria-pressed="true">Instant</button>
+            <button class="apply-mode-btn" type="button" data-apply-mode="next-match" aria-pressed="false">Next Match</button>
+          </div>
+        </div>
+
+        <div class="slider-group pause-toggles">
+          <label class="inline-toggle"><input class="setting-toggle" type="checkbox" data-setting="difficulty-lock" /> Lock difficulty during active battle</label>
+          <label class="inline-toggle"><input class="setting-toggle" type="checkbox" data-setting="hard-confirm" checked /> Ask before switching to Hard mid-fight</label>
+        </div>
+
+        <div class="slider-group">
+          <label for="music-volume">Music Volume <span id="music-volume-value">72%</span></label>
+          <input type="range" id="music-volume" min="0" max="100" step="1" value="72" />
+        </div>
+
+        <div class="slider-group">
+          <label for="sfx-volume">SFX Volume <span id="sfx-volume-value">88%</span></label>
+          <input type="range" id="sfx-volume" min="0" max="100" step="1" value="88" />
+        </div>
+
+        <div class="pause-actions">
+          <button class="resume-btn" id="resume-btn">Resume Battle</button>
+          <button class="audio-btn" id="pause-audio-toggle" aria-pressed="false">Sound Off</button>
+          <button class="reset-btn compact" id="pause-restart">Restart Match</button>
+        </div>
+
+        <p class="pause-help">Hotkeys: O settings, P or Esc pause, M mute, R restart, 1-5 deploy.</p>
+      </div>
+    </section>
+
+    <section class="unit-row">
+      <h2>Deploy Cats</h2>
+      <div class="unit-buttons" id="unit-buttons"></div>
+    </section>
+
+    <section class="shop-row">
+      <h2>Shop: Upgrade Cats to Level 10</h2>
+      <div class="shop-grid" id="shop-grid"></div>
+    </section>
+
+    <p class="hint" id="hint">Your cats deploy from the right side. Win matches to unlock new cats.</p>
+    <p class="credits">Sprites by pongos</p>
+  </main>
+
+  <script src="game.js"></script>
+</body>
+</html>
